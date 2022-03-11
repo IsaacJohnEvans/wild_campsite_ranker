@@ -27,7 +27,7 @@ def get_biergarten_data():
     return data_dict
 
 
-def plot_biergarten_data(data):
+def get_biergarten_coords(data):
     # Collect coords into list
     coords = []
     for element in data['elements']:
@@ -41,13 +41,17 @@ def plot_biergarten_data(data):
             coords.append((lon, lat))
     # Convert coordinates into numpy array
     X = np.array(coords)
+    return X
+
+def plot_coords(X):
     plt.plot(X[:, 0], X[:, 1], 'o')
     plt.title('Biergarten in Germany')
+    plt.xlim((6, 16))
+    plt.ylim((47, 57))
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
     plt.axis('equal')
     plt.show()
-
 
 def plot_biergarten_data_overpy(data):
     api = overpy.Overpass()
@@ -67,7 +71,11 @@ def plot_biergarten_data_overpy(data):
     coords += [(float(rel.center_lon), float(rel.center_lat))
                for rel in r.relations]
 
-
-data = get_biergarten_data()
-print(data)
 #%%
+data = get_biergarten_data()
+#%%
+X = get_biergarten_coords(data)
+#%%
+plot_coords(X)
+#%%
+plot_biergarten_data_overpy(data)
