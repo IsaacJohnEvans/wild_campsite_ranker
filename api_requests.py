@@ -71,14 +71,3 @@ def plot_biergarten_data_overpy(data):
 data = get_biergarten_data()
 print(data)
 #%%
-data['elements'][0]['lat']
-#[data.get(key) for key in data.keys()]
-data.keys()
-data_list = data['elements']
-for i in data_list:
-    data_array = 
-#%%
-print(type(data))
-data_json = json.dumps(data, indent = 5)
-with open('beer_garden_data.json', "w") as outfile:
-    json.dump(data_json, outfile)
