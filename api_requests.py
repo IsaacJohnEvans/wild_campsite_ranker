@@ -22,5 +22,5 @@ biergarten_reponse = get_query_response("""
                                             );
                                             out center;
                                             """)
-
+print(biergarten_reponse.nodes)
 
