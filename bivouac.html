@@ -93,6 +93,14 @@
 
     map.on('load', () => {
 
+        map.addSource(
+            'mapbox-dem', {
+                'type': 'raster-dem',
+                'url': 'mapbox://mapbox.terrain-rgb',
+                'tileSize': 512,
+                'maxzoom': 14
+            });
+
         map.addSource('legality', {
             'type': 'geojson',
             'data': 'https://raw.githubusercontent.com/crispianm/crispianm.github.io/main/data/legality.geojson'
