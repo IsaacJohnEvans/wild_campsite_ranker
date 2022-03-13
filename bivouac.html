@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>bivouac</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.js"></script>
+<style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    </style>
+    </head>
+    <body>
+    <style>
+    #menu {
+    background: #fff;
+    position: absolute;
+    z-index: 1;
+    top: 10px;
+    right: 60px;
+    border-radius: 3px;
+    width: 140px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    font-family: 'Open Sans', sans-serif;
+    }
+     
+    #menu a {
+    font-size: 13px;
+    color: #404040;
+    display: block;
+    margin: 0;
+    padding: 0;
+    padding: 10px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+    text-align: center;
+    }
+     
+    #menu a:last-child {
+    border: none;
+    }
+     
+    #menu a:hover {
+    background-color: #f8f8f8;
+    color: #404040;
+    }
+     
+    #menu a.active {
+    background-color: #3887be;
+    color: #ffffff;
+    }
+     
+    #menu a.active:hover {
+    background: #3074a4;
+    }
+    </style>
+     
+    <nav id="menu"></nav>
+    <div id="map"></div>
+
+<script>
+	mapboxgl.accessToken = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ';
+    // Use a minimal variant of the Mapbox Dark style, with certain features removed.
+    const map = new mapboxgl.Map({
+        style: 'mapbox://styles/mapbox/light-v9',
+        center: {
+            lng: -2.8066556755666565,
+            lat: 53.51729421462671
+        },
+        zoom: 6,
+        pitch: 0,
+        container: 'map',
+        antialias: true
+    });
+
+    map.addControl(new mapboxgl.FullscreenControl());
+
+    map.addControl(new mapboxgl.NavigationControl());
+
+    map.addControl(
+        new mapboxgl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: true
+            },
+            // When active the map will receive updates to the device's location as it changes.
+            trackUserLocation: true,
+            // Draw an arrow next to the location dot to indicate which direction the device is heading.
+            showUserHeading: true
+        })
+    );
+
+
+    map.on('load', () => {
+
+        map.addSource('legality', {
+            'type': 'geojson',
+            'data': 'https://raw.githubusercontent.com/crispianm/crispianm.github.io/main/data/legality.geojson'
+        });
+
+        map.addSource('nps', {
+            'type': 'geojson',
+            'data': 'https://raw.githubusercontent.com/crispianm/crispianm.github.io/main/data/uk_national_parks_boundaries.geojson'
+        });
+
+        map.setTerrain({
+            'source': 'mapbox-dem',
+            'exaggeration': 1.5});
+
+        map.addLayer({
+            'id': 'sky',
+            'type': 'sky',
+            'paint': {
+                'sky-type': 'atmosphere',
+                'sky-atmosphere-sun': [0.0, 0.0],
+                'sky-atmosphere-sun-intensity': 15
+            }
+        });
+
+        map.addLayer({
+            'id': 'hillshading',
+            'source': 'mapbox-dem',
+            'type': 'hillshade'
+            // insert below waterway-river-canal-shadow;
+            // where hillshading sits in the Mapbox Outdoors style
+            },
+            'waterway-river-canal-shadow'
+        );
+
+        // Add legality polygon
+        map.addLayer({
+            'id': 'Legality',
+            'type': 'fill',
+            'source': 'legality', // reference the data source
+            'layout': {},
+            'paint': {
+                'fill-color': '#0080ff', // blue color fill
+                'fill-opacity': 0.5
+            }
+        });
+
+        // Add nps polygon
+        map.addLayer({
+            'id': 'National Parks',
+            'type': 'fill',
+            'source': 'nps', // reference the data source
+            'layout': {},
+            'paint': {
+                'fill-color': '#3D550C', // blue color fill
+                'fill-opacity': 0.5
+            }
+        });
+
+        // // Add a black outline around the polygon.
+        // map.addLayer({
+        //     'id': 'legality_outline',
+        //     'type': 'line',
+        //     'source': 'legality',
+        //     'layout': {},
+        //     'paint': {
+        //         'line-color': '#000',
+        //         'line-width': 3
+        //     }
+        // });
+
+        // // Add a black outline around the polygon.
+        // map.addLayer({
+        //     'id': 'nps_outline',
+        //     'type': 'line',
+        //     'source': 'nps',
+        //     'layout': {},
+        //     'paint': {
+        //         'line-color': '#000',
+        //         'line-width': 3
+        //     }
+        // });
+
+        // HTML from the click event's properties.
+        map.on('click', 'Legality', (e) => {
+            new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(e.features[0].properties.spr16nm)
+                .addTo(map);
+            });
+
+        // Change the cursor to a pointer when
+        // the mouse is over the states layer.
+        map.on('mouseenter', 'Legality', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        
+        // Change the cursor back to a pointer
+        // when it leaves the states layer.
+        map.on('mouseleave', 'Legality', () => {
+            map.getCanvas().style.cursor = '';
+        });
+
+
+        map.on('click', 'National Parks', (e) => {
+            new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(e.features[0].properties.name)
+                .addTo(map);
+            });
+        
+        // Change the cursor to a pointer when
+        // the mouse is over the states layer.
+        map.on('mouseenter', 'National Parks', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        
+        // Change the cursor back to a pointer
+        // when it leaves the states layer.
+        map.on('mouseleave', 'National Parks', () => {
+            map.getCanvas().style.cursor = '';
+        });
+
+        
+    });
+
+
+        map.on('idle', () => {
+            // If these two layers were not added to the map, abort
+            if (!map.getLayer('Legality') || !map.getLayer('National Parks')) {
+                return;
+            }
+            
+            // Enumerate ids of the layers.
+            const toggleableLayerIds = ['Legality', 'National Parks'];
+            
+            // Set up the corresponding toggle button for each layer.
+            for (const id of toggleableLayerIds) {
+                // Skip layers that already have a button set up.
+                if (document.getElementById(id)) {
+                continue;
+                }
+                
+                // Create a link.
+                const link = document.createElement('a');
+                link.id = id;
+                link.href = '#';
+                link.textContent = id;
+                link.className = 'active';
+                
+                // Show or hide layer when the toggle is clicked.
+                link.onclick = function (e) {
+                const clickedLayer = this.textContent;
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const visibility = map.getLayoutProperty(
+                clickedLayer,
+                'visibility'
+                );
+                
+                // Toggle layer visibility by changing the layout object's visibility property.
+                if (visibility === 'visible') {
+                map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                this.className = '';
+                } else {
+                this.className = 'active';
+                map.setLayoutProperty(
+                clickedLayer,
+                'visibility',
+                'visible'
+                );
+                }
+            };
+            
+            const layers = document.getElementById('menu');
+            layers.appendChild(link);
+        }
+
+
+
+
+
+
+    });
+
+
+</script>
