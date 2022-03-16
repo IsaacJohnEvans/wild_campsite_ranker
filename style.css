@@ -46,3 +46,12 @@ color: #ffffff;
 #menu a.active:hover {
 background: #3074a4;
 }
+
+.marker {
+    background-image: url('beer.png');
+    background-size: cover;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
