@@ -90,3 +90,19 @@ X = get_biergarten_coords(data)
 plot_coords(X)
 #%%
 plot_biergarten_data_overpy(data)
+#%%
+data
+
+#%%
+query = \
+    """
+node(1694620775);
+complete(100) { nwr[amenity=pub](around:500); };
+out center;"""
+pub_crawl = get_query_response(query)
+#%%
+pub_crawl.nodes
+#%%
+
+a = np.random.rand(10000, 100000)
+np.argmin(a)
