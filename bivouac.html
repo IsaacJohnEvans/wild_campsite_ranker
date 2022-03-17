@@ -102,7 +102,7 @@
 
                 map.addSource('points', {
                     'type' : 'geojson',
-                    'data' : 'https://raw.githubusercontent.com/IsaacJohnEvans/wild_campsite_ranker/main/bristol%20test%20data/bristol_pubs_points.geojson'
+                    'data' : 'https://raw.githubusercontent.com/IsaacJohnEvans/wild_campsite_ranker/main/bristol%20test%20data/pubs.geojson'
             });
             map.addLayer({
                 'id':'Pubs',
@@ -122,7 +122,14 @@
             });
         }
         );
-            
+        
+        map.addSource(
+            'mapbox-dem', {
+                'type': 'raster-dem',
+                'url': 'mapbox://mapbox.terrain-rgb',
+                'tileSize': 512,
+                'maxzoom': 14
+            });
         
 
         map.addSource('legality', {
@@ -258,8 +265,10 @@
             }
             
             // Enumerate ids of the layers.
-            const toggleableLayerIds = ['Legality', 'National Parks', 'Pubs'];
-            
+            const toggleableLayerIds = ['Legality', 'National Parks','Pubs'];
+            const zoomLayerIds = ['Pubs']
+
+
             // Set up the corresponding toggle button for each layer.
             for (const id of toggleableLayerIds) {
                 // Skip layers that already have a button set up.
@@ -279,11 +288,11 @@
                 const clickedLayer = this.textContent;
                 e.preventDefault();
                 e.stopPropagation();
-                
                 const visibility = map.getLayoutProperty(
                 clickedLayer,
                 'visibility'
                 );
+                
                 
                 // Toggle layer visibility by changing the layout object's visibility property.
                 if (visibility === 'visible') {
@@ -303,9 +312,16 @@
             layers.appendChild(link);
         }
 
-
-
-
+        //Layers for zoom based Symbols
+            if (map.getZoom() < 8) {
+            for (const id of zoomLayerIds) {
+                const link = document.createElement('a');
+                link.textContent = id;
+                const layer = link.textContent;
+                const visibility = map.getLayoutProperty(layer, 'visibility');
+                map.setLayoutProperty(layer, 'visibility', 'none');
+            }}
+           
 
 
     });
