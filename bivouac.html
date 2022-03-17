@@ -93,6 +93,36 @@
 
     map.on('load', () => {
 
+        map.loadImage(
+            'https://raw.githubusercontent.com/IsaacJohnEvans/wild_campsite_ranker/main/bristol%20test%20data/beer.png',
+
+                    (error, image) => {
+                if (error) throw error;
+                map.addImage('custom-marker',image);
+
+                map.addSource('points', {
+                    'type' : 'geojson',
+                    'data' : 'https://raw.githubusercontent.com/IsaacJohnEvans/wild_campsite_ranker/main/bristol%20test%20data/pubs.geojson'
+            });
+            map.addLayer({
+                'id':'Pubs',
+                'type':'symbol',
+                'source':'points',
+                'layout': {
+                        'icon-image': 'custom-marker',
+                        // get the title name from the source's "title" property
+                        'text-field': ['get', 'title'],
+                        'text-font': [
+                        'Open Sans Semibold',
+                        'Arial Unicode MS Bold'
+                        ],
+                        'text-offset': [0, 1.25],
+                        'text-anchor': 'top'
+                        }
+            });
+        }
+        );
+        
         map.addSource(
             'mapbox-dem', {
                 'type': 'raster-dem',
@@ -100,6 +130,7 @@
                 'tileSize': 512,
                 'maxzoom': 14
             });
+        
 
         map.addSource('legality', {
             'type': 'geojson',
@@ -234,8 +265,10 @@
             }
             
             // Enumerate ids of the layers.
-            const toggleableLayerIds = ['Legality', 'National Parks'];
-            
+            const toggleableLayerIds = ['Legality', 'National Parks','Pubs'];
+            const zoomLayerIds = ['Pubs']
+
+
             // Set up the corresponding toggle button for each layer.
             for (const id of toggleableLayerIds) {
                 // Skip layers that already have a button set up.
@@ -255,11 +288,11 @@
                 const clickedLayer = this.textContent;
                 e.preventDefault();
                 e.stopPropagation();
-                
                 const visibility = map.getLayoutProperty(
                 clickedLayer,
                 'visibility'
                 );
+                
                 
                 // Toggle layer visibility by changing the layout object's visibility property.
                 if (visibility === 'visible') {
@@ -279,9 +312,16 @@
             layers.appendChild(link);
         }
 
-
-
-
+        //Layers for zoom based Symbols
+            if (map.getZoom() < 8) {
+            for (const id of zoomLayerIds) {
+                const link = document.createElement('a');
+                link.textContent = id;
+                const layer = link.textContent;
+                const visibility = map.getLayoutProperty(layer, 'visibility');
+                map.setLayoutProperty(layer, 'visibility', 'none');
+            }}
+           
 
 
     });
