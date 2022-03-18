@@ -4,9 +4,14 @@ import matplotlib.pyplot as plt
 from math import e, pi, sqrt
 from OSGridConverter import latlong2grid
 
+def sinusoidal_func(x, y, dist, h):
+    return -h * np.cos(((x**2 + y**2)**0.5)/dist) + h
 
 def normal_func(x,y,mean,var):
     return np.exp(-0.5*(((x**2 + y**2)**0.5 - mean)/var)**2)/(var*(2 * pi)**0.5)
+    #x = np.where((x**2 + y**2)**0.5 > 2*pi, 0, x)
+    #y = np.where((x ** 2 + y ** 2) ** 0.5 > 2*pi, 0, y)
+    #return -np.cos((x**2 + y**2)**0.5)
 
 def step_func(x,y):
     return -5
@@ -25,13 +30,14 @@ def get_point_coords(data_dict):
     return coords, grid_refs
 
 pub_coords, pub_gridrefs = get_point_coords(pub_dict)
+print(pub_gridrefs[:1])
 
 res = 1000
-x = np.outer(np.linspace(360000, 365000, res), np.ones(res))
-y = np.outer(np.linspace(170000, 175000, res), np.ones(res)).T
+x = np.outer(np.linspace(362500, 367500, res, endpoint=False), np.ones(res))
+y = np.outer(np.linspace(172500, 177500, res, endpoint=False), np.ones(res)).T
 z = np.zeros_like(x)
-for pub in pub_gridrefs[:30]:
-    z += normal_func(x-pub[0], y-pub[1],100,100)
+for pub in pub_gridrefs[:1]:
+    z += sinusoidal_func(x-pub[0], y-pub[1],300,300)
 
 fig = plt.figure()
 ax = plt.axes(projection ='3d')
