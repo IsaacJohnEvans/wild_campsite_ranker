@@ -24,9 +24,10 @@ def getFeatureData(lng, lat, ACCESS_TOKEN):
     return data_dict
 
 
-def getRasterRGB(ACCESS_TOKEN):
+def getRasterRGB(ACCESS_TOKEN, zoom=14, x=3826, y=6127):
+    """Gets RGBA RAWPNG raster elevation heatmap using tilename values x & y at specified zoom level"""
     # need to convert long and lat to x and y using slippy map
-    url = f"https://api.mapbox.com/v4/mapbox.terrain-rgb/14/3826/6127.pngraw?access_token={ACCESS_TOKEN}"
+    url = f"https://api.mapbox.com/v4/mapbox.terrain-rgb/{zoom}/{x}/{y}.pngraw?access_token={ACCESS_TOKEN}"
     response = requests.get(url)
     #print(response.content)
     return response.content
@@ -42,10 +43,12 @@ def getRasterDEM(ACCESS_TOKEN):
 def rasterToImage(raster):
     """Convert rawpng rgba octets into PIL image"""
     imagePIL = Image.open(io.BytesIO(raster))
+    imagePIL.show()
     return imagePIL
 
 
 def getElevationMatrix(img):
+    """Generates matrix of elevation values for each RGBA raster pixel"""
     elevation_matrix = np.ones( (256, 256), dtype=float)
     for i in range(256):
         for j in range(256):
@@ -56,8 +59,3 @@ def getElevationMatrix(img):
             elevation_matrix[i,j] = elevation
     return elevation_matrix
 
-
-raster = getRasterRGB(MAPBOX_TOKEN)
-image = rasterToImage(raster)
-elevation_mat = getElevationMatrix(image)
-print(elevation_mat)
