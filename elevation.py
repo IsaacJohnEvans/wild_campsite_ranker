@@ -47,12 +47,14 @@ def rasterToImage(raster):
     return imagePIL
 
 
-def getElevationMatrix(img):
+def getElevationMatrix(MAPBOX_TOKEN, zoom, x, y):
     """Generates matrix of elevation values for each RGBA raster pixel"""
+    raster = getRasterRGB(MAPBOX_TOKEN, zoom, x, y)
+    img = rasterToImage(raster)
     elevation_matrix = np.ones( (256, 256), dtype=float)
     for i in range(256):
         for j in range(256):
-            coord = x, y = i, j
+            coord = i, j
             pixel_rgba = img.getpixel(coord)
             # elevation = -10000 + (({R} * 256 * 256 + {G} * 256 + {B}) * 0.1)
             elevation = -10000 + ((pixel_rgba[0] * 256 * 256 + pixel_rgba[1] * 256 + pixel_rgba[2])) * 0.1

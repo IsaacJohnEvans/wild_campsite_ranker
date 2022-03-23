@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB
 from local_config import MAPBOX_TOKEN
 
-raster = getRasterRGB(MAPBOX_TOKEN)
-image = rasterToImage(raster)
-elevation_mat = getElevationMatrix(image)
+# raster = getRasterRGB(MAPBOX_TOKEN)
+# image = rasterToImage(raster)
+elevation_mat = getElevationMatrix(MAPBOX_TOKEN, 14, 3826, 6127)
 padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
 print(padded_mat)
 
