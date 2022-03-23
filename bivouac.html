@@ -24,6 +24,21 @@
     border: 1px solid rgba(0, 0, 0, 0.4);
     font-family: 'Open Sans', sans-serif;
     }
+
+    #mouse_info {
+    display: table;
+    position: relative;
+    margin: 0px auto;
+    word-wrap: anywhere;
+    white-space: pre-wrap;
+    padding: 10px;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    text-align: center;
+    color: #222;
+    background: #fff;
+}
      
     #menu a {
     font-size: 13px;
@@ -58,8 +73,18 @@
      
     <nav id="menu"></nav>
     <div id="map"></div>
+    <pre id="mouse_info"></pre>
 
 <script>
+
+
+
+
+
+
+
+
+
 	mapboxgl.accessToken = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ';
     // Use a minimal variant of the Mapbox Dark style, with certain features removed.
     const map = new mapboxgl.Map({
@@ -92,36 +117,6 @@
 
 
     map.on('load', () => {
-
-        map.loadImage(
-            'https://raw.githubusercontent.com/IsaacJohnEvans/wild_campsite_ranker/main/bristol%20test%20data/beer.png',
-
-                    (error, image) => {
-                if (error) throw error;
-                map.addImage('custom-marker',image);
-
-                map.addSource('points', {
-                    'type' : 'geojson',
-                    'data' : 'https://raw.githubusercontent.com/IsaacJohnEvans/wild_campsite_ranker/main/bristol%20test%20data/pubs.geojson'
-            });
-            map.addLayer({
-                'id':'Pubs',
-                'type':'symbol',
-                'source':'points',
-                'layout': {
-                        'icon-image': 'custom-marker',
-                        // get the title name from the source's "title" property
-                        'text-field': ['get', 'title'],
-                        'text-font': [
-                        'Open Sans Semibold',
-                        'Arial Unicode MS Bold'
-                        ],
-                        'text-offset': [0, 1.25],
-                        'text-anchor': 'top'
-                        }
-            });
-        }
-        );
         
         map.addSource(
             'mapbox-dem', {
@@ -253,10 +248,8 @@
         map.on('mouseleave', 'National Parks', () => {
             map.getCanvas().style.cursor = '';
         });
-
         
     });
-
 
         map.on('idle', () => {
             // If these two layers were not added to the map, abort
@@ -265,8 +258,7 @@
             }
             
             // Enumerate ids of the layers.
-            const toggleableLayerIds = ['Legality', 'National Parks','Pubs'];
-            const zoomLayerIds = ['Pubs']
+            const toggleableLayerIds = ['Legality', 'National Parks'];
 
 
             // Set up the corresponding toggle button for each layer.
@@ -313,18 +305,20 @@
         }
 
         //Layers for zoom based Symbols
-            if (map.getZoom() < 8) {
-            for (const id of zoomLayerIds) {
-                const link = document.createElement('a');
-                link.textContent = id;
-                const layer = link.textContent;
-                const visibility = map.getLayoutProperty(layer, 'visibility');
-                map.setLayoutProperty(layer, 'visibility', 'none');
-            }}
-           
 
 
-    });
+    }
+    );
+
+    map.on('mousemove', (g) => {
+        document.getElementById('mouse_info').innerHTML =
+        // `e.point` is the x, y coordinates of the `mousemove` event
+        // relative to the top-left corner of the map.
+        JSON.stringify(g.point) + '<br />' +
+        // `e.lngLat` is the longitude, latitude geographical position of the event.
+        JSON.stringify(g.lngLat.wrap());
+        
+        });
 
 
 </script>
