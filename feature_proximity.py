@@ -176,24 +176,40 @@ def get_point_coords(data_dict):
         coords.append(list(reversed(data_dict['features'][i]['geometry']['coordinates'])))
         grid_ref = latlong2grid(coords[i][0], coords[i][1])
         grid_refs.append([grid_ref.E, grid_ref.N])
+    coords = np.array(coords)
+    grid_refs = np.array(grid_refs)
     return coords, grid_refs
 
-pub_coords, pub_refs = get_point_coords(pub_dict)
+pub_coords, pub_grid_refs = get_point_coords(pub_dict)
+pub_grid_refs
 #%%
 with open('bristol_test_data/bristol_pubs_multipolygons.geojson', "r") as read_file:
     pub_poly_dict = json.load(read_file)
 
 def get_poly_coords(poly_dict):
     poly_coords = []
+    poly_grid_refs = []
     for i in range(len(poly_dict['features'])):
+        j_list = []
         for j in range(len(poly_dict['features'][i]['geometry']['coordinates'])):
             full_poly = []
+            full_grid_poly = []
             for k in range(len(poly_dict['features'][i]['geometry']['coordinates'][j])):
                 poly_point = []
+                poly_point_refs = []
                 for l in range(len(poly_dict['features'][i]['geometry']['coordinates'][j][k])):
-                    poly_point.append(list(reversed(poly_dict['features'][i]['geometry']['coordinates'][j][k][l])))
-            full_poly.append(poly_point)
-        poly_coords.append(full_poly)
-    return poly_coords
+                    poly_point.append((list(reversed(poly_dict['features'][i]['geometry']['coordinates'][j][k][l]))))
+                    grid_ref = latlong2grid(poly_point[0][0], poly_point[0][1])
+                    poly_point_refs.append([grid_ref.E, grid_ref.N])
+                full_poly.append(poly_point)
+                full_grid_poly.append(poly_point_refs)
+            j_list.append(j)
+            poly_coords.append(full_poly)
+            poly_grid_refs.append(full_grid_poly)
+    for i in j_list:
+        if i != 0:
+            print(i)
+    return poly_coords, poly_grid_refs
 
-get_poly_coords(pub_poly_dict)
+poly_coords, poly_grid_refs = get_poly_coords(pub_poly_dict)
+print(len(poly_coords), len(poly_coords[0]), len(poly_coords[0][0]), len(poly_coords[0][0][0]), type(poly_coords[0][0][0][0]))
