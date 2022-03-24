@@ -123,8 +123,8 @@ def dilate_layer(layer1, z, struct, value):
 
 
 n_points = 40
-min_point = -200
-max_point = 200
+min_point = -400
+max_point = 400
 x_cen = polygon[0][0]
 y_cen = polygon[0][1]
 a = np.zeros((n_points, n_points))
@@ -134,6 +134,8 @@ a[17:20, 7] = 1
 a[17, 18:23] = 1
 a[14:17, 22] = 1
 a[11:13, 11:13] = 1
+a = np.zeros((n_points, n_points))
+a[15:25, 15:25] = 1
 struct2 = ndimage.generate_binary_structure(2, 2)
 struct = np.ones((3, 3))
 struct[1, 1] = 0
@@ -152,7 +154,7 @@ layer2, z = dilate_layer(a, z, struct, value_list[0])
 for val in value_list[1:]:
     layer2, z = dilate_layer(layer2, z, struct, val)
 
-z = skimage.filters.gaussian(z, 1)
+z = skimage.filters.gaussian(z, 5)
 fig = plt.figure()
 ax = plt.axes(projection ='3d')
 ax.plot_surface(x, y, z, cmap ='inferno')
@@ -163,8 +165,8 @@ polygon = poly_grid_refs[0][0]
 polygon
 #%%
 n_points = 20
-min_point = -5
-max_point = 5
+min_point = -10
+max_point = 10
 x_cen = polygon[0][0] + 5
 y_cen = polygon[0][1] + 5
 
@@ -179,6 +181,7 @@ layer2, z = dilate_layer(poly_bool, z, struct, 1)
 for val in [2, 3, 2, 1, 0]:
     layer2, z = dilate_layer(layer2, z, struct, val)
 
+z = skimage.filters.gaussian(z, 1)
 fig = plt.figure()
 ax = plt.axes(projection ='3d')
 ax.plot_surface(x, y, z, cmap ='inferno')
