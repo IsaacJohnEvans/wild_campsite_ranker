@@ -219,6 +219,19 @@
                     '<p>' + " (" + camp_landuse_features.type  + ")" + '</p>'
                 )
                 .addTo(map);
+
+            var mouse_info = $("#mouse_info").html();
+            var zoom_level = map.getZoom();
+            var feats = JSON.stringify(displayFeatures);
+
+            
+                $.ajax({
+                 
+                   type: 'POST',
+                    url: '/result',
+                    data: {'mouse_info': mouse_info, 'zoom_level':zoom_level, 'features':feats},
+                });
+            
             });
             // map.addSource('landuse_coords', {
             // 'type': 'geojson',
@@ -317,17 +330,6 @@
         
 
         });
-
-        document.addEventListener('click', (event) => {
-            console.log(event.button);
-            var mouse_info = $("#mouse_info").html();
-            var zoom_level = map.getZoom();
-        $.ajax({
-            type: 'POST',
-            url: '/result',
-            data: {'mouse_info': mouse_info, 'zoom_level':zoom_level},
-        });
-        })
 
     
 
