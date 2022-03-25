@@ -1,27 +1,30 @@
 import numpy as np
+import mercantile
 import matplotlib.pyplot as plt
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB
 from local_config import MAPBOX_TOKEN
+import math
 
-# raster = getRasterRGB(MAPBOX_TOKEN)
-# image = rasterToImage(raster)
-elevation_mat = getElevationMatrix(MAPBOX_TOKEN, 14, 3826, 6127)
+tile_coords = mercantile.tile(lng=-95.9326171875, lat=41.26129149391987, zoom=14)
+print(tile_coords)
+elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
 padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
 print(padded_mat)
 
 
-def djikstra(matrix, startNode):
+def djikstra(matrix, startNode, latitude):
     # resolution = 156543.03 meters/pixel * cos(latitude) / (2 ^ zoomlevel)
-    latitude = 0
+    print("latitiude:", latitude)
+    latitude_radians = latitude * math.pi / 180
     zoomlevel = 14
-    resolution = 156543.03 * np.cos(latitude) / (2 ^ zoomlevel)
+    resolution = abs(156543.03 * np.cos(latitude_radians) / (2 ** zoomlevel))
+    print("resolution:", resolution)
     elevation_multiplier = 2
     targetNode = (248, 250)
     neighbourDiffs = [[0,1], [0,-1], [-1,0], [1,0]]
     visitedNodes = {startNode: 0} # Dictionary of nodes and their shortest discovered cumulative distance
     frontierNodes = dict()
     parentDict = dict()
-    optimalParents = dict()
 
     currentNode = startNode
     currentDist = 0
@@ -35,7 +38,7 @@ def djikstra(matrix, startNode):
         for node in neighbourNodes:
             if node not in visitedNodes.keys():
                 # Generate weighting for traversing to neighbouring node
-                neighbourDist = currentDist + resolution + elevation_multiplier * (matrix[node] - matrix[currentNode])
+                neighbourDist = currentDist + resolution + elevation_multiplier * abs((matrix[node] - matrix[currentNode]))
 
                 # Update frontier if newly-discovered distance is smaller than existing frontier distance
                 try:
@@ -62,7 +65,6 @@ def djikstra(matrix, startNode):
 
         # Add new current node to visited nodes
         visitedNodes[currentNode] = currentDist
-        optimalParents[currentNode] = parentDict
         #print(currentNode)
         if targetNode in visitedNodes.keys():
             print("DONE")
@@ -80,11 +82,12 @@ def djikstra(matrix, startNode):
     #nodePath = nodePath.reverse()
     print(nodePath)
 
-    plt.imshow(matrix, cmap='hot', interpolation='nearest')
+    plt.imshow(elevation_mat, interpolation='nearest')
     xs = [x[0] for x in nodePath]
     ys = [x[1] for x in nodePath]
-    plt.plot(xs, ys)
+    plt.plot(xs, ys, 'r-')
     plt.show()
 
 
-djikstra(padded_mat, startNode=(1,1))
+djikstra(padded_mat, startNode=(1,1), latitude=41.26129149391987)
+# scipy convolve 2D
