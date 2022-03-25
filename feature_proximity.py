@@ -176,24 +176,66 @@ def get_point_coords(data_dict):
         coords.append(list(reversed(data_dict['features'][i]['geometry']['coordinates'])))
         grid_ref = latlong2grid(coords[i][0], coords[i][1])
         grid_refs.append([grid_ref.E, grid_ref.N])
+    coords = np.array(coords)
+    grid_refs = np.array(grid_refs)
     return coords, grid_refs
 
-pub_coords, pub_refs = get_point_coords(pub_dict)
+pub_coords, pub_grid_refs = get_point_coords(pub_dict)
+pub_grid_refs
 #%%
 with open('bristol_test_data/bristol_pubs_multipolygons.geojson', "r") as read_file:
     pub_poly_dict = json.load(read_file)
 
 def get_poly_coords(poly_dict):
     poly_coords = []
+    poly_grid_refs = []
     for i in range(len(poly_dict['features'])):
+        j_list = []
         for j in range(len(poly_dict['features'][i]['geometry']['coordinates'])):
             full_poly = []
+            full_grid_poly = []
             for k in range(len(poly_dict['features'][i]['geometry']['coordinates'][j])):
                 poly_point = []
+                poly_point_refs = []
                 for l in range(len(poly_dict['features'][i]['geometry']['coordinates'][j][k])):
-                    poly_point.append(list(reversed(poly_dict['features'][i]['geometry']['coordinates'][j][k][l])))
-            full_poly.append(poly_point)
-        poly_coords.append(full_poly)
-    return poly_coords
+                    poly_point.append((list(reversed(poly_dict['features'][i]['geometry']['coordinates'][j][k][l]))))
+                    grid_ref = latlong2grid(poly_point[0][0], poly_point[0][1])
+                    poly_point_refs.append([grid_ref.E, grid_ref.N])
+                full_poly.append(poly_point)
+                full_grid_poly.append(poly_point_refs)
+            j_list.append(j)
+            poly_coords.append(full_poly)
+            poly_grid_refs.append(full_grid_poly)
+    for i in j_list:
+        if i != 0:
+            print(i)
+    return poly_coords, poly_grid_refs
 
-get_poly_coords(pub_poly_dict)
+poly_coords, poly_grid_refs = get_poly_coords(pub_poly_dict)
+print(len(poly_coords), len(poly_coords[0]), len(poly_coords[0][0]), len(poly_coords[0][0][0]), type(poly_coords[0][0][0][0]))
+
+#%%
+var = 1
+mean = 3
+n_points = 1000
+min_point = -5
+max_point = 5
+x = np.outer(np.linspace(min_point, max_point, n_points), np.ones(n_points))
+y = x.copy().T
+x_cen = 0
+y_cen = 0
+z = np.exp(-0.5*((((x-x_cen)**2 + (y-y_cen)**2)**0.5 - mean)/var)**2)/(var*(2 * pi)**0.5)
+fig = plt.figure(1)
+ax = plt.axes(projection ='3d')
+ax.plot_surface(x, y, z, cmap ='viridis', edgecolor ='green')
+plt.show()
+
+#%%
+x = 0
+y = 0 
+x_cen = 0
+y_cen = 0
+mean = 1
+
+np.exp(-0.5*((((x-x_cen)**2 + (y-y_cen)**2)**0.5 - mean)/var)**2)/(var*(2 * pi)**0.5)
+np.tanh(np.exp(-0.5*((((x-x_cen)**2 + (y-y_cen)**2)**0.5 - mean)/var)**2)/(var*(2 * pi)**0.5))
