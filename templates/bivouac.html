@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="images/favicon.ico" type="image/vnd.microsoft.icon" />
 <title>bivouac</title>
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css" rel="stylesheet">
@@ -76,7 +77,6 @@
     <div id="map"></div>
     <pre id="mouse_info"></pre>
 
-
 <script>
 
 	mapboxgl.accessToken = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ';
@@ -138,9 +138,7 @@
             'id': 'hillshading',
             'source': 'mapbox-dem',
             'type': 'hillshade'
-            // insert below waterway-river-canal-shadow;
-            // where hillshading sits in the Mapbox Outdoors style
-            },
+           },
             'waterway-river-canal-shadow'
         );
 
@@ -188,7 +186,14 @@
         // HTML from the click event's properties.
         map.on('click', 'camp_landuse', (e) => {
 
-            const features = map.queryRenderedFeatures(e.point, {
+            var radius = 5000 
+            const bbox = [
+                [e.point.x - radius, e.point.y - radius],
+                [e.point.x + radius, e.point.y + radius]
+            ];
+
+            // Find features in the bounding box.
+            const features = map.queryRenderedFeatures(bbox, {
                 layers: ['camp_landuse']
             });
             const displayProperties = [
@@ -245,12 +250,12 @@
 
         map.on('idle', () => {
             // If these two layers were not added to the map, abort
-            if (!map.getLayer('Legality') || !map.getLayer('National Parks')) {
+            if (!map.getLayer('camp_landuse') || !map.getLayer('National Parks')) {
                 return;
             }
             
             // Enumerate ids of the layers.
-            const toggleableLayerIds = ['Legality', 'National Parks'];
+            const toggleableLayerIds = ['camp_landuse', 'National Parks'];
 
 
             // Set up the corresponding toggle button for each layer.
@@ -302,7 +307,13 @@
     }
     );
 
-    
+    map.on('mouseenter', 'camp_landuse', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        
+    map.on('mouseleave', 'camp_landuse', () => {
+            map.getCanvas().style.cursor = '';
+        });
 
     map.on('mousemove', (g) => {
         
