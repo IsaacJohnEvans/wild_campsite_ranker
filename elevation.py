@@ -29,7 +29,7 @@ def getRasterRGB(ACCESS_TOKEN, zoom=14, x=3826, y=6127):
     # need to convert long and lat to x and y using slippy map
     url = f"https://api.mapbox.com/v4/mapbox.terrain-rgb/{zoom}/{x}/{y}.pngraw?access_token={ACCESS_TOKEN}"
     response = requests.get(url)
-    #print(response)
+    #print(response.content)
     return response.content
 
 
@@ -40,17 +40,16 @@ def getRasterDEM(ACCESS_TOKEN):
     return response.content
 
 
-def rasterToImage(raster, show_img=True):
+def rasterToImage(raster):
     """Convert rawpng rgba octets into PIL image"""
     imagePIL = Image.open(io.BytesIO(raster))
-    if show_img:
-        imagePIL.show()
+    #imagePIL.show()
     return imagePIL
 
 
 def getElevationMatrix(MAPBOX_TOKEN, zoom, x, y):
     """Generates matrix of elevation values for each RGBA raster pixel"""
-    raster = getRasterRGB(MAPBOX_TOKEN, zoom=zoom, x=x, y=y)
+    raster = getRasterRGB(MAPBOX_TOKEN, zoom, x, y)
     img = rasterToImage(raster)
     elevation_matrix = np.ones( (256, 256), dtype=float)
     for i in range(256):
@@ -62,3 +61,9 @@ def getElevationMatrix(MAPBOX_TOKEN, zoom, x, y):
             elevation_matrix[i,j] = elevation
     return elevation_matrix.transpose()
 
+def getSlopeMatrix(elevation_mat):
+
+    grad_mat = np.gradient(elevation_mat)
+    x_grad_mat = grad_mat[0]
+    y_grad_mat = grad_mat[1]
+    return x_grad_mat, y_grad_mat
