@@ -194,17 +194,15 @@
 
             // Find features in the bounding box.
             const features = map.queryRenderedFeatures(bbox, {
-                layers: ['camp_landuse']
+                layers: ['camp_landuse', 'camp_landcover']
             });
             const displayProperties = [
-                'type',
+                // 'type',
                 'properties',
                 'id',
                 'layer',
-                'source',
+                // 'source',
                 'geometry',
-                'sourceLayer',
-                'state'
             ];
 
             const displayFeatures = features.map((feat) => {
@@ -318,7 +316,6 @@
         }
 
         //Layers for zoom based Symbols
-
 
     }
     );
