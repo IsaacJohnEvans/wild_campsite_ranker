@@ -229,49 +229,34 @@
             var zoom_level = map.getZoom();
             var feats = JSON.stringify(displayFeatures);
 
-            var feat_matrix = 0;
+            var num_features = 'Waiting for result...';
             function callback(response) {
-                feat_matrix = response;
+                num_features = response.some;
+                console.log("Inside ajax: "+ num_features)
                 //use feat_matrix variable here
             }
 
                 $.ajax({
                  
-                   type: 'POST',
-                    url: '/get_result',
+                    type: 'POST',
+                    async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
                     data: {
-                        'mouse_info': mouse_info,
-                        'zoom_level':zoom_level,
-                        'features':feats
+                        'features': feats,
+                        'zoom_level': zoom_level,
+                        'mouse_info': mouse_info
                     },
-                    success: function (results) {
-                        callback(results);
-                    } 
+                    url: '/get_result',
+                    success: callback, 
                 });
 
 
             new mapboxgl.Popup()
                 .setLngLat(e.lngLat)
-                .setHTML(feat_matrix)
+                .setHTML(num_features)
                 .addTo(map);
             
             });
-            // map.addSource('landuse_coords', {
-            // 'type': 'geojson',
-            // 'data': displayFeatures[0].geometry
-            // });
-
-            // map.addLayer({
-            //   'id': 'landuse-highlighted',
-            //   'type': 'line',
-            //   'source': 'landuse_coords',
-            //   'layout': {},
-            //   'paint': {
-            //     'line-color': '#000',
-            //     'line-width': 3
-            //    }
-            // });
-
+            
             // new mapboxgl.Popup()
             //     .setLngLat(e.lngLat)
             //     .setHTML(camp_landuse_features.class + " (" + camp_landuse_features.type  + ")")
