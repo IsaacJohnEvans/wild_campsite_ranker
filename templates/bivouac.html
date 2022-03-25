@@ -261,13 +261,14 @@
 
         });
 
-        document.addEventListener('keydown', (event) => {
-            var key = event.key;
+        document.addEventListener('click', (event) => {
+            console.log(event.button);
             var mouse_info = $("#mouse_info").html();
+            var zoom_level = map.getZoom();
         $.ajax({
             type: 'POST',
             url: '/result',
-            data: {'mouse_info': mouse_info},
+            data: {'mouse_info': mouse_info, 'zoom_level':zoom_level},
         });
         })
 
