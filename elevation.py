@@ -59,5 +59,5 @@ def getElevationMatrix(MAPBOX_TOKEN, zoom, x, y):
             # elevation = -10000 + (({R} * 256 * 256 + {G} * 256 + {B}) * 0.1)
             elevation = -10000 + ((pixel_rgba[0] * 256 * 256 + pixel_rgba[1] * 256 + pixel_rgba[2])) * 0.1
             elevation_matrix[i,j] = elevation
-    return elevation_matrix
+    return elevation_matrix.transpose()
 
