@@ -186,7 +186,7 @@
         // HTML from the click event's properties.
         map.on('click', 'camp_landuse', (e) => {
 
-            var radius = 5000 
+            var radius = 5 
             const bbox = [
                 [e.point.x - radius, e.point.y - radius],
                 [e.point.x + radius, e.point.y + radius]
@@ -217,25 +217,43 @@
 
             var camp_landuse_features = displayFeatures[0].properties;
 
-            new mapboxgl.Popup()
-                .setLngLat(e.lngLat)
-                .setHTML(
-                    '<h3>' + camp_landuse_features.class + '</h3>' +
-                    '<p>' + " (" + camp_landuse_features.type  + ")" + '</p>'
-                )
-                .addTo(map);
+            // new mapboxgl.Popup()
+            //     .setLngLat(e.lngLat)
+            //     .setHTML(
+            //         '<h3>' + camp_landuse_features.class + '</h3>' +
+            //         '<p>' + "(" + camp_landuse_features.type + ")" + '</p>'
+            //     )
+            //     .addTo(map);
 
             var mouse_info = $("#mouse_info").html();
             var zoom_level = map.getZoom();
             var feats = JSON.stringify(displayFeatures);
 
-            
+            var feat_matrix = 0;
+            function callback(response) {
+                feat_matrix = response;
+                //use feat_matrix variable here
+            }
+
                 $.ajax({
                  
                    type: 'POST',
-                    url: '/result',
-                    data: {'mouse_info': mouse_info, 'zoom_level':zoom_level, 'features':feats},
+                    url: '/get_result',
+                    data: {
+                        'mouse_info': mouse_info,
+                        'zoom_level':zoom_level,
+                        'features':feats
+                    },
+                    success: function (results) {
+                        callback(results);
+                    } 
                 });
+
+
+            new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(feat_matrix)
+                .addTo(map);
             
             });
             // map.addSource('landuse_coords', {
