@@ -44,3 +44,16 @@ def weather_mesh(lat_list,lon_list):
     }
 
     return geojson
+
+
+def wind_direction(lat,long):
+    call = 'https://api.openweathermap.org/data/2.5/weather?lat='+str(lat)+'&lon='+str(long)+'&appid=e64e8059142aa7d4aa3126405fb4b4d2&units=metric'
+
+    response = requests.get(call)
+    
+    data = response.json()
+    
+    return data['wind']['direction']
+    
+    
+    
