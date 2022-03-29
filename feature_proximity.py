@@ -43,6 +43,11 @@ def get_poly_centre(polygon):
     y_cen = p1.centroid.coords[0][1]
     return x_cen, y_cen
 
+def get_min_max(polygon, x_cen, y_cen, values):
+    min_point = np.round(np.min(polygon - np.array([x_cen, y_cen])), 0)*len(values)
+    max_point = np.round(np.max(polygon - np.array([x_cen, y_cen])), 0)*len(values)
+    return min_point, max_point
+
 def make_grid(x_cen, y_cen, n_points, min_point, max_point):
     x = np.outer(np.linspace(min_point + x_cen, x_cen + max_point, n_points), np.ones(n_points))
     y = np.outer(np.linspace(min_point + y_cen, y_cen + max_point, n_points), np.ones(n_points)).T
@@ -86,28 +91,25 @@ poly_coords, poly_grid_refs = get_poly_coords(pub_poly_dict)
 #%%
 polygon = poly_grid_refs[0][0]
 polygon = np.array(polygon)
-
+print(polygon)
 plt.figure(1)
 plt.plot(polygon[:,0], polygon[:,1], '-o')
 
-def get_min_max(polygon, x_cen, y_cen, values):
-    min_point = np.round(np.min(polygon - np.array([x_cen, y_cen])), 0)*len(values)
-    max_point = np.round(np.max(polygon - np.array([x_cen, y_cen])), 0)*len(values)
-    return min_point, max_point
+n_points = 100
 
-    
-n_points = 40
-min_point = -50
-max_point = 50
 values = [1, 2, 3, 2, 1, 0]
 sigma = 1
 
 struct = make_dilate_struct()
 x_cen, y_cen = get_poly_centre(polygon)
 min_point, max_point = get_min_max(polygon, x_cen, y_cen, values)
+min_point = -1000
+max_point = 1000
 x, y, z = make_grid(x_cen, y_cen, n_points, min_point, max_point)
-
 poly_bool = polygon_to_points(x, y, polygon)
-z = dilate_poly(poly_bool, z, struct, values, sigma)
+for i in range(len(poly_grid_refs)):
+    polygon = poly_grid_refs[i][0]
+    poly_bool = np.logical_or(poly_bool,polygon_to_points(x, y, polygon))
 
+z = dilate_poly(poly_bool, z, struct, values, sigma)
 plot_poly(x, y, z)
