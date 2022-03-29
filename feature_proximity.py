@@ -95,16 +95,17 @@ print(polygon)
 plt.figure(1)
 plt.plot(polygon[:,0], polygon[:,1], '-o')
 
-n_points = 100
-
-values = [1, 2, 3, 2, 1, 0]
+n_points = 300
+dist = 5
+effect = 2
+values = np.repeat(np.array([0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0])* effect, dist)
 sigma = 1
 
 struct = make_dilate_struct()
 x_cen, y_cen = get_poly_centre(polygon)
 min_point, max_point = get_min_max(polygon, x_cen, y_cen, values)
-min_point = -1000
-max_point = 1000
+min_point = -10000
+max_point = 10000
 x, y, z = make_grid(x_cen, y_cen, n_points, min_point, max_point)
 poly_bool = polygon_to_points(x, y, polygon)
 for i in range(len(poly_grid_refs)):
