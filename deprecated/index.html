@@ -1,19 +1,42 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <link rel = "stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
-        <script src = "https://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<html> 
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<link rel="stylesheet" type="text/css" href="../static/index.css"> 
 
-    </head>
-    <body>
-        <div id="map" style="width:900px;height:580px;background:rgb(186, 244, 247);"><</div>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet-src.js"></script>
-        <script src="https://cdn.rawgit.com/aparshin/leaflet-boundary-canvas/f00b4d35/src/BoundaryCanvas.js"></script>
+
+
+
+	</head>
+	
+	<body>
+
+        <form class="grid" action="/result" method="POST">
+
+          {% if name %}
+            <center>
+              <h3 style="color: blue;" class="let_space">Hello {{name}}, How was your day!!</h3>
+            </center> 
+
+          {% endif %}
+           
+          <label for="name">Enter you name:</label>
+          <input type="text" id="name" name="name">
+
+          <center><input class="file_submit" type="Submit"></center>
+
+        </form>
+
         
+
         
-        <script type="text/javascript" src="mapJS.js"></script>
-    
+
+        
+        <br>
+        <br>
+        <br>
+
+
     </body>
+
 </html>

@@ -33,11 +33,11 @@ pub_coords, pub_gridrefs = get_point_coords(pub_dict)
 print(pub_gridrefs[:1])
 
 res = 1000
-x = np.outer(np.linspace(362500, 367500, res, endpoint=False), np.ones(res))
-y = np.outer(np.linspace(172500, 177500, res, endpoint=False), np.ones(res)).T
+x = np.outer(np.linspace(360000, 368000, res, endpoint=False), np.ones(res))
+y = np.outer(np.linspace(170000, 178000, res, endpoint=False), np.ones(res)).T
 z = np.zeros_like(x)
-for pub in pub_gridrefs[:1]:
-    z += sinusoidal_func(x-pub[0], y-pub[1],300,300)
+for pub in pub_gridrefs:
+    z += normal_func(x-pub[0], y-pub[1],300,300)
 
 fig = plt.figure()
 ax = plt.axes(projection ='3d')

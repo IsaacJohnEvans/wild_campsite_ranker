@@ -2,12 +2,14 @@
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="images/favicon.ico" type="image/vnd.microsoft.icon" />
 <title>bivouac</title>
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <style>
-    body { margin: 0; padding: 0; }
+    body { margin: 100; padding: 0; }
     #map { position: absolute; top: 0; bottom: 0; width: 100%; }
     </style>
     </head>
@@ -24,6 +26,21 @@
     border: 1px solid rgba(0, 0, 0, 0.4);
     font-family: 'Open Sans', sans-serif;
     }
+
+    #mouse_info {
+    display: table;
+    position: relative;
+    margin: 0px auto;
+    word-wrap: anywhere;
+    white-space: pre-wrap;
+    padding: 10px;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    text-align: center;
+    color: #222;
+    background: #fff;
+}
      
     #menu a {
     font-size: 13px;
@@ -58,6 +75,7 @@
      
     <nav id="menu"></nav>
     <div id="map"></div>
+    <pre id="mouse_info"></pre>
 
 <script>
 
@@ -93,8 +111,7 @@
 
 
     map.on('load', () => {
-
-       
+        
         map.addSource(
             'mapbox-dem', {
                 'type': 'raster-dem',
@@ -121,31 +138,29 @@
             'id': 'hillshading',
             'source': 'mapbox-dem',
             'type': 'hillshade'
-            // insert below waterway-river-canal-shadow;
-            // where hillshading sits in the Mapbox Outdoors style
-            },
+           },
             'waterway-river-canal-shadow'
         );
 
-        // HTML from the click event's properties.
-        map.on('click', 'Legality', (e) => {
-            new mapboxgl.Popup()
-                .setLngLat(e.lngLat)
-                .setHTML(e.features[0].properties.spr16nm)
-                .addTo(map);
-            });
+        // // HTML from the click event's properties.
+        // map.on('click', 'Legality', (e) => {
+        //     new mapboxgl.Popup()
+        //         .setLngLat(e.lngLat)
+        //         .setHTML(e.features[0].properties.spr16nm)
+        //         .addTo(map);
+        //     });
 
-        // Change the cursor to a pointer when
-        // the mouse is over the states layer.
-        map.on('mouseenter', 'Legality', () => {
-            map.getCanvas().style.cursor = 'pointer';
-        });
+        // // Change the cursor to a pointer when
+        // // the mouse is over the states layer.
+        // map.on('mouseenter', 'Legality', () => {
+        //     map.getCanvas().style.cursor = 'pointer';
+        // });
         
-        // Change the cursor back to a pointer
-        // when it leaves the states layer.
-        map.on('mouseleave', 'Legality', () => {
-            map.getCanvas().style.cursor = '';
-        });
+        // // Change the cursor back to a pointer
+        // // when it leaves the states layer.
+        // map.on('mouseleave', 'Legality', () => {
+        //     map.getCanvas().style.cursor = '';
+        // });
 
 
         map.on('click', 'National Parks', (e) => {
@@ -167,18 +182,94 @@
             map.getCanvas().style.cursor = '';
         });
 
-        
-    });
 
+        // HTML from the click event's properties.
+        map.on('click', 'camp_landuse', (e) => {
+
+            var radius = 5 
+            const bbox = [
+                [e.point.x - radius, e.point.y - radius],
+                [e.point.x + radius, e.point.y + radius]
+            ];
+
+            // Find features in the bounding box.
+            const features = map.queryRenderedFeatures(bbox, {
+                layers: ['camp_landuse', 'camp_landcover']
+            });
+            const displayProperties = [
+                // 'type',
+                'properties',
+                'id',
+                'layer',
+                // 'source',
+                'geometry',
+            ];
+
+            const displayFeatures = features.map((feat) => {
+                const displayFeat = {};
+                displayProperties.forEach((prop) => {
+                    displayFeat[prop] = feat[prop];
+                });
+                return displayFeat;
+            });
+
+            var camp_landuse_features = displayFeatures[0].properties;
+
+            // new mapboxgl.Popup()
+            //     .setLngLat(e.lngLat)
+            //     .setHTML(
+            //         '<h3>' + camp_landuse_features.class + '</h3>' +
+            //         '<p>' + "(" + camp_landuse_features.type + ")" + '</p>'
+            //     )
+            //     .addTo(map);
+
+            var mouse_info = $("#mouse_info").html();
+            var zoom_level = map.getZoom();
+            var feats = JSON.stringify(displayFeatures);
+
+            var num_features = 'Waiting for result...';
+            function callback(response) {
+                num_features = response.some;
+                console.log("Inside ajax: "+ num_features)
+                //use feat_matrix variable here
+            }
+
+                $.ajax({
+                 
+                    type: 'POST',
+                    async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
+                    data: {
+                        'features': feats,
+                        'zoom_level': zoom_level,
+                        'mouse_info': mouse_info
+                    },
+                    url: '/get_result',
+                    success: callback, 
+                });
+
+
+            new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(num_features)
+                .addTo(map);
+            
+            });
+            
+            // new mapboxgl.Popup()
+            //     .setLngLat(e.lngLat)
+            //     .setHTML(camp_landuse_features.class + " (" + camp_landuse_features.type  + ")")
+            //     .addTo(map);
+                    
+    });
 
         map.on('idle', () => {
             // If these two layers were not added to the map, abort
-            if (!map.getLayer('Legality') || !map.getLayer('National Parks')) {
+            if (!map.getLayer('camp_landuse') || !map.getLayer('National Parks')) {
                 return;
             }
             
             // Enumerate ids of the layers.
-            const toggleableLayerIds = ['Legality', 'National Parks'];
+            const toggleableLayerIds = ['camp_landuse', 'National Parks'];
 
 
             // Set up the corresponding toggle button for each layer.
@@ -224,11 +315,33 @@
             layers.appendChild(link);
         }
 
+        //Layers for zoom based Symbols
 
-           
+    }
+    );
 
+    map.on('mouseenter', 'camp_landuse', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        
+    map.on('mouseleave', 'camp_landuse', () => {
+            map.getCanvas().style.cursor = '';
+        });
 
-    });
+    map.on('mousemove', (g) => {
+        
+        document.getElementById('mouse_info').innerHTML =
+        // `e.point` is the x, y coordinates of the `mousemove` event
+        // relative to the top-left corner of the map.
+        JSON.stringify(g.point) + '<br />' +
+        // `e.lngLat` is the longitude, latitude geographical position of the event.
+        
+        JSON.stringify(g.lngLat.wrap());
+        
+        
 
+        });
+
+    
 
 </script>
