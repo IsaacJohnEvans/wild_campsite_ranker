@@ -27,11 +27,17 @@ def get_poly_coords(poly_dict):
                     grid_ref = latlong2grid(poly_point[l][0], poly_point[l][1])
                     poly_point_refs.append(np.array([grid_ref.E, grid_ref.N]))
                 full_poly.append(poly_point)
-                full_grid_poly.append(poly_point_refs)
+                full_grid_poly.append(list_to_array(poly_point_refs))
             j_list.append(j)
             poly_coords.append(full_poly)
             poly_grid_refs.append(full_grid_poly)
     return poly_coords, poly_grid_refs
+
+def list_to_array(a):
+    b = np.zeros([len(a),len(max(a,key = lambda x: len(x)))], dtype = np.float32)
+    for i,j in enumerate(a):
+        b[i][0:len(j)] = j
+    return b
 
 def get_poly_centre(polygon):
     poly_str = 'POLYGON(('
@@ -83,34 +89,50 @@ def plot_poly(x, y, z):
     ax = plt.axes(projection ='3d')
     ax.plot_surface(x, y, z, cmap ='inferno')
     plt.show()
+    
+def add_feature(x, y, z, polygon, values, dist, effect, struct, sigma):
+    values = np.repeat(values* effect, dist)
+    polygon = poly_grid_refs[0][0]
+    poly_bool = polygon_to_points(x, y, polygon)
+    for i in range(len(poly_grid_refs)):
+        polygon = poly_grid_refs[i][0]
+        poly_bool = np.logical_or(poly_bool,polygon_to_points(x, y, polygon))
+    z += dilate_poly(poly_bool, z, struct, values, sigma)
+    return x, y, z
 #%%
 with open('bristol_test_data/bristol_pubs_multipolygons.geojson', "r") as read_file:
     pub_poly_dict = json.load(read_file)
 poly_coords, poly_grid_refs = get_poly_coords(pub_poly_dict)
-
+print(poly_grid_refs[0][0])
+#%%
+for i in pub_poly_dict['features']:
+    print(i['properties']['name'])
 #%%
 polygon = poly_grid_refs[0][0]
-polygon = np.array(polygon)
-print(polygon)
 plt.figure(1)
 plt.plot(polygon[:,0], polygon[:,1], '-o')
 
 n_points = 300
 dist = 5
 effect = 2
-values = np.repeat(np.array([0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0])* effect, dist)
-sigma = 1
+values = np.array([0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0])
 
+sigma = 1
 struct = make_dilate_struct()
+
 x_cen, y_cen = get_poly_centre(polygon)
 min_point, max_point = get_min_max(polygon, x_cen, y_cen, values)
 min_point = -10000
 max_point = 10000
 x, y, z = make_grid(x_cen, y_cen, n_points, min_point, max_point)
-poly_bool = polygon_to_points(x, y, polygon)
-for i in range(len(poly_grid_refs)):
-    polygon = poly_grid_refs[i][0]
-    poly_bool = np.logical_or(poly_bool,polygon_to_points(x, y, polygon))
-
-z = dilate_poly(poly_bool, z, struct, values, sigma)
+x, y, z = add_feature(x, y, z, poly_grid_refs, values, dist, effect, struct, sigma)
 plot_poly(x, y, z)
+#%%
+print(poly_grid_refs[0][0])
+
+#%%
+def set_grid_size(grid_refs):
+    min_point = np.min(grid_refs)
+    max_point = np.max(grid_refs)
+    return min_point, max_point
+set_grid_size(poly_grid_refs)
