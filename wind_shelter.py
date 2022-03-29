@@ -34,7 +34,7 @@ import basic_weather_calls
 def wind_shelter_prep(radius,direction,tolerance,cellsize=90):
     nc = 2*int(radius)+1
     nr=nc
-    mask=np.ones((nc,nr),dtype=np.int8)
+    mask=np.zeros((nc,nr),dtype=np.int8)
     for j in range(nc):
         for i in range(nr):
             if i==j and i==((nr+1)/2):
@@ -52,7 +52,7 @@ def wind_shelter_prep(radius,direction,tolerance,cellsize=90):
                 d = d-2*np.pi
             d = min(d,2*np.pi-d)
             if (d<=tolerance):
-                mask[i,j] = 0
+                mask[i,j] = 1
     
     
 
@@ -75,6 +75,9 @@ def wind_shelter_prep(radius,direction,tolerance,cellsize=90):
 
 '''
 
+
+
+#mask has a problem - fix so it's using a pi sized slice in the upwind direction
 def centervalue(x): 
     i = math.ceil(x.shape[1] / 2)
     return(x[i,i],i)  
@@ -106,6 +109,7 @@ def wind_shelter(x,mask,radius,cellsize,coord_x=None,coord_y=None):
             distance_minus = np.sqrt((coord_c-x_minus[0])**2+(coord_c-x_minus[1])**2) * cellsize
             
             if not np.isnan(x[x_plus]): 
+                print('x_plus')
                 x_list.append(np.arctan((x[x_plus]-ctr)/distance_plus))
             if not np.isnan(x[x_minus]): 
                 x_list.append(np.arctan((x[x_minus]-ctr)/distance_minus))
@@ -124,8 +128,8 @@ elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, t
 direction = np.pi/180*basic_weather_calls.wind_direction(lat,lng)
 
 
-control = wind_shelter_prep(20,direction,1,20)
+control = wind_shelter_prep(20,direction,0.52,20)
 
-
+print(control)
 shelter = wind_shelter(elevation_mat,control,20,20)
 print(shelter)
