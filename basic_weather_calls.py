@@ -53,7 +53,7 @@ def wind_direction(lat,long):
     
     data = response.json()
     
-    return data['wind']['direction']
+    return data['wind']['deg']
     
     
     
