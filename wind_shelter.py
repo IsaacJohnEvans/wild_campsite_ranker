@@ -34,7 +34,7 @@ import basic_weather_calls
 def wind_shelter_prep(radius,direction,tolerance,cellsize=90):
     nc = 2*int(radius)+1
     nr=nc
-    mask=np.zeros((nc,nr),dtype=np.int8)
+    mask=np.ones((nc,nr),dtype=np.int8)
     for j in range(nc):
         for i in range(nr):
             if i==j and i==((nr+1)/2):
@@ -52,7 +52,7 @@ def wind_shelter_prep(radius,direction,tolerance,cellsize=90):
                 d = d-2*np.pi
             d = min(d,2*np.pi-d)
             if (d<=tolerance):
-                mask[i,j] = 1
+                mask[i,j] = 0
     
     
 
@@ -77,42 +77,36 @@ def wind_shelter_prep(radius,direction,tolerance,cellsize=90):
 
 
 
-#mask has a problem - fix so it's using a pi sized slice in the upwind direction
+#the way the mask points are iterated through needs to change, true values should exist other values should go
+
+#cut x down to size then add the mask and change values
 def centervalue(x): 
     i = math.ceil(x.shape[1] / 2)
     return(x[i,i],i)  
 
-def wind_shelter(x,mask,radius,cellsize,coord_x=None,coord_y=None):
+def wind_shelter(x,mask,radius,cellsize):
     
     ctr,coord_x = centervalue(x)
-    ctr_c,coord_c = centervalue(mask)
-    for i in range(int(radius)):
-        for j in range(int(radius)):
-            if mask[coord_c+i,coord_c+j]==1:
-                x[coord_x+i,coord_x+j] = np.nan
-            if mask[coord_c-i,coord_c-j]==1:
-                x[coord_x-i,coord_x-j] = np.nan
-            
     x = x[coord_x-radius:coord_x+1+radius,coord_x-radius:coord_x+1+radius]
+
+    ctr_c,coord_c = centervalue(mask)
     
-            
-    array_sum = np.sum(x)
-    array_has_nan = np.isnan(array_sum)
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            if mask[i,j]==1:
+               
+                x[i,j] = np.nan
     
     res = np.nan
     x_list =[]
-    for i in range(1,radius):
-        for j in range(1,radius):
-            x_plus = (coord_c+i,coord_c+j)
-            x_minus = (coord_c-i,coord_c-j)
-            distance_plus = np.sqrt((coord_c-x_plus[0])**2+(coord_c-x_plus[1])**2) * cellsize
-            distance_minus = np.sqrt((coord_c-x_minus[0])**2+(coord_c-x_minus[1])**2) * cellsize
-            
-            if not np.isnan(x[x_plus]): 
-                print('x_plus')
-                x_list.append(np.arctan((x[x_plus]-ctr)/distance_plus))
-            if not np.isnan(x[x_minus]): 
-                x_list.append(np.arctan((x[x_minus]-ctr)/distance_minus))
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            if not np.isnan(x[i,j]):
+                point_coords = (i,j)
+                if point_coords != (coord_c,coord_c):
+                    distance = np.sqrt((coord_c-point_coords[0])**2+(coord_c-point_coords[1])**2) * cellsize
+                    x_list.append(np.arctan((x[point_coords[0],point_coords[1]]-ctr)/distance))
+           
     res = max(x_list)
     
     
@@ -130,6 +124,6 @@ direction = np.pi/180*basic_weather_calls.wind_direction(lat,lng)
 
 control = wind_shelter_prep(20,direction,0.52,20)
 
-print(control)
+
 shelter = wind_shelter(elevation_mat,control,20,20)
 print(shelter)
