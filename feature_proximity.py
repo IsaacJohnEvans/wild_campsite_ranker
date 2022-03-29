@@ -8,6 +8,7 @@ import json
 from OSGridConverter import latlong2grid
 from scipy import ndimage
 import skimage
+from shapely import wkt
 
 #%%
 def get_poly_coords(poly_dict):
@@ -23,14 +24,24 @@ def get_poly_coords(poly_dict):
                 poly_point_refs = []
                 for l in range(len(poly_dict['features'][i]['geometry']['coordinates'][j][k])):
                     poly_point.append((list(reversed(poly_dict['features'][i]['geometry']['coordinates'][j][k][l]))))
-                    grid_ref = latlong2grid(poly_point[l][1], poly_point[l][1])
-                    poly_point_refs.append([grid_ref.E, grid_ref.N])
+                    grid_ref = latlong2grid(poly_point[l][0], poly_point[l][1])
+                    poly_point_refs.append(np.array([grid_ref.E, grid_ref.N]))
                 full_poly.append(poly_point)
                 full_grid_poly.append(poly_point_refs)
             j_list.append(j)
             poly_coords.append(full_poly)
             poly_grid_refs.append(full_grid_poly)
     return poly_coords, poly_grid_refs
+
+def get_poly_centre(polygon):
+    poly_str = 'POLYGON(('
+    for i in tuple(map(tuple, polygon)):
+        poly_str += str(i[0]) + ' ' + str(i[1]) + ', '
+    poly_str = poly_str[:-2] + '))'
+    p1 = wkt.loads(poly_str)
+    x_cen = p1.centroid.coords[0][0]
+    y_cen = p1.centroid.coords[0][1]
+    return x_cen, y_cen
 
 def make_grid(x_cen, y_cen, n_points, min_point, max_point):
     x = np.outer(np.linspace(min_point + x_cen, x_cen + max_point, n_points), np.ones(n_points))
@@ -43,6 +54,12 @@ def polygon_to_points(x, y, polygon):
     path = mpltPath.Path(polygon)
     poly_bool = np.reshape(np.array(path.contains_points(points)), x.shape)
     return poly_bool
+
+def make_dilate_struct():
+    struct = np.ones((3, 3))
+    struct[1, 1] = 0
+    struct = struct.astype(bool)
+    return struct
 
 def dilate_layer(layer1, z, struct, value):
     layer2 = ndimage.binary_dilation(layer1, structure=struct)
@@ -57,7 +74,7 @@ def dilate_poly(poly_bool, z, struct, values, sigma):
     return z
 
 def plot_poly(x, y, z):
-    fig = plt.figure()
+    fig = plt.figure(2)
     ax = plt.axes(projection ='3d')
     ax.plot_surface(x, y, z, cmap ='inferno')
     plt.show()
@@ -65,28 +82,32 @@ def plot_poly(x, y, z):
 with open('bristol_test_data/bristol_pubs_multipolygons.geojson', "r") as read_file:
     pub_poly_dict = json.load(read_file)
 poly_coords, poly_grid_refs = get_poly_coords(pub_poly_dict)
-polygon = poly_grid_refs[0][0]
 
 #%%
+polygon = poly_grid_refs[0][0]
+polygon = np.array(polygon)
 
-struct = np.ones((3, 3))
-struct[1, 1] = 0
-struct = struct.astype(bool)
+plt.figure(1)
+plt.plot(polygon[:,0], polygon[:,1], '-o')
 
-polygon = np.array([[0, 0], [10, 0], [13, 2], [6, 2], [0, 5], [0, 4]])
-n_points = 20
-min_point = -10
-max_point = 10
-x_cen = polygon[0][0] + 5
-y_cen = polygon[0][1] + 5
+def get_min_max(polygon, x_cen, y_cen, values):
+    min_point = np.round(np.min(polygon - np.array([x_cen, y_cen])), 0)*len(values)
+    max_point = np.round(np.max(polygon - np.array([x_cen, y_cen])), 0)*len(values)
+    return min_point, max_point
+
+    
+n_points = 40
+min_point = -50
+max_point = 50
 values = [1, 2, 3, 2, 1, 0]
 sigma = 1
+
+struct = make_dilate_struct()
+x_cen, y_cen = get_poly_centre(polygon)
+min_point, max_point = get_min_max(polygon, x_cen, y_cen, values)
 x, y, z = make_grid(x_cen, y_cen, n_points, min_point, max_point)
 
 poly_bool = polygon_to_points(x, y, polygon)
-#print(polygon)
-#print(poly_bool.astype(np.int64))
-
 z = dilate_poly(poly_bool, z, struct, values, sigma)
 
 plot_poly(x, y, z)
