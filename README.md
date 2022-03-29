@@ -2,4 +2,5 @@
 This is a tool to rank the viability of wild camping locations.
 
 
-https://cx19105.github.io/cx19105.github.io/index.html
+Version 1.0:
+https://crispianm.github.io/bivouac.html

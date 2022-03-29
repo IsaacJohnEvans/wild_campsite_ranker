@@ -43,7 +43,7 @@ def getRasterDEM(ACCESS_TOKEN):
 def rasterToImage(raster):
     """Convert rawpng rgba octets into PIL image"""
     imagePIL = Image.open(io.BytesIO(raster))
-    imagePIL.show()
+    #imagePIL.show()
     return imagePIL
 
 
@@ -61,3 +61,10 @@ def getElevationMatrix(MAPBOX_TOKEN, zoom, x, y):
             elevation_matrix[i,j] = elevation
     return elevation_matrix.transpose()
 
+
+def getSlopeMatrix(elevation_mat):
+    """Generates matrices of the gradients of the elevation matrix in x and y directions"""
+    grad_mat = np.gradient(elevation_mat)
+    x_grad_mat = grad_mat[0]
+    y_grad_mat = grad_mat[1]
+    return x_grad_mat, y_grad_mat
