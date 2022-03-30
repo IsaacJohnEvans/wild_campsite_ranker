@@ -194,7 +194,7 @@
 
             // Find features in the bounding box.
             const features = map.queryRenderedFeatures(bbox, {
-                layers: ['camp_landuse', 'camp_landcover']
+                layers: ['camp_landcover', 'camp_landuse', 'poi-labels']
             });
             const displayProperties = [
                 // 'type',
