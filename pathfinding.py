@@ -5,14 +5,40 @@ from elevation import getElevationMatrix, rasterToImage, getRasterRGB
 from local_config import MAPBOX_TOKEN
 import math
 
-tile_coords = mercantile.tile(lng=-95.9326171875, lat=41.26129149391987, zoom=10)
+tile_coords = mercantile.tile(lng=-95.9326171875, lat=41.26129149391987, zoom=12)
 print(tile_coords)
 elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
 padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
 print(padded_mat)
+# Get latitude and longitude at upper-left of tile
+upper_left = mercantile.ul(tile_coords)
+print("upperleft:", upper_left)
 
 
-def djikstra(matrix, startNode, targetNode, zoomlevel, latitude, elevation_multiplier=2):
+def coord_to_lng_lat(ul, coord, start_coord, zoomlevel):
+
+    # Unpack upper-left of tile longitude and latitude
+    ul_lat = ul.lat
+    ul_lng = ul.lng
+
+    latitude_radians = ul_lat * math.pi / 180
+    resolution = abs(156543.03 * np.cos(latitude_radians) / (2 ** zoomlevel))
+
+    R = 6378137
+
+    dn = (coord[0] - start_coord[0]) * resolution
+    de = (coord[1] - start_coord[1]) * resolution
+
+    dLat = dn / R
+    dLon = de / (R * math.cos(math.pi * ul_lat / 180))
+
+    latO = ul_lat + dLat * 180 / math.pi
+    lonO = ul_lng + dLon * 180 / math.pi
+
+    return [lonO, latO]
+
+
+def djikstra(matrix, startNode, targetNode, zoomlevel, latitude, elevation_multiplier=2, show_plot=True):
     # resolution = 156543.03 meters/pixel * cos(latitude) / (2 ^ zoomlevel)
     print("latitiude:", latitude)
     latitude_radians = latitude * math.pi / 180
@@ -63,20 +89,27 @@ def djikstra(matrix, startNode, targetNode, zoomlevel, latitude, elevation_multi
 
     print(len(visitedNodes))
 
-    # Backtracking to get path
+    # Backtracking to get path of nodes
     currentNode = targetNode
     nodePath = [currentNode]
     while currentNode != startNode:
         currentNode = parentDict[currentNode]
         nodePath.append(currentNode)
     print(nodePath)
+    # Get lng and lat of upper-left of tile
+    upper_left = mercantile.ul(tile_coords)
+    # Gets path as series of longitude and latitude coordinates
+    lnglatPath = [coord_to_lng_lat(upper_left, coord, startNode, zoomlevel) for coord in nodePath]
+    print(lnglatPath)
 
-    plt.imshow(elevation_mat, interpolation='nearest')
-    xs = [x[0] for x in nodePath]
-    ys = [x[1] for x in nodePath]
-    plt.plot(xs, ys, 'r-')
-    plt.show()
+    if show_plot:
+        plt.imshow(elevation_mat, interpolation='nearest')
+        xs = [x[0] for x in nodePath]
+        ys = [x[1] for x in nodePath]
+        plt.plot(xs, ys, 'r-')
+        plt.show()
+
+    return lnglatPath
 
 
-djikstra(padded_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=10, latitude=41.26129149391987, elevation_multiplier=10)
-# scipy convolve 2D
+djikstra(padded_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=12, latitude=41.26129149391987, elevation_multiplier=10, show_plot=False)
