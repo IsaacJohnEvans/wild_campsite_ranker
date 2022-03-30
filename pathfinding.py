@@ -5,22 +5,19 @@ from elevation import getElevationMatrix, rasterToImage, getRasterRGB
 from local_config import MAPBOX_TOKEN
 import math
 
-tile_coords = mercantile.tile(lng=-95.9326171875, lat=41.26129149391987, zoom=14)
+tile_coords = mercantile.tile(lng=-95.9326171875, lat=41.26129149391987, zoom=10)
 print(tile_coords)
 elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
 padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
 print(padded_mat)
 
 
-def djikstra(matrix, startNode, latitude):
+def djikstra(matrix, startNode, targetNode, zoomlevel, latitude, elevation_multiplier=2):
     # resolution = 156543.03 meters/pixel * cos(latitude) / (2 ^ zoomlevel)
     print("latitiude:", latitude)
     latitude_radians = latitude * math.pi / 180
-    zoomlevel = 14
     resolution = abs(156543.03 * np.cos(latitude_radians) / (2 ** zoomlevel))
     print("resolution:", resolution)
-    elevation_multiplier = 2
-    targetNode = (248, 250)
     neighbourDiffs = [[0,1], [0,-1], [-1,0], [1,0]]
     visitedNodes = {startNode: 0} # Dictionary of nodes and their shortest discovered cumulative distance
     frontierNodes = dict()
@@ -32,9 +29,7 @@ def djikstra(matrix, startNode, latitude):
     while True:
 
         neighbourNodes = set(tuple(np.array(currentNode) + np.array(diff)) for diff in neighbourDiffs)
-        #print(neighbourNodes)
 
-        neighbourDistances = dict()
         for node in neighbourNodes:
             if node not in visitedNodes.keys():
                 # Generate weighting for traversing to neighbouring node
@@ -50,11 +45,8 @@ def djikstra(matrix, startNode, latitude):
                     frontierNodes[node] = neighbourDist
                     parentDict[node] = currentNode
 
-        #print(frontierNodes)
-
         # Search frontier nodes for smallest distance
         smallestFrontierNode = min(frontierNodes, key=frontierNodes.get)
-        #print(smallestFrontierNode)
 
         # Change current node to smallest frontier node
         currentNode = smallestFrontierNode
@@ -65,12 +57,10 @@ def djikstra(matrix, startNode, latitude):
 
         # Add new current node to visited nodes
         visitedNodes[currentNode] = currentDist
-        #print(currentNode)
         if targetNode in visitedNodes.keys():
             print("DONE")
             break
 
-    #print(parentDict)
     print(len(visitedNodes))
 
     # Backtracking to get path
@@ -79,7 +69,6 @@ def djikstra(matrix, startNode, latitude):
     while currentNode != startNode:
         currentNode = parentDict[currentNode]
         nodePath.append(currentNode)
-    #nodePath = nodePath.reverse()
     print(nodePath)
 
     plt.imshow(elevation_mat, interpolation='nearest')
@@ -89,5 +78,5 @@ def djikstra(matrix, startNode, latitude):
     plt.show()
 
 
-djikstra(padded_mat, startNode=(1,1), latitude=41.26129149391987)
+djikstra(padded_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=10, latitude=41.26129149391987, elevation_multiplier=10)
 # scipy convolve 2D
