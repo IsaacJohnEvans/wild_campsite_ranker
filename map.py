@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, jsonify, request, json
+from flask import Flask, render_template, url_for, jsonify, request
 import json
 app = Flask(__name__)
 
@@ -15,9 +15,10 @@ def process_result():
         mouse_pos = request.form['mouse_info']  
         zoom_level = request.form['zoom_level']
         features = request.form['features']
-
+     
         with open('file.json', 'w') as f:
             json.dump(features, f)
+        
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
