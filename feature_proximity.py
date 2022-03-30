@@ -109,6 +109,10 @@ with open('bristol_test_data/bristol_pubs_multipolygons.geojson', "r") as read_f
 poly_coords, poly_grid_refs = get_poly_coords(pub_poly_dict)
 
 #%%
+with open("file.json", "r") as content:
+    dict = json.loads(json.loads(content.read()))
+
+#%%
 polygon = poly_grid_refs[0][0]
 plt.figure(1)
 plt.plot(polygon[:,0], polygon[:,1], '-o')
@@ -132,4 +136,4 @@ plot_poly(x, y, z)
 min(min_points), max(max_points)
 
 #%%
-print(z[z==np.max(z)].shape,np.unravel_index(np.argmax(z[z==np.max(z)], keepdims=True), z.shape))
+print(z[z==np.max(z)].shape,np.unravel_index(np.argmax([z==np.max(z)], keepdims=True), z.shape))
