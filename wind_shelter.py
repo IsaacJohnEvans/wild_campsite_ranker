@@ -66,20 +66,56 @@ def shelter_index(x,mask,radius,cellsize):
     return(res)
 
 
-def wind_shelter(lat,long):
+def shelter_index_non_centre(x,mask,radius,cellsize,coord_x,coord_y):
+    
+    
+    x = x[coord_x-radius:coord_x+1+radius,coord_y-radius:coord_y+1+radius]
+
+    ctr_c,coord_c = centervalue(mask)
+    
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            if mask[i,j]==1:
+               
+                x[i,j] = np.nan
+    
+    res = np.nan
+    x_list =[]
+    
+    ctr = x[coord_c,coord_c]
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            if not np.isnan(x[i,j]):
+                point_coords = (i,j)
+                if point_coords != (coord_c,coord_c):
+                    distance = np.sqrt((coord_c-point_coords[0])**2+(coord_c-point_coords[1])**2) * cellsize
+                    x_list.append(np.arctan((x[point_coords[0],point_coords[1]]-ctr)/distance))
+           
+    res = max(x_list)
+    
+    
+    return(res)
+
+
+def wind_shelter(lat,long,zoom):
     #creating elevation matrix
-    tile_coords = mercantile.tile(lng, lat, zoom=14)
+    tile_coords = mercantile.tile(lng, lat, zoom)
     elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)    
 
     #finding wind direction at coords
     direction = np.pi/180*basic_weather_calls.wind_direction(lat,lng)
     
+    print(direction)
     
     #initial values
     radius = 20 #arbitary
     tolerance = 30*np.pi/180 #from first paper
     
-    cellsize = 20 #assumed
+    #calculation of cellsize
+    latitude_radians = lat * math.pi / 180
+    
+    cellsize = abs(156543.03 * np.cos(latitude_radians) / (2 ** zoom))
+    
     #creating mask for windward direction
     mask = wind_shelter_prep(radius,direction,tolerance)
     
@@ -95,10 +131,9 @@ def wind_shelter(lat,long):
 #usage   
     
     
-lng=-95.9326171875
-lat=41.26129149391987
+lng=45.558726
+lat=6.715438
+zoom = 14
 
-
-
-shelter = wind_shelter(lat,lng)
+shelter = wind_shelter(lat,lng,zoom)
 print(shelter)
