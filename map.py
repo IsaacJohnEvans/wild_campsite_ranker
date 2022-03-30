@@ -17,7 +17,7 @@ def process_result():
         features = request.form['features']
 
         with open('file.json', 'w') as f:
-            json.dump(json.loads(features), f)
+            json.dump(features, f)
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
