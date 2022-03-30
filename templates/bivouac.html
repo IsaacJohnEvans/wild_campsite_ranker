@@ -186,7 +186,7 @@
         // HTML from the click event's properties.
         map.on('click', 'camp_landuse', (e) => {
 
-            var radius = 5 
+            var radius = 50 
             const bbox = [
                 [e.point.x - radius, e.point.y - radius],
                 [e.point.x + radius, e.point.y + radius]
@@ -194,7 +194,7 @@
 
             // Find features in the bounding box.
             const features = map.queryRenderedFeatures(bbox, {
-                layers: ['camp_landuse', 'camp_landcover']
+                layers: ['camp_landcover', 'camp_landuse', 'points_of_interest']
             });
             const displayProperties = [
                 // 'type',
@@ -230,6 +230,8 @@
             var num_features = 'Waiting for result...';
             function callback(response) {
                 num_features = response.some;
+                temp = response.temp;
+                wind = response.wind;
                 console.log("Inside ajax: "+ num_features)
                 //use feat_matrix variable here
             }
@@ -250,7 +252,7 @@
 
             new mapboxgl.Popup()
                 .setLngLat(e.lngLat)
-                .setHTML(num_features)
+                .setHTML(num_features + "<br> Temperature: " + temp + "<br> Wind Speed: " + wind)
                 .addTo(map);
             
             });
