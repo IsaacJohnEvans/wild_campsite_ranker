@@ -18,8 +18,7 @@ def process_result():
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
 
         get_weather = weather_mesh([latlon['lat']], [latlon['lng']])
-        temp = get_weather['features'][0]['properties']
-        print(str(temp), flush=True)
+        tempWind = get_weather['features'][0]['properties']
 
         with open('file.json', 'w') as f:
             json.dump(features, f)
@@ -34,7 +33,8 @@ def process_result():
         # add whatever keys and values we want to this
         data = {"status": "success",
             "some": num_features,
-            "temp": str(temp)
+            "temp": tempWind['Temp'],
+            "wind": tempWind['Wind']
             } 
         
 
