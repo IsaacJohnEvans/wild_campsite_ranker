@@ -1,8 +1,8 @@
 from flask import Flask, render_template, url_for, jsonify, request, json
-
+import json
 app = Flask(__name__)
 
- 
+
 
 @app.route('/')
 def home():
@@ -15,8 +15,9 @@ def process_result():
         mouse_pos = request.form['mouse_info']  
         zoom_level = request.form['zoom_level']
         features = request.form['features']
+
         with open('file.json', 'w') as f:
-            json.dump(features, f)
+            json.dump(json.loads(features), f)
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
@@ -28,8 +29,9 @@ def process_result():
         data = {"status": "success",
             "some": num_features
             } 
+        
 
-    return data, 200 # 200 tells ajax "succes!"
+    return data, 200 # 200 tells ajax "success!"
    
 def get_num_features(feats):
     dictionary = json.loads(feats)
