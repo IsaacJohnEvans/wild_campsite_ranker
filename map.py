@@ -1,7 +1,9 @@
 from flask import Flask, render_template, url_for, jsonify, request, json
 import json, re
+import math
 app = Flask(__name__)
 from basic_weather_calls import weather_mesh
+from wind_shelter import wind_shelter
 
 
 @app.route('/')
@@ -14,11 +16,14 @@ def process_result():
     if request.method == 'POST':
         mouse_pos = request.form['mouse_info']  
         zoom_level = request.form['zoom_level']
+    
         features = request.form['features']
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
 
         get_weather = weather_mesh([latlon['lat']], [latlon['lng']])
         tempWind = get_weather['features'][0]['properties']
+
+        shelter = wind_shelter(latlon['lat'], latlon['lng'], math.ceil(float(zoom_level)))
 
         with open('file.json', 'w') as f:
             json.dump(features, f)
@@ -34,7 +39,8 @@ def process_result():
         data = {"status": "success",
             "some": num_features,
             "temp": tempWind['Temp'],
-            "wind": tempWind['Wind']
+            "wind": tempWind['Wind'],
+            "wind_shelter": shelter
             } 
         
 
