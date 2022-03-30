@@ -1,9 +1,12 @@
 import requests
 import ast
-from local_config import MAPBOX_TOKEN
+
 from PIL import Image
 import io
 import numpy as np
+
+global MAPBOX_TOKEN 
+MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
 
 
 def getFeatureData(lng, lat, ACCESS_TOKEN):

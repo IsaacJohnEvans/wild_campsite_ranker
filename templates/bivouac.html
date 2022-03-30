@@ -223,6 +223,9 @@
             var num_features = 'Waiting for result...';
             function callback(response) {
                 num_features = response.some;
+                temp = response.temp;
+                wind = response.wind;
+                shelter = response.wind_shelter
                 console.log("Inside ajax: "+ num_features)
                 //use feat_matrix variable here
             }
@@ -243,7 +246,7 @@
 
             new mapboxgl.Popup()
                 .setLngLat(e.lngLat)
-                .setHTML(num_features)
+                .setHTML(num_features + "<br> Temperature: " + temp + "<br> Wind Speed: " + wind + "<br> Shelter Index: " + shelter)
                 .addTo(map);
             
             });

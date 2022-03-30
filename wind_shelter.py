@@ -1,7 +1,6 @@
 import numpy as np
 import math
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB
-from local_config import MAPBOX_TOKEN
 import mercantile
 import basic_weather_calls
 
@@ -66,20 +65,27 @@ def shelter_index(x,mask,radius,cellsize):
     return(res)
 
 
-def wind_shelter(lat,long):
+def wind_shelter(lat,lng,zoom):
     #creating elevation matrix
-    tile_coords = mercantile.tile(lng, lat, zoom=14)
+    MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
+
+    tile_coords = mercantile.tile(lng, lat, zoom)
     elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)    
 
     #finding wind direction at coords
     direction = np.pi/180*basic_weather_calls.wind_direction(lat,lng)
     
+    print(direction)
     
     #initial values
     radius = 20 #arbitary
     tolerance = 30*np.pi/180 #from first paper
     
-    cellsize = 20 #assumed
+    #calculation of cellsize
+    latitude_radians = lat * math.pi / 180
+    
+    cellsize = abs(156543.03 * np.cos(latitude_radians) / (2 ** zoom))
+    
     #creating mask for windward direction
     mask = wind_shelter_prep(radius,direction,tolerance)
     
@@ -90,15 +96,4 @@ def wind_shelter(lat,long):
     
     
     
-    
-    
 #usage   
-    
-    
-lng=-95.9326171875
-lat=41.26129149391987
-
-
-
-shelter = wind_shelter(lat,lng)
-print(shelter)
