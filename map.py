@@ -1,5 +1,5 @@
-from flask import Flask, render_template, url_for, jsonify, request
-import json, re
+from flask import Flask, render_template, url_for, jsonify, request, json
+import re
 import math
 app = Flask(__name__)
 from basic_weather_calls import weather_mesh
@@ -14,11 +14,14 @@ def home():
 @app.route('/get_result', methods=['POST', 'GET'])
 def process_result():
     if request.method == 'POST':
-        mouse_pos = request.form['mouse_info']  
+        mouse_pos = request.form['mouse_info']
         zoom_level = request.form['zoom_level']
-    
+
         features = request.form['features']
-     
+        # print(features)
+        with open('data.geojson', 'w') as f:
+            json.dump(features, f)
+
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
 
         get_weather = weather_mesh([latlon['lat']], [latlon['lng']])
@@ -26,8 +29,7 @@ def process_result():
 
         shelter = wind_shelter(latlon['lat'], latlon['lng'], math.ceil(float(zoom_level)))
 
-        with open('file.json', 'w') as f:
-            json.dump(features, f)
+        
         
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
