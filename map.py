@@ -4,7 +4,7 @@ import math
 app = Flask(__name__)
 from basic_weather_calls import weather_mesh
 from wind_shelter import wind_shelter
-
+from OSGridConverter import latlong2grid
 
 @app.route('/')
 def home():
@@ -23,6 +23,7 @@ def process_result():
 
         get_weather = weather_mesh([latlon['lat']], [latlon['lng']])
         tempWind = get_weather['features'][0]['properties']
+        osGrid = str(latlong2grid(latlon['lat'], latlon['lng']))
 
         shelter = wind_shelter(latlon['lat'], latlon['lng'], math.ceil(float(zoom_level)))
 
@@ -41,7 +42,8 @@ def process_result():
             "some": num_features,
             "temp": tempWind['Temp'],
             "wind": tempWind['Wind'],
-            "wind_shelter": shelter
+            "wind_shelter": shelter,
+            "osGrid": osGrid
             } 
         
 

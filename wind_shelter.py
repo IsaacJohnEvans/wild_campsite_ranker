@@ -70,7 +70,7 @@ def wind_shelter(lat,lng,zoom):
     MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
 
     tile_coords = mercantile.tile(lng, lat, zoom)
-    elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)    
+    elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
 
     #finding wind direction at coords
     direction = np.pi/180*basic_weather_calls.wind_direction(lat,lng)
