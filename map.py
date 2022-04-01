@@ -6,6 +6,37 @@ from basic_weather_calls import weather_mesh
 from wind_shelter import wind_shelter
 from OSGridConverter import latlong2grid
 
+class Optimiser():
+    def __init__(self, latlon, zoom_level, bbox, features):
+        self.preferences = [3,3,3,3,3,3]
+        self.latlon = latlon
+        self.zoom_level = zoom_level
+        self.bbox = self.getBBoxList(bbox)
+        self.features = features
+        self.shelterIndex = self.getShelterIndex()
+        self.OSGridReference = self.getOSGridReference()
+        self.tempWind = self.getTempWind()
+
+    def getBBoxList(self, bbox):
+        bboxLatLon = re.findall('\(.*?\)', bbox)
+        bboxList = []
+        for latLon in bboxLatLon:
+            bboxList.append(latLon.replace('(','').replace(')','').replace(' ','').split(','))
+
+        return bboxList
+
+    def getShelterIndex(self):
+        shelterIndex = wind_shelter(self.latlon['lat'], self.latlon['lng'], math.ceil(float(self.zoom_level)))
+        return shelterIndex
+
+    def getOSGridReference(self):
+        return str(latlong2grid(self.latlon['lat'], self.latlon['lng']))
+
+    def getTempWind(self):
+        get_weather = weather_mesh([self.latlon['lat']], [self.latlon['lng']])
+        tempWind = get_weather['features'][0]['properties']
+        return tempWind
+
 @app.route('/')
 def home():
     return render_template('bivouac.html')
@@ -14,6 +45,7 @@ def home():
 def get_preferences():
     if request.method == 'POST':
         preferences = request.form['preferences']
+        print(preferences, flush=True)
         data = {'status':"success"}
         
     return data, 200
@@ -25,7 +57,7 @@ def process_result():
         mouse_pos = request.form['mouse_info']
         zoom_level = request.form['zoom_level']
         bbox = request.form['bbox']
-        bboxList = getBBoxList(bbox)
+
         features = request.form['features']
         # print(features)
         with open('data.geojson', 'w') as f:
@@ -33,14 +65,9 @@ def process_result():
 
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
 
-        get_weather = weather_mesh([latlon['lat']], [latlon['lng']])
-        tempWind = get_weather['features'][0]['properties']
-        osGrid = str(latlong2grid(latlon['lat'], latlon['lng']))
+        optimiser = Optimiser(latlon, zoom_level, bbox, features)
 
-        shelter = wind_shelter(latlon['lat'], latlon['lng'], math.ceil(float(zoom_level)))
 
-        
-        
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
@@ -51,13 +78,12 @@ def process_result():
         # add whatever keys and values we want to this
         data = {"status": "success",
             "some": num_features,
-            "temp": tempWind['Temp'],
-            "wind": tempWind['Wind'],
-            "wind_shelter": shelter,
-            "osGrid": osGrid
+            "temp": optimiser.tempWind['Temp'],
+            "wind": optimiser.tempWind['Wind'],
+            "wind_shelter": optimiser.shelterIndex,
+            "osGrid": optimiser.OSGridReference
             } 
         
-
     return data, 200 # 200 tells ajax "success!"
    
 def get_num_features(feats):
@@ -65,14 +91,7 @@ def get_num_features(feats):
     num = len(dictionary)
     return num
 
-def getBBoxList(bbox):
 
-    bboxLatLon = re.findall('\(.*?\)', bbox)
-    bboxList = []
-    for latLon in bboxLatLon:
-        bboxList.append(latLon.replace('(','').replace(')','').replace(' ','').split(','))
-
-    return bboxList
 
 
 if __name__ == "__main__":
