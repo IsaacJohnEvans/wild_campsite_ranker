@@ -7,8 +7,8 @@ from wind_shelter import wind_shelter
 from OSGridConverter import latlong2grid
 
 class Optimiser():
-    def __init__(self, latlon, zoom_level, bbox, features):
-        self.preferences = [3,3,3,3,3,3]
+    def __init__(self, latlon, zoom_level, bbox, features, preferences):
+        self.preferences = preferences
         self.latlon = latlon
         self.zoom_level = zoom_level
         self.bbox = self.getBBoxList(bbox)
@@ -16,6 +16,7 @@ class Optimiser():
         self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
         self.tempWind = self.getTempWind()
+        self.printStats()
 
     def getBBoxList(self, bbox):
         bboxLatLon = re.findall('\(.*?\)', bbox)
@@ -37,6 +38,15 @@ class Optimiser():
         tempWind = get_weather['features'][0]['properties']
         return tempWind
 
+    def printStats(self):
+        print("Latlon:",self.latlon, flush=True)
+        print("zoom_level:",self.zoom_level, flush=True)
+        print("bbox:",self.bbox, flush=True)
+        print("shelterIndex:",self.shelterIndex, flush=True)
+        print("OSGridReference:",self.OSGridReference, flush=True)
+        print("preferences:",self.preferences, flush=True)
+
+
 @app.route('/')
 def home():
     return render_template('bivouac.html')
@@ -45,9 +55,13 @@ def home():
 def get_preferences():
     if request.method == 'POST':
         preferences = request.form['preferences']
-        print(preferences, flush=True)
         data = {'status':"success"}
-        
+        try:
+            optimiser.preferences = preferences
+        except NameError:
+            pass
+        #print(preferences, flush=True)
+    
     return data, 200
 
 
@@ -57,6 +71,7 @@ def process_result():
         mouse_pos = request.form['mouse_info']
         zoom_level = request.form['zoom_level']
         bbox = request.form['bbox']
+        preferences = request.form['vals']
 
         features = request.form['features']
         # print(features)
@@ -65,9 +80,8 @@ def process_result():
 
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
 
-        optimiser = Optimiser(latlon, zoom_level, bbox, features)
-
-
+        global optimiser
+        optimiser = Optimiser(latlon, zoom_level, bbox, features, preferences)
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
@@ -92,7 +106,6 @@ def get_num_features(feats):
     return num
 
 
-
-
 if __name__ == "__main__":
+    
     app.run(debug=True)

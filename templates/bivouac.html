@@ -259,7 +259,6 @@
 
         if ( collapsed ) 
                 {
-
                     // Remove the 'collapsed' class from the class list of the element, this sets it back to the expanded state.
                     classes.splice(classes.indexOf('collapsed'), 1);
 
@@ -268,7 +267,6 @@
                         padding: padding,
                         duration: 1000 // In ms, CSS transition duration property for the sidebar matches this value
                     });
-
                 } 
 
                 else 
@@ -395,7 +393,7 @@
                 [e.point.x + radius, e.point.y + radius]
             ];
             var bboxLatLng = String([map.unproject(bbox[0]), map.unproject(bbox[1])]);
-            console.log(bboxLatLng);
+        
             
             // Find features in the bounding box.
             // const features = map.queryRenderedFeatures(bbox, {
@@ -434,6 +432,12 @@
             var mouse_info = $("#mouse_info").html();
             var zoom_level = map.getZoom();
             var feats = JSON.stringify(displayFeatures);
+            var sliderValues = [];
+            var sliders = document.getElementsByClassName("slider");
+            for(var i=0; i<(sliders.length);i++) {
+                sliderValues.push(sliders[i].value);
+            };
+            var vals = JSON.stringify(sliderValues);
 
             var num_features = 'Waiting for result...';
             function callback(response) {
@@ -455,6 +459,7 @@
                         'zoom_level': zoom_level,
                         'mouse_info': mouse_info,
                         'bbox' : bboxLatLng,
+                        'vals':vals
                     },
                     url: '/get_result',
                     success: callback, 
