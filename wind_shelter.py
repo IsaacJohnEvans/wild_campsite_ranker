@@ -78,13 +78,17 @@ def wind_shelter(lat,lng,zoom):
     print(direction)
     
     #initial values
-    radius = 20 #arbitary
+    
     tolerance = 30*np.pi/180 #from first paper
     
     #calculation of cellsize
     latitude_radians = lat * math.pi / 180
     
     cellsize = abs(156543.03 * np.cos(latitude_radians) / (2 ** zoom))
+    
+    
+    #using a max dist of 100m (from paper), calculating radius by zoom
+    radius = math.ceil(100/cellsize)
     
     #creating mask for windward direction
     mask = wind_shelter_prep(radius,direction,tolerance)
