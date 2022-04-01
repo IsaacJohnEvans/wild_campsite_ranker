@@ -1,7 +1,6 @@
 import numpy as np
 import math
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB
-from local_config import MAPBOX_TOKEN
 import mercantile
 import basic_weather_calls
 
@@ -66,41 +65,12 @@ def shelter_index(x,mask,radius,cellsize):
     return(res)
 
 
-def shelter_index_non_centre(x,mask,radius,cellsize,coord_x,coord_y):
-    
-    
-    x = x[coord_x-radius:coord_x+1+radius,coord_y-radius:coord_y+1+radius]
-
-    ctr_c,coord_c = centervalue(mask)
-    
-    for i in range(x.shape[0]):
-        for j in range(x.shape[1]):
-            if mask[i,j]==1:
-               
-                x[i,j] = np.nan
-    
-    res = np.nan
-    x_list =[]
-    
-    ctr = x[coord_c,coord_c]
-    for i in range(x.shape[0]):
-        for j in range(x.shape[1]):
-            if not np.isnan(x[i,j]):
-                point_coords = (i,j)
-                if point_coords != (coord_c,coord_c):
-                    distance = np.sqrt((coord_c-point_coords[0])**2+(coord_c-point_coords[1])**2) * cellsize
-                    x_list.append(np.arctan((x[point_coords[0],point_coords[1]]-ctr)/distance))
-           
-    res = max(x_list)
-    
-    
-    return(res)
-
-
-def wind_shelter(lat,long,zoom):
+def wind_shelter(lat,lng,zoom):
     #creating elevation matrix
+    MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
+
     tile_coords = mercantile.tile(lng, lat, zoom)
-    elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)    
+    elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
 
     #finding wind direction at coords
     direction = np.pi/180*basic_weather_calls.wind_direction(lat,lng)
@@ -130,14 +100,4 @@ def wind_shelter(lat,long,zoom):
     
     
     
-    
-    
 #usage   
-    
-    
-lng=45.558726
-lat=6.715438
-zoom = 14
-
-shelter = wind_shelter(lat,lng,zoom)
-print(shelter)

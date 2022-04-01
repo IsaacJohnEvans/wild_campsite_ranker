@@ -94,45 +94,46 @@ def add_feature(x, y, z, polygon, values, dist, effect, struct, sigma):
     values = np.repeat(values* effect, dist)
     polygon = poly_grid_refs[0][0]
     poly_bool = polygon_to_points(x, y, polygon)
+    min_points, max_points = [], []
     for i in range(len(poly_grid_refs)):
+        min_point, max_point = get_min_max(polygon, x_cen, y_cen, values)
+        min_points.append(min_point)
+        max_points.append(max_point)
         polygon = poly_grid_refs[i][0]
         poly_bool = np.logical_or(poly_bool,polygon_to_points(x, y, polygon))
     z += dilate_poly(poly_bool, z, struct, values, sigma)
-    return x, y, z
+    return x, y, z, min_points, max_points
 #%%
 with open('bristol_test_data/bristol_pubs_multipolygons.geojson', "r") as read_file:
     pub_poly_dict = json.load(read_file)
 poly_coords, poly_grid_refs = get_poly_coords(pub_poly_dict)
-print(poly_grid_refs[0][0])
+
 #%%
-for i in pub_poly_dict['features']:
-    print(i['properties']['name'])
+with open("file.json", "r") as content:
+    dict = json.loads(json.loads(content.read()))
+
 #%%
 polygon = poly_grid_refs[0][0]
 plt.figure(1)
 plt.plot(polygon[:,0], polygon[:,1], '-o')
 
-n_points = 300
-dist = 5
+dist = 10
+n_points = 500
 effect = 2
-values = np.array([0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0])
+values = np.array([0, 0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0])
 
 sigma = 1
 struct = make_dilate_struct()
 
 x_cen, y_cen = get_poly_centre(polygon)
-min_point, max_point = get_min_max(polygon, x_cen, y_cen, values)
-min_point = -10000
-max_point = 10000
+min_point = -15000
+max_point = 15000
 x, y, z = make_grid(x_cen, y_cen, n_points, min_point, max_point)
-x, y, z = add_feature(x, y, z, poly_grid_refs, values, dist, effect, struct, sigma)
+x, y, z, min_points, max_points = add_feature(x, y, z, poly_grid_refs, values, dist, effect, struct, sigma)
 plot_poly(x, y, z)
-#%%
-print(poly_grid_refs[0][0])
 
 #%%
-def set_grid_size(grid_refs):
-    min_point = np.min(grid_refs)
-    max_point = np.max(grid_refs)
-    return min_point, max_point
-set_grid_size(poly_grid_refs)
+min(min_points), max(max_points)
+
+#%%
+print(z[z==np.max(z)].shape,np.unravel_index(np.argmax([z==np.max(z)], keepdims=True), z.shape))
