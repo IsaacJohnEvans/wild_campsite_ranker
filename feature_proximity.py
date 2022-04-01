@@ -11,7 +11,7 @@ import skimage
 from shapely import wkt
 
 #%%
-def get_poly_coords(poly_dict):
+def get_test_poly_coords(poly_dict):
     poly_coords = []
     poly_grid_refs = []
     for i in range(len(poly_dict['features'])):
@@ -106,11 +106,43 @@ def add_feature(x, y, z, polygon, values, dist, effect, struct, sigma):
 #%%
 with open('bristol_test_data/bristol_pubs_multipolygons.geojson', "r") as read_file:
     pub_poly_dict = json.load(read_file)
-poly_coords, poly_grid_refs = get_poly_coords(pub_poly_dict)
+poly_coords, poly_grid_refs = get_test_poly_coords(pub_poly_dict)
+#%%
+def get_poly_coords(file_name):
+    with open(file_name, "r") as read_file:
+        data_list = json.load(read_file)
+    coords = {}
+    grid_refs = {}
+    count = 0
+    data_types = ['Point', 'LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']
+    for i in range(len(data_list)):
+        if 'ele' in data_list[i]['properties']:
+            coords[data_list[i]['properties']['ele']] = {}
+            coords[data_list[i]['properties']['ele']][data_list[i]['geometry']['type']] = data_list[i]['geometry']['coordinates']
+        elif 'FID' in data_list[i]['properties']:
+            coords[data_list[i]['properties']['FID']] = {}
+            coords[data_list[i]['properties']['FID']][data_list[i]['geometry']['type']] = data_list[i]['geometry']['coordinates']
+        elif 'class' in data_list[i]['properties']:
+            if data_list[i]['properties']['class'] not in coords.keys():
+                coords[data_list[i]['properties']['class']] = {}
+                if data_list[i]['geometry']['type'] not in coords[data_list[i]['properties']['class']].keys():
+                    coords[data_list[i]['properties']['class']][data_list[i]['geometry']['type']] = []
+                coords[data_list[i]['properties']['class']][data_list[i]['geometry']['type']] += data_list[i]['geometry']['coordinates']
+    return data_list, coords, grid_refs
+
+data_list, coords, grid_refs = get_poly_coords('data.geojson')
+
+count = 0 
+for i in coords.keys():
+    for j in coords[i]:
+        count += 1
+        print(i, j)
+print(count, coords[20])
+#coords, grid_refs
 
 #%%
-with open("file.json", "r") as content:
-    dict = json.loads(json.loads(content.read()))
+poly_coords, poly_grid_refs = get_poly_coords(pub_poly_dict)
+
 
 #%%
 polygon = poly_grid_refs[0][0]
@@ -137,3 +169,5 @@ min(min_points), max(max_points)
 
 #%%
 print(z[z==np.max(z)].shape,np.unravel_index(np.argmax([z==np.max(z)], keepdims=True), z.shape))
+
+#%%
