@@ -16,7 +16,9 @@ def process_result():
     if request.method == 'POST':
         mouse_pos = request.form['mouse_info']
         zoom_level = request.form['zoom_level']
-
+        bbox = request.form['bbox']
+        bboxList = getBBoxList(bbox)
+        print(bboxList, flush= True)
         features = request.form['features']
         # print(features)
         with open('data.geojson', 'w') as f:
@@ -55,6 +57,16 @@ def get_num_features(feats):
     dictionary = json.loads(feats)
     num = len(dictionary)
     return num
+
+def getBBoxList(bbox):
+
+    bboxLatLon = re.findall('\(.*?\)', bbox)
+    bboxList = []
+    for latLon in bboxLatLon:
+        bboxList.append(latLon.replace('(','').replace(')','').replace(' ','').split(','))
+
+    return bboxList
+
 
 if __name__ == "__main__":
     app.run(debug=True)

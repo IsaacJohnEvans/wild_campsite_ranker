@@ -181,6 +181,8 @@
                 [e.point.x - radius, e.point.y - radius],
                 [e.point.x + radius, e.point.y + radius]
             ];
+            var bboxLatLng = String([map.unproject(bbox[0]), map.unproject(bbox[1])]);
+            console.log(bboxLatLng);
             
             // Find features in the bounding box.
             // const features = map.queryRenderedFeatures(bbox, {
@@ -239,6 +241,7 @@
                         'features': feats,
                         'zoom_level': zoom_level,
                         'mouse_info': mouse_info,
+                        'bbox' : bboxLatLng,
                     },
                     url: '/get_result',
                     success: callback, 
