@@ -127,17 +127,18 @@ def get_poly_coords(file_name):
                 coords[data_list[i]['properties']['class']] = {}
                 if data_list[i]['geometry']['type'] not in coords[data_list[i]['properties']['class']].keys():
                     coords[data_list[i]['properties']['class']][data_list[i]['geometry']['type']] = []
-                coords[data_list[i]['properties']['class']][data_list[i]['geometry']['type']] += data_list[i]['geometry']['coordinates']
+                coords[data_list[i]['properties']['class']][data_list[i]['geometry']['type']].append(data_list[i]['geometry']['coordinates'])
     return data_list, coords, grid_refs
 
 data_list, coords, grid_refs = get_poly_coords('data.geojson')
 
-count = 0 
+count = 0
 for i in coords.keys():
-    for j in coords[i]:
-        count += 1
-        print(i, j)
-print(count, coords[20])
+    for j in coords[i].keys():
+        for k in coords[i][j]:
+            count += 1
+            print(i, j, k)
+print(count, len(data_list))
 #coords, grid_refs
 
 #%%
