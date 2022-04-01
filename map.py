@@ -10,6 +10,14 @@ from OSGridConverter import latlong2grid
 def home():
     return render_template('bivouac.html')
 
+@app.route('/set_preferences', methods=['POST', 'GET'])
+def get_preferences():
+    if request.method == 'POST':
+        preferences = request.form['preferences']
+        data = {'status':"success"}
+        
+    return data, 200
+
 
 @app.route('/get_result', methods=['POST', 'GET'])
 def process_result():
@@ -18,7 +26,6 @@ def process_result():
         zoom_level = request.form['zoom_level']
         bbox = request.form['bbox']
         bboxList = getBBoxList(bbox)
-        print(bboxList, flush= True)
         features = request.form['features']
         # print(features)
         with open('data.geojson', 'w') as f:
