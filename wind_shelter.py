@@ -70,7 +70,7 @@ def wind_shelter(lat,lng,zoom):
     MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
 
     tile_coords = mercantile.tile(lng, lat, zoom)
-    elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)    
+    elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
 
     #finding wind direction at coords
     direction = np.pi/180*basic_weather_calls.wind_direction(lat,lng)
@@ -78,13 +78,17 @@ def wind_shelter(lat,lng,zoom):
     print(direction)
     
     #initial values
-    radius = 20 #arbitary
+    
     tolerance = 30*np.pi/180 #from first paper
     
     #calculation of cellsize
     latitude_radians = lat * math.pi / 180
     
     cellsize = abs(156543.03 * np.cos(latitude_radians) / (2 ** zoom))
+    
+    
+    #using a max dist of 100m (from paper), calculating radius by zoom
+    radius = math.ceil(100/cellsize)
     
     #creating mask for windward direction
     mask = wind_shelter_prep(radius,direction,tolerance)
