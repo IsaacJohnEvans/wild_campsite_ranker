@@ -57,6 +57,7 @@ class map_layer(map_feature):
         self.x = x
         self.y = y
         self.z = z
+        self.points = points = np.concatenate((np.reshape(self.x, (self.x.size, 1)), np.reshape(self.y, (self.y.size, 1))), axis = 1)
         self.layer_name = name
         self.sigma = 1
         self.effect = effect
@@ -85,9 +86,6 @@ class map_layer(map_feature):
                                                 data_list[i]['geometry']['type'], 
                                                 data_list[i]['geometry']['coordinates']))
     
-    def update_poly_bool(self, poly_bool):
-        self.poly_bool = np.logical_or(self.poly_bool, poly_bool)
-    
     def add_feature_to_layer(self):
         for i in self.features:
             self.bool_feature(self, self.features[1])
@@ -102,7 +100,6 @@ class map_layer(map_feature):
             elif feat.shape_type == 'MultiLineString':
                 pass
             elif feat.shape_type == 'Polygon':
-                print(feat.shape)
                 self.polygon_to_points(feat.shape[0])
             '''
             elif feat.shape_type == 'MultiPolygon':
@@ -111,10 +108,8 @@ class map_layer(map_feature):
             '''
 
     def polygon_to_points(self, polygon):
-        points = np.concatenate((np.reshape(self.x, (self.x.size, 1)), np.reshape(self.y, (self.y.size, 1))), axis = 1)
         path = mpltPath.Path(polygon)
-        poly_bool = np.reshape(np.array(path.contains_points(points)), self.x.shape)
-        self.update_poly_bool(poly_bool)
+        self.poly_bool = np.logical_or(self.poly_bool, np.reshape(np.array(path.contains_points(self.points)), self.poly_bool.shape))
         
     def make_dilate_struct(self):
         struct = np.ones((3, 3))
@@ -130,14 +125,13 @@ class map_layer(map_feature):
         layer2 = self.dilate_layer(self.poly_bool, struct, self.values[0])
         for val in self.values[1:]:
             layer2 = self.dilate_layer(layer2, struct, val)
-        #self.z = skimage.filters.gaussian(self.z, self.sigma)
+        self.z = skimage.filters.gaussian(self.z, self.sigma)
     
     def draw_heatmap(self):
         struct = self.make_dilate_struct()
         self.dilate_poly(struct)
 
     def plot_heatmap(self):
-        fig = plt.figure(1)
         ax = plt.axes(projection ='3d')
         ax.plot_surface(self.x, self.y, self.z, cmap ='inferno')
         plt.show()
