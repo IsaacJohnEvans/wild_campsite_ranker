@@ -1,5 +1,6 @@
 #coding : utf8
 #%%
+from hmac import new
 import numpy as np
 import pandas as pd
 from matplotlib.patches import Polygon
@@ -57,7 +58,7 @@ class map_layer(map_feature):
         self.x = x
         self.y = y
         self.z = z
-        self.points = points = np.concatenate((np.reshape(self.x, (self.x.size, 1)), np.reshape(self.y, (self.y.size, 1))), axis = 1)
+        self.points = np.concatenate((np.reshape(self.x, (self.x.size, 1)), np.reshape(self.y, (self.y.size, 1))), axis = 1)
         self.layer_name = name
         self.sigma = 1
         self.effect = effect
@@ -101,15 +102,15 @@ class map_layer(map_feature):
                 pass
             elif feat.shape_type == 'Polygon':
                 self.polygon_to_points(feat.shape[0])
-            '''
-            elif feat.shape_type == 'MultiPolygon':
-                for poly in feat.shape:
-                    self.polygon_to_points(poly[0])
-            '''
+            if True:                
+                if feat.shape_type == 'MultiPolygon':
+                    for poly in feat.shape:
+                        self.polygon_to_points(poly[0])            
 
     def polygon_to_points(self, polygon):
         path = mpltPath.Path(polygon)
-        self.poly_bool = np.logical_or(self.poly_bool, np.reshape(np.array(path.contains_points(self.points)), self.poly_bool.shape))
+        new_poly_bool = np.reshape(np.array(path.contains_points(self.points)), self.poly_bool.shape)
+        self.poly_bool = np.logical_or(self.poly_bool, new_poly_bool)
         
     def make_dilate_struct(self):
         struct = np.ones((3, 3))

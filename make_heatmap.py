@@ -6,11 +6,11 @@ from feature_class import map_feature, map_layer, heatmap_layer
 
 
 distance = 2
-n_points = 100
+n_points = 1000
 effect = 1
-x_cen, y_cen = 362000, 326000
-min_point = -1000
-max_point = 1000
+x_cen, y_cen = 360000, 325000
+min_point = -15000
+max_point = 15000
 values = np.array([0, 0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0])
 
 heatmap = heatmap_layer()
