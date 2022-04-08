@@ -2,17 +2,28 @@ import numpy as np
 import mercantile
 import matplotlib.pyplot as plt
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB
-from local_config import MAPBOX_TOKEN
+#from local_config import MAPBOX_TOKEN
 import math
 
-tile_coords = mercantile.tile(lng=-95.9326171875, lat=41.26129149391987, zoom=12)
+MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
+
+'''tile_coords = mercantile.tile(lng=-95.9326171875, lat=41.26129149391987, zoom=12)
 print(tile_coords)
 elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
 padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
 print(padded_mat)
 # Get latitude and longitude at upper-left of tile
 upper_left = mercantile.ul(tile_coords)
-print("upperleft:", upper_left)
+print("upperleft:", upper_left)'''
+
+def get_tile(lat, lng, zoom_level):
+    tile_coords = mercantile.tile(lng=lng, lat=lat, zoom=zoom_level)
+    elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
+    padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
+    print(padded_mat, flush=True)
+    # Get latitude and longitude at upper-left of tile
+    upper_left = mercantile.ul(tile_coords)
+    djikstra(padded_mat, tile_coords, elevation_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=zoom_level, latitude=lat, elevation_multiplier=10, show_plot=True)
 
 
 def coord_to_lng_lat(ul, coord, start_coord, zoomlevel):
@@ -38,7 +49,7 @@ def coord_to_lng_lat(ul, coord, start_coord, zoomlevel):
     return [lonO, latO]
 
 
-def djikstra(matrix, startNode, targetNode, zoomlevel, latitude, elevation_multiplier=2, show_plot=True):
+def djikstra(matrix, tile_coords, elevation_mat, startNode, targetNode, zoomlevel, latitude, elevation_multiplier=2, show_plot=True):
     # resolution = 156543.03 meters/pixel * cos(latitude) / (2 ^ zoomlevel)
     print("latitiude:", latitude)
     latitude_radians = latitude * math.pi / 180
@@ -112,4 +123,4 @@ def djikstra(matrix, startNode, targetNode, zoomlevel, latitude, elevation_multi
     return lnglatPath
 
 
-djikstra(padded_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=12, latitude=41.26129149391987, elevation_multiplier=10, show_plot=False)
+#djikstra(padded_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=12, latitude=41.26129149391987, elevation_multiplier=10, show_plot=True)
