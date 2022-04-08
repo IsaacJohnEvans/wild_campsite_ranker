@@ -106,6 +106,7 @@ def shift_one_dim(z, poly_bool, axis, shift, value):
     z[shift_bool *zero_bool] = value
     return z
 
+
 #%%
 api = overpy.Overpass()
 Bristol_feat = api.query("[out:json];nwr(51.44,-2.7,51.46,-2.6);out;")
