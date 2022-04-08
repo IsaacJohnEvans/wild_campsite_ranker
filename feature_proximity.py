@@ -9,7 +9,7 @@ from OSGridConverter import latlong2grid
 from scipy import ndimage
 import skimage
 from shapely import wkt
-
+#from feature_class import map_feature
 #%%
 def get_test_poly_coords(poly_dict):
     poly_coords = []
@@ -93,7 +93,7 @@ def plot_poly(x, y, z):
 def add_feature(x, y, z, polygon, values, dist, effect, struct, sigma):
     values = np.repeat(values* effect, dist)
     polygon = poly_grid_refs[0][0]
-    poly_bool = polygon_to_points(x, y, polygon)
+    poly_bool = np.zeros(z.shape).astype(bool)
     min_points, max_points = [], []
     for i in range(len(poly_grid_refs)):
         min_point, max_point = get_min_max(polygon, x_cen, y_cen, values)
@@ -142,7 +142,7 @@ print(count, len(data_list))
 #coords, grid_refs
 
 #%%
-poly_coords, poly_grid_refs = get_poly_coords(pub_poly_dict)
+poly_coords, poly_grid_refs = get_test_poly_coords(pub_poly_dict)
 
 
 #%%
@@ -172,3 +172,36 @@ min(min_points), max(max_points)
 print(z[z==np.max(z)].shape,np.unravel_index(np.argmax([z==np.max(z)], keepdims=True), z.shape))
 
 #%%
+file_name = 'data.geojson'
+with open(file_name, "r") as read_file:
+    data_list = json.load(read_file)
+coords = {}
+grid_refs = {}
+count = 0
+map_features = []
+'''
+data_types = ['Point', 'LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']
+for i in range(len(data_list)):
+    
+    if 'ele' in data_list[i]['properties']:
+        map_features.append(map_feature(i, data_list[i]['properties']['ele'],
+                                        data_list[i]['geometry']['type'], 
+                                        data_list[i]['geometry']['coordinates']))
+    elif 'FID' in data_list[i]['properties']:
+        map_features.append(map_feature(i, data_list[i]['properties']['FID'],
+                                        data_list[i]['geometry']['type'], 
+                                        data_list[i]['geometry']['coordinates']))
+    elif 'class' in data_list[i]['properties']:
+        map_features.append(map_feature(i, data_list[i]['properties']['class'],
+                                        data_list[i]['geometry']['type'], 
+                                        data_list[i]['geometry']['coordinates']))
+    elif 'water' in data_list[i]['layer']['id']:
+        map_features.append(map_feature(i, 'water',
+                                        data_list[i]['geometry']['type'], 
+                                        data_list[i]['geometry']['coordinates']))
+    else:
+        print(data_list[i])
+
+for i in map_features:
+    print(i.shape_type)
+'''
