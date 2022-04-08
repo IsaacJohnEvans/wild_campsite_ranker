@@ -173,7 +173,3 @@ def get_min_path(start_lng_lat, end_lng_lat, zoom):
     plt.plot(xs, ys, 'r-')
     plt.show()
 
-
-if __name__ == "__main__":
-    get_min_path(start_lng_lat=(-1.3089807491057464, 51.061299909570835),
-                 end_lng_lat=(-1.3255656630335202, 51.0646481464813), zoom=15)
