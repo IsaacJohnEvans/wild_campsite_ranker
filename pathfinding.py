@@ -165,11 +165,6 @@ def get_min_path(start_lng_lat, end_lng_lat, zoom):
     upper_left = mercantile.ul(tile_coords)
     # Gets path as series of longitude and latitude coordinates
     lnglatPath = [coord_to_lng_lat(upper_left, coord, zoom) for coord in node_path]
-    print(lnglatPath)
 
-    plt.imshow(padded_mat, interpolation='nearest')
-    xs = [x[0] for x in node_path]
-    ys = [x[1] for x in node_path]
-    plt.plot(xs, ys, 'r-')
-    plt.show()
+    return lnglatPath
 
