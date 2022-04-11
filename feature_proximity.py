@@ -9,6 +9,7 @@ from OSGridConverter import latlong2grid
 from scipy import ndimage
 import skimage
 from shapely import wkt
+from mpl_toolkits.mplot3d import Axes3D
 #from feature_class import map_feature
 #%%
 def get_test_poly_coords(poly_dict):
