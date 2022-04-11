@@ -12,6 +12,7 @@ from OSGridConverter import latlong2grid
 from scipy import ndimage
 import skimage
 from shapely import wkt
+from mpl_toolkits.mplot3d import Axes3D
 
 class map_feature:
     def __init__(self, feature_id, feature_type, shape_type, latlong):
