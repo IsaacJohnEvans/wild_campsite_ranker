@@ -171,7 +171,7 @@
             appearance: none;
             width: 25px; /* Set a specific slider handle width */
             height: 25px; /* Slider handle height */
-            background: #04AA6D; /* Green background */
+            background: #000000; /* Green background */
             cursor: pointer; /* Cursor on hover */
             }
 
@@ -248,7 +248,9 @@
 
     }
 
-
+    function saveLocation() {
+        console.log("test");
+    };  
 
 
     function toggleSidebar(id) {
@@ -361,7 +363,7 @@
         // // when it leaves the states layer.
         // map.on('mouseleave', 'Legality', () => {
         //     map.getCanvas().style.cursor = '';
-        // });
+        // }); 
 
 
         map.on('click', 'National Parks', (e) => {
@@ -464,21 +466,26 @@
                     url: '/get_result',
                     success: callback, 
                 });
-
+            
+            
 
             new mapboxgl.Popup()
                 .setLngLat(e.lngLat)
-                .setHTML(num_features + "<br> Temperature: " + temp + "<br> Wind Speed: " + wind + "<br> Shelter Index: " + shelter + "<br> Grid Ref: " + gridref)
+                .setHTML(num_features + "<br> Temperature: " + temp + "<br> Wind Speed: " + 
+                wind + "<br> Shelter Index: " + shelter + "<br> Grid Ref: " + gridref + 
+                "<button class='goToButton' onclick='saveLocation()'>Set Destination</button>")
                 .addTo(map);
             
             });
+
             
             // new mapboxgl.Popup()
             //     .setLngLat(e.lngLat)
             //     .setHTML(camp_landuse_features.class + " (" + camp_landuse_features.type  + ")")
             //     .addTo(map);
                     
-    });
+    });     
+            
 
         map.on('idle', () => {
             // If these two layers were not added to the map, abort

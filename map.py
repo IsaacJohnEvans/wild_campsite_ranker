@@ -5,18 +5,21 @@ app = Flask(__name__)
 from basic_weather_calls import weather_mesh
 from wind_shelter import wind_shelter
 from OSGridConverter import latlong2grid
+from pathfinding import get_tile
 
 class Optimiser():
     def __init__(self, latlon, zoom_level, bbox, features, preferences):
-        self.preferences = preferences
+        self.preferences = self.updatePreferences(preferences)
         self.latlon = latlon
-        self.zoom_level = zoom_level
+        self.zoom_level = float(zoom_level)
         self.bbox = self.getBBoxList(bbox)
         self.features = features
         self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
         self.tempWind = self.getTempWind()
         self.printStats()
+        self.getFeatures()
+        get_tile(self.latlon['lat'], self.latlon['lng'], math.floor(self.zoom_level))
 
     def getBBoxList(self, bbox):
         bboxLatLon = re.findall('\(.*?\)', bbox)
@@ -25,6 +28,10 @@ class Optimiser():
             bboxList.append(latLon.replace('(','').replace(')','').replace(' ','').split(','))
 
         return bboxList
+
+    def getFeatures(self):
+        pass
+        #print(self.features)
 
     def getShelterIndex(self):
         shelterIndex = wind_shelter(self.latlon['lat'], self.latlon['lng'], math.ceil(float(self.zoom_level)))
@@ -37,6 +44,13 @@ class Optimiser():
         get_weather = weather_mesh([self.latlon['lat']], [self.latlon['lng']])
         tempWind = get_weather['features'][0]['properties']
         return tempWind
+
+    def updatePreferences(self, newPreferences):
+        preferences = []
+        for i in newPreferences:
+            if i.isdigit():
+                preferences.append(i)
+        return preferences
 
     def printStats(self):
         print("Latlon:",self.latlon, flush=True)
@@ -57,7 +71,8 @@ def get_preferences():
         preferences = request.form['preferences']
         data = {'status':"success"}
         try:
-            optimiser.preferences = preferences
+            optimiser.preferences = optimiser.updatePreferences(preferences)
+            
         except NameError:
             pass
         #print(preferences, flush=True)
@@ -72,7 +87,6 @@ def process_result():
         zoom_level = request.form['zoom_level']
         bbox = request.form['bbox']
         preferences = request.form['vals']
-
         features = request.form['features']
         # print(features)
         with open('data.geojson', 'w') as f:
@@ -81,11 +95,10 @@ def process_result():
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
 
         global optimiser
-        optimiser = Optimiser(latlon, zoom_level, bbox, features, preferences)
+        optimiser = Optimiser(latlon, zoom_level, bbox, json.loads(features), preferences)
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
-
         # Define loads of interesting things here, ie list of coords to plot that is a path
         num_features = get_num_features(features)
 

@@ -2,9 +2,28 @@ import numpy as np
 import mercantile
 import matplotlib.pyplot as plt
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB
-from local_config import MAPBOX_TOKEN
+#from local_config import MAPBOX_TOKEN
 import math
 
+MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
+
+'''tile_coords = mercantile.tile(lng=-95.9326171875, lat=41.26129149391987, zoom=12)
+print(tile_coords)
+elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
+padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
+print(padded_mat)
+# Get latitude and longitude at upper-left of tile
+upper_left = mercantile.ul(tile_coords)
+print("upperleft:", upper_left)'''
+
+def get_tile(lat, lng, zoom_level):
+    tile_coords = mercantile.tile(lng=lng, lat=lat, zoom=zoom_level)
+    elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
+    padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
+    print(padded_mat, flush=True)
+    # Get latitude and longitude at upper-left of tile
+    upper_left = mercantile.ul(tile_coords)
+    djikstra(padded_mat, tile_coords, elevation_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=zoom_level, latitude=lat, elevation_multiplier=10, show_plot=True)
 
 def construct_lng_lat_matrix(ul, zoomlevel):
 
@@ -165,15 +184,6 @@ def get_min_path(start_lng_lat, end_lng_lat, zoom):
     upper_left = mercantile.ul(tile_coords)
     # Gets path as series of longitude and latitude coordinates
     lnglatPath = [coord_to_lng_lat(upper_left, coord, zoom) for coord in node_path]
-    print(lnglatPath)
 
-    plt.imshow(padded_mat, interpolation='nearest')
-    xs = [x[0] for x in node_path]
-    ys = [x[1] for x in node_path]
-    plt.plot(xs, ys, 'r-')
-    plt.show()
+    return lnglatPath
 
-
-if __name__ == "__main__":
-    get_min_path(start_lng_lat=(-1.3089807491057464, 51.061299909570835),
-                 end_lng_lat=(-1.3255656630335202, 51.0646481464813), zoom=15)
