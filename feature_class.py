@@ -1,6 +1,5 @@
 #coding : utf8
 #%%
-from hmac import new
 import numpy as np
 import pandas as pd
 from matplotlib.patches import Polygon
@@ -145,3 +144,7 @@ class heatmap_layer():
         y = np.outer(np.linspace(min_point + y_cen, y_cen + max_point, n_points), np.ones(n_points)).T
         z = np.zeros(x.shape)
         self.grid = [x, y, z]
+    def plot_heatmap(self):
+        ax = plt.axes(projection ='3d')
+        ax.plot_surface(self.x, self.y, self.z, cmap ='inferno')
+        plt.show()

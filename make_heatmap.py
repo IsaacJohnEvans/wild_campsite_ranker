@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from feature_class import map_feature, map_layer, heatmap_layer
 
 
-distance = 2
+distance = 20
 n_points = 1000
 effect = 1
 x_cen, y_cen = 360000, 325000
