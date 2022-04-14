@@ -138,11 +138,16 @@ class map_layer(map_feature):
         plt.show()
 
 class heatmap_layer():
-    def __init__(self):
-        self.grid = []
-    def make_grid(self, x_cen, y_cen, n_points, min_point, max_point):
-        x = np.outer(np.linspace(min_point + x_cen, x_cen + max_point, n_points), np.ones(n_points))
-        y = np.outer(np.linspace(min_point + y_cen, y_cen + max_point, n_points), np.ones(n_points)).T
+    def make_grid(self, latlon, bbox, n_points):
+        centre_gr = latlong2grid(latlon[0], latlon[1])
+        centre = [centre_gr.E, centre_gr.N]
+        NW_gr = latlong2grid(bbox[0][0],bbox[0][1])
+        NW = [NW_gr.E, NW_gr.N]
+        SE_gr = latlong2grid(bbox[1][0],bbox[1][1])
+        SE = [SE_gr.E, SE_gr.N]
+
+        x = np.outer(np.linspace(SE[0], NW[0], n_points), np.ones(n_points))
+        y = np.outer(np.linspace(SE[1], NW[1], n_points), np.ones(n_points)).T
         z = np.zeros(x.shape)
         self.grid = [x, y, z]
     def plot_heatmap(self):

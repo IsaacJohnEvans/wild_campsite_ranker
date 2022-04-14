@@ -156,7 +156,7 @@ n_points = 500
 effect = 2
 values = np.array([0, 0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0])
 
-sigma = 1
+sigma = 10
 struct = make_dilate_struct()
 
 x_cen, y_cen = get_poly_centre(polygon)
