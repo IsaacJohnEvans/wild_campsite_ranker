@@ -21,7 +21,7 @@ class map_feature:
         self.latlong = latlong
         self.shape = []
         if self.shape_type == 'Point':
-            grid_ref = latlong2grid(i[1], i[0])
+            grid_ref = latlong2grid(self.latlong[1], self.latlong[0])
             self.shape.append([grid_ref.E, grid_ref.N])
         elif self.shape_type in ['MultiPoint', 'LineString']:
             for i in self.latlong:
