@@ -5,7 +5,11 @@ app = Flask(__name__)
 from basic_weather_calls import weather_mesh
 from wind_shelter import wind_shelter
 from OSGridConverter import latlong2grid
-from pathfinding import get_tile, get_min_path
+from pathfinding import get_tile
+from feature_class import map_feature, map_layer, heatmap_layer
+import mercantile
+from elevation import getElevationMatrix, rasterToImage, getRasterRGB ,getSlopeMatrix
+from pathfinding import construct_lng_lat_matrix
 
 class Optimiser():
     def __init__(self, latlon, zoom_level, bbox, features, preferences):
@@ -125,9 +129,25 @@ def process_result():
             "temp": optimiser.tempWind['Temp'],
             "wind": optimiser.tempWind['Wind'],
             "wind_shelter": optimiser.shelterIndex,
-            "osGrid": optimiser.OSGridReference,
-            
+            "osGrid": optimiser.OSGridReference
             }
+
+        # creating elevation matrix (needs to be using the bbox and latlon centre)
+        MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
+
+
+        tile_coords = mercantile.tile(bbox[0][0], bbox[0][1], zoom_level)
+        upper_left = mercantile.ul(tile_coords)
+        lnglat_mat = construct_lng_lat_matrix(upper_left, zoom_level)
+
+        elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
+        slope_mat = getSlopeMatrix(elevation_mat)
+
+
+        # create heatmap layer
+        #heatmap = heatmap_layer()
+        #heatmap.make_grid(latlon, bbox, n_points)
+
         
     return data, 200 # 200 tells ajax "success!"
    

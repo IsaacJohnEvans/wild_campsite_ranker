@@ -1,6 +1,5 @@
 #coding : utf8
 #%%
-from hmac import new
 import numpy as np
 import pandas as pd
 from matplotlib.patches import Polygon
@@ -12,6 +11,7 @@ from OSGridConverter import latlong2grid
 from scipy import ndimage
 import skimage
 from shapely import wkt
+from mpl_toolkits.mplot3d import Axes3D
 
 class map_feature:
     def __init__(self, feature_id, feature_type, shape_type, latlong):
@@ -21,7 +21,7 @@ class map_feature:
         self.latlong = latlong
         self.shape = []
         if self.shape_type == 'Point':
-            grid_ref = latlong2grid(i[1], i[0])
+            grid_ref = latlong2grid(self.latlong[1], self.latlong[0])
             self.shape.append([grid_ref.E, grid_ref.N])
         elif self.shape_type in ['MultiPoint', 'LineString']:
             for i in self.latlong:
@@ -138,10 +138,19 @@ class map_layer(map_feature):
         plt.show()
 
 class heatmap_layer():
-    def __init__(self):
-        self.grid = []
-    def make_grid(self, x_cen, y_cen, n_points, min_point, max_point):
-        x = np.outer(np.linspace(min_point + x_cen, x_cen + max_point, n_points), np.ones(n_points))
-        y = np.outer(np.linspace(min_point + y_cen, y_cen + max_point, n_points), np.ones(n_points)).T
+    def make_grid(self, latlon, bbox, n_points):
+        centre_gr = latlong2grid(latlon[0], latlon[1])
+        centre = [centre_gr.E, centre_gr.N]
+        NW_gr = latlong2grid(bbox[0][0],bbox[0][1])
+        NW = [NW_gr.E, NW_gr.N]
+        SE_gr = latlong2grid(bbox[1][0],bbox[1][1])
+        SE = [SE_gr.E, SE_gr.N]
+
+        x = np.outer(np.linspace(SE[0], NW[0], n_points), np.ones(n_points))
+        y = np.outer(np.linspace(SE[1], NW[1], n_points), np.ones(n_points)).T
         z = np.zeros(x.shape)
         self.grid = [x, y, z]
+    def plot_heatmap(self):
+        ax = plt.axes(projection ='3d')
+        ax.plot_surface(self.x, self.y, self.z, cmap ='inferno')
+        plt.show()
