@@ -5,7 +5,7 @@ app = Flask(__name__)
 from basic_weather_calls import weather_mesh
 from wind_shelter import wind_shelter
 from OSGridConverter import latlong2grid
-from pathfinding import get_tile
+from pathfinding import get_tile, get_min_path
 
 class Optimiser():
     def __init__(self, latlon, zoom_level, bbox, features, preferences):
@@ -13,21 +13,38 @@ class Optimiser():
         self.latlon = latlon
         self.zoom_level = float(zoom_level)
         self.bbox = self.getBBoxList(bbox)
+        self.startPoint = None
+        self.endPoint = None
         self.features = features
         self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
         self.tempWind = self.getTempWind()
         self.printStats()
-        self.getFeatures()
-        get_tile(self.latlon['lat'], self.latlon['lng'], math.floor(self.zoom_level))
+z        self.getFeatures()
+       
+        self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
+        #print(self.minPathToPoint, flush=True)
+
+    def convertToJson(self, minPath):
+        geojson = {
+            "type": "FeatureCollection",
+            "features": [
+            {
+                "type": "Feature",
+                "geometry" : {
+                    "type": "LineString",
+                    "coordinates": minPath
+                    }}]}
+        output = open("minPath.geojson", 'w')
+        json.dump(geojson, output)
 
     def getBBoxList(self, bbox):
         bboxLatLon = re.findall('\(.*?\)', bbox)
         bboxList = []
         for latLon in bboxLatLon:
             bboxList.append(latLon.replace('(','').replace(')','').replace(' ','').split(','))
-
-        return bboxList
+        bbox = [[float(bboxList[0][0]), float(bboxList[0][1])],[float(bboxList[1][0]),float(bboxList[1][1])]]
+        return bbox
 
     def getFeatures(self):
         pass
@@ -108,8 +125,9 @@ def process_result():
             "temp": optimiser.tempWind['Temp'],
             "wind": optimiser.tempWind['Wind'],
             "wind_shelter": optimiser.shelterIndex,
-            "osGrid": optimiser.OSGridReference
-            } 
+            "osGrid": optimiser.OSGridReference,
+            
+            }
         
     return data, 200 # 200 tells ajax "success!"
    

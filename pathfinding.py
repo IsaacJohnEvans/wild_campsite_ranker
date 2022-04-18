@@ -23,7 +23,7 @@ def get_tile(lat, lng, zoom_level):
     print(padded_mat, flush=True)
     # Get latitude and longitude at upper-left of tile
     upper_left = mercantile.ul(tile_coords)
-    djikstra(padded_mat, tile_coords, elevation_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=zoom_level, latitude=lat, elevation_multiplier=10, show_plot=True)
+    djikstra(padded_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=zoom_level, latitude=lat, elevation_multiplier=10, show_plot=True)
 
 def construct_lng_lat_matrix(ul, zoomlevel):
 
