@@ -102,6 +102,7 @@
           .flex-center.right {
               right: 0px;
           }
+          .clicked { box-shadow:0 0 5px rgba(255, 0, 0, .5) }
 
           .sidebar-content {
               position: relative;
@@ -284,6 +285,8 @@
 
     <script>
 
+        var clickedButtons = [0,0];
+
          function savePreferences() {
              var sliderValues = [];
              var sliders = document.getElementsByClassName("slider");
@@ -308,8 +311,47 @@
 
          }
 
-         function saveLocation() {
-             console.log("test");
+         
+
+         function startLocation() {
+            var coordinate = $("#mouse_info").html();
+                     //use feat_matrix variable here
+            clickedButtons[0] = 1;
+            if (clickedButtons[1] == 1) {
+                showRoute();
+            }
+
+            $.ajax({
+
+                type: 'POST',
+                async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
+                data: {
+                    'location': coordinate
+
+                },
+                url: '/start_destination',
+                });
+         };
+
+         
+
+         function destinationLocation() {
+            var coordinate = $("#mouse_info").html();
+            clickedButtons[1] = 1;
+            if (clickedButtons[0] == 1) {
+                showRoute();
+            }
+
+            $.ajax({
+
+                type: 'POST',
+                async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
+                data: {
+                    'location': coordinate
+
+                },
+                url: '/end_destination',
+                });
          };
 
 
@@ -546,20 +588,19 @@
                      ]
                  });
 
-                 map.addLayer({
+                 /*map.addLayer({
                      id: 'serious_image-layer',
                      'type': 'raster',
                      'source': 'serious_image',
                      'paint': {
                          'raster-fade-duration': 0
                      }
-                 });
-
+                 });*/
                  new mapboxgl.Popup()
                      .setLngLat(e.lngLat)
                      .setHTML(num_features + "<br> Temperature: " + temp + "<br> Wind Speed: " +
                      wind + "<br> Shelter Index: " + shelter + "<br> Grid Ref: " + gridref +
-                     "<button class='goToButton' onclick='saveLocation()'>Set Destination</button>")
+                     "<br><button class='goFromButton' onclick='startLocation()'>Set Starting Location</button><br><button class='goToButton' onclick='destinationLocation()'>Set Destination</button>" )
                      .addTo(map);
 
                  });
@@ -661,6 +702,28 @@
 
 
              });
+             function showRoute() {
+                 var url = "minPath.geojson.geojson"
+             map.addSource('route',{
+                 type:'geojson',
+                 data: url //"./minPath.geojson",
+                 /*cluster: true,
+        clusterMaxZoom: 15, // Max zoom to cluster points on
+        clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)*/
+
+             });
+             map.addLayer({
+                'id': 'boundary',
+                'type': 'fill',
+                'source': 'boundary',
+                'layout': {},
+                'paint': {
+                    'fill-color': '#38f',
+                    'fill-opacity': 0.2
+        }
+    });
+         }
+             
     </script>
   </body>
 </html>

@@ -9,24 +9,34 @@ from pathfinding import get_tile
 from feature_class import map_feature, map_layer, heatmap_layer
 import mercantile
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB ,getSlopeMatrix
-from pathfinding import construct_lng_lat_matrix
+from pathfinding import construct_lng_lat_matrix, get_min_path
 
 class Optimiser():
-    def __init__(self, latlon, zoom_level, bbox, features, preferences):
-        self.preferences = self.updatePreferences(preferences)
+    def __init__(self):
+        self.preferences = None
+        self.latlon = None
+        self.zoom_level = None
+        self.bbox = None
+        self.startPoint = None
+        self.endPoint = None
+        self.features = None
+        self.shelterIndex = None
+        self.OSGridReference = None
+        self.tempWind = None
+        
+    
+    def updateOptimiser(self, latlon, zoom_level, bbox, features, preferences):
         self.latlon = latlon
         self.zoom_level = float(zoom_level)
         self.bbox = self.getBBoxList(bbox)
-        self.startPoint = None
-        self.endPoint = None
         self.features = features
+        self.preferences = self.updatePreferences(preferences)
         self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
         self.tempWind = self.getTempWind()
         self.printStats()
-z        self.getFeatures()
        
-        self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
+        #self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
         #print(self.minPathToPoint, flush=True)
 
     def convertToJson(self, minPath):
@@ -49,6 +59,15 @@ z        self.getFeatures()
             bboxList.append(latLon.replace('(','').replace(')','').replace(' ','').split(','))
         bbox = [[float(bboxList[0][0]), float(bboxList[0][1])],[float(bboxList[1][0]),float(bboxList[1][1])]]
         return bbox
+
+    def setPoint(self, latlonDict, pointType):
+        if pointType == "start":
+            self.startPoint = [latlonDict['lat'], latlonDict['lng']]
+            
+        else:
+            self.endPoint = [latlonDict['lat'], latlonDict['lng']]
+        if self.startPoint != None and self.endPoint != None:
+            min_path = get_min_path(self.startPoint, self.endPoint, math.ceil(float(self.zoom_level)))
 
     def getFeatures(self):
         pass
@@ -86,6 +105,27 @@ z        self.getFeatures()
 def home():
     return render_template('bivouac.html')
 
+
+@app.route('/start_destination', methods = ['POST','GET'])
+def start_destination():
+    if request.method == 'POST':
+        location = request.form['location']
+            
+        optimiser.setPoint(json.loads(re.findall('\{.*?\}',location)[1]),"start")
+        
+        data = {'status':"success"}
+    return data, 200
+
+@app.route('/end_destination', methods = ['POST','GET'])
+def end_destination():
+    if request.method == 'POST':
+        location = request.form['location']
+        optimiser.setPoint(json.loads(re.findall('\{.*?\}',location)[1]), "end")
+        data = {'status':"success"}
+    return data, 200
+
+
+
 @app.route('/set_preferences', methods=['POST', 'GET'])
 def get_preferences():
     if request.method == 'POST':
@@ -115,8 +155,7 @@ def process_result():
 
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
 
-        global optimiser
-        optimiser = Optimiser(latlon, zoom_level, bbox, json.loads(features), preferences)
+        optimiser.updateOptimiser(latlon, zoom_level, bbox, json.loads(features), preferences)
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
@@ -136,12 +175,12 @@ def process_result():
         MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
 
 
-        tile_coords = mercantile.tile(bbox[0][0], bbox[0][1], zoom_level)
+        '''tile_coords = mercantile.tile(bbox[0][0], bbox[0][1], zoom_level)
         upper_left = mercantile.ul(tile_coords)
         lnglat_mat = construct_lng_lat_matrix(upper_left, zoom_level)
 
         elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
-        slope_mat = getSlopeMatrix(elevation_mat)
+        slope_mat = getSlopeMatrix(elevation_mat)'''
 
 
         # create heatmap layer
@@ -158,5 +197,6 @@ def get_num_features(feats):
 
 
 if __name__ == "__main__":
-    
+    global optimiser
+    optimiser = Optimiser()
     app.run(debug=True)
