@@ -285,8 +285,6 @@
 
     <script>
 
-        var clickedButtons = [0,0];
-
          function savePreferences() {
              var sliderValues = [];
              var sliders = document.getElementsByClassName("slider");
@@ -316,10 +314,7 @@
          function startLocation() {
             var coordinate = $("#mouse_info").html();
                      //use feat_matrix variable here
-            clickedButtons[0] = 1;
-            if (clickedButtons[1] == 1) {
-                showRoute();
-            }
+            
 
             $.ajax({
 
@@ -329,18 +324,21 @@
                     'location': coordinate
 
                 },
+                dataType: "json",
                 url: '/start_destination',
-                });
+                success: function (json) {
+                    min_path = json.minpath
+                    if (min_path != "False"){
+                        showRoute(min_path);
+                }
+},
+});
          };
 
          
 
          function destinationLocation() {
             var coordinate = $("#mouse_info").html();
-            clickedButtons[1] = 1;
-            if (clickedButtons[0] == 1) {
-                showRoute();
-            }
 
             $.ajax({
 
@@ -350,7 +348,14 @@
                     'location': coordinate
 
                 },
+                dataType: "json",
                 url: '/end_destination',
+                success: function (json) {
+                    min_path = json.minpath
+                    if (min_path != "False"){
+                        showRoute(min_path);
+                }
+                },
                 });
          };
 
@@ -701,29 +706,14 @@
 
 
 
-             });
-             function showRoute() {
-                 var url = "minPath.geojson.geojson"
-             map.addSource('route',{
-                 type:'geojson',
-                 data: url //"./minPath.geojson",
-                 /*cluster: true,
-        clusterMaxZoom: 15, // Max zoom to cluster points on
-        clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)*/
-
-             });
-             map.addLayer({
-                'id': 'boundary',
-                'type': 'fill',
-                'source': 'boundary',
-                'layout': {},
-                'paint': {
-                    'fill-color': '#38f',
-                    'fill-opacity': 0.2
-        }
-    });
-         }
+             }); 
              
+             function showRoute(minPath) {
+                 console.log(minPath);
+             }
+             
+         
+        
     </script>
   </body>
 </html>

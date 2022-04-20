@@ -51,6 +51,7 @@ class Optimiser():
                     }}]}
         output = open("minPath.geojson", 'w')
         json.dump(geojson, output)
+        return geojson
 
     def getBBoxList(self, bbox):
         bboxLatLon = re.findall('\(.*?\)', bbox)
@@ -68,6 +69,9 @@ class Optimiser():
             self.endPoint = [latlonDict['lat'], latlonDict['lng']]
         if self.startPoint != None and self.endPoint != None:
             min_path = get_min_path(self.startPoint, self.endPoint, math.ceil(float(self.zoom_level)))
+            return self.convertToJson(min_path)
+        else:
+            return "False"
 
     def getFeatures(self):
         pass
@@ -111,17 +115,18 @@ def start_destination():
     if request.method == 'POST':
         location = request.form['location']
             
-        optimiser.setPoint(json.loads(re.findall('\{.*?\}',location)[1]),"start")
+        minpath = optimiser.setPoint(json.loads(re.findall('\{.*?\}',location)[1]),"start")
         
-        data = {'status':"success"}
+        data = {'status':"success", "minpath":minpath}
     return data, 200
 
 @app.route('/end_destination', methods = ['POST','GET'])
 def end_destination():
     if request.method == 'POST':
         location = request.form['location']
-        optimiser.setPoint(json.loads(re.findall('\{.*?\}',location)[1]), "end")
-        data = {'status':"success"}
+        minpath = optimiser.setPoint(json.loads(re.findall('\{.*?\}',location)[1]), "end")
+        data = {'status':"success",
+        "minpath": minpath}
     return data, 200
 
 
