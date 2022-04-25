@@ -152,7 +152,11 @@ class heatmap_layer():
         z = np.zeros(x.shape)
         self.grid = [x, y, z]
     def plot_heatmap(self):
-        
         ax = plt.axes(projection ='3d')
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap ='inferno')
         plt.show()
+
+    def effect_values(reach, effect):
+        x = np.linspace(0,2*np.pi,reach)
+        y = effect/2*(- np.cos(x) + 1)
+        return y
