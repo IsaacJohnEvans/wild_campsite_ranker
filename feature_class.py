@@ -56,8 +56,8 @@ class map_feature:
         return grid_refs
 
 class map_layer(map_feature):
-    def __init__(self, grid, name, effect, distance):
-        self.features = []
+    def __init__(self, grid, name, effect, distance, features):
+        self.features = features
         self.x = grid[0]
         self.y = grid[1]
         self.z = grid[2]
@@ -73,11 +73,6 @@ class map_layer(map_feature):
         x = np.linspace(0,2*np.pi,self.dist)
         y = self.effect/2*(- np.cos(x) + 1)
         return y
-    
-    def add_feature_to_layer(self):
-        for i in self.features:
-            self.bool_feature(self, self.features[1])
-        self.values = np.repeat(self.values* self.effect, self.dist)
         
     def bool_features(self):
         for feat in self.features:
@@ -89,7 +84,7 @@ class map_layer(map_feature):
                 pass
             elif feat.shape_type == 'Polygon':
                 self.polygon_to_points(feat.shape[0])
-            if True:                
+            else:                
                 if feat.shape_type == 'MultiPolygon':
                     for poly in feat.shape:
                         self.polygon_to_points(poly[0])            
@@ -98,12 +93,6 @@ class map_layer(map_feature):
         path = mpltPath.Path(polygon)
         new_poly_bool = np.reshape(np.array(path.contains_points(self.points)), self.poly_bool.shape)
         self.poly_bool = np.logical_or(self.poly_bool, new_poly_bool)
-        print('Poly is false: ', (self.poly_bool[2]==False).all())
-        
-    def make_dilate_struct(self):
-        struct = np.ones((3, 3))
-        struct[1, 1] = 0
-        return struct.astype(bool)
 
     def dilate_layer(self, layer1, struct, value):
         layer2 = ndimage.binary_dilation(layer1, structure=struct)
@@ -114,12 +103,7 @@ class map_layer(map_feature):
         layer2 = self.dilate_layer(self.poly_bool, struct, self.values[0])
         for val in self.values[1:]:
             layer2 = self.dilate_layer(layer2, struct, val)
-        self.z = skimage.filters.gaussian(self.z, self.sigma)
-    
-    def draw_heatmap(self):
-        struct = self.make_dilate_struct()
-        self.dilate_poly(struct)
-    
+        self.z = skimage.filters.gaussian(self.z, self.sigma)    
 
 class heatmap_layer():
     def __init__(self, latlon, bbox, n_points):
@@ -128,7 +112,12 @@ class heatmap_layer():
         NW_gr = latlong2grid(bbox[0][0],bbox[0][1])
         NW = [NW_gr.E, NW_gr.N]
         SE_gr = latlong2grid(bbox[1][0],bbox[1][1])
+        
         SE = [SE_gr.E, SE_gr.N]
+        '''
+        The grid ref in the 
+        '''
+        SE, NW = [[356000, 173000], [358000, 175000]]
         x = np.outer(np.linspace(SE[0], NW[0], n_points), np.ones(n_points))
         y = np.outer(np.linspace(SE[1], NW[1], n_points), np.ones(n_points)).T
         z = np.zeros(x.shape)
@@ -164,23 +153,35 @@ class heatmap_layer():
         desired_features = set()
         for feature in self.features:
             desired_features.add(feature.feature_type)
-        self.desired_features = list(desired_features)
-        print(self.desired_features)
+        self.unique_features = list(desired_features)
+        
+    def make_dilate_struct(self):
+        struct = np.ones((3, 3))
+        struct[1, 1] = 0
+        return struct.astype(bool)
         
     def make_layers(self):
         effect = 1
-        distance = 5
-        for feature in self.desired_features:
-            grid = self.grid[:2]
-            grid.append(np.zeros(self.grid[0].shape))
-            layer1 = map_layer(grid, self.desired_features, effect, distance)
+        distance = 200
+        grid = self.grid[:2]
+        grid.append(np.zeros(self.grid[0].shape))
+        layers = {}
+        struct = self.make_dilate_struct()
+        
+        for unique_feature in self.unique_features:
+            layers[unique_feature] = []
+        
+        for feature in self.features:
+            layers[feature.feature_type].append(feature)
+        
+        for unique_feature in self.unique_features:
+            layer1 = map_layer(grid, unique_feature, effect, distance, layers[unique_feature])
             layer1.bool_features()
-            print(layer1.poly_bool.any())
+            layer1.dilate_poly(struct)
             self.grid[2] += layer1.z
             self.layers.append(layer1)
 
     def plot_heatmap(self):
-        print('z is zero', (self.grid[2]!=0).any())
         ax = plt.axes(projection ='3d')
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap ='inferno')
         plt.show()

@@ -47,7 +47,7 @@ class Optimiser():
         n_points = 1000
         distance = 20
         effect = 1
-        heatmap = heatmap_layer(self.latlon, self.bbox, n_points)
+        heatmap = heatmap_layer(self.latlon, self.bbox, n_points) # This works
         heatmap.make_layers()
         heatmap.plot_heatmap()
 
