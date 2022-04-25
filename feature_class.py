@@ -154,3 +154,8 @@ class heatmap_layer():
         ax = plt.axes(projection ='3d')
         ax.plot_surface(self.x, self.y, self.z, cmap ='inferno')
         plt.show()
+
+def effect_values(reach, effect):
+  x = np.linspace(0,2*np.pi,reach)
+  y = effect/2*(- np.cos(x) + 1)
+  return y
