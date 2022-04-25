@@ -10,6 +10,7 @@ from feature_class import map_feature, map_layer, heatmap_layer
 import mercantile
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB ,getSlopeMatrix
 from pathfinding import construct_lng_lat_matrix, get_min_path
+import numpy as np
 
 class Optimiser():
     def __init__(self):
@@ -35,10 +36,28 @@ class Optimiser():
         self.OSGridReference = self.getOSGridReference()
         self.tempWind = self.getTempWind()
         self.printStats()
-       
+        
         #self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
         #print(self.minPathToPoint, flush=True)
+    def make_heatmap(self):
+        heatmap = heatmap_layer()
+        '''
+        Need to set npoints based on the zoom level
+        '''
+        n_points = 1000
+        distance = 20
+        effect = 1
+        values = np.array([0, 0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0])
+        heatmap.make_grid(self.latlon, self.bbox, n_points)
+        x, y, z = heatmap.grid
+        layer1 = map_layer(x, y, z, 'layer1', effect, distance, values)
 
+        layer1.get_features()
+        layer1.bool_features()
+        print(layer1.poly_bool.any())
+
+        layer1.draw_heatmap()
+        layer1.plot_heatmap()
     def convertToJson(self, minPath):
         geojson = {
             "type": "FeatureCollection",
@@ -161,6 +180,7 @@ def process_result():
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
 
         optimiser.updateOptimiser(latlon, zoom_level, bbox, json.loads(features), preferences)
+        optimiser.make_heatmap()
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
@@ -179,7 +199,7 @@ def process_result():
         # creating elevation matrix (needs to be using the bbox and latlon centre)
         MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
 
-
+        #tile_coords = mercantile.tile(bbox[0][0], bbox[0][1], zoom_level)
         '''tile_coords = mercantile.tile(bbox[0][0], bbox[0][1], zoom_level)
         upper_left = mercantile.ul(tile_coords)
         lnglat_mat = construct_lng_lat_matrix(upper_left, zoom_level)

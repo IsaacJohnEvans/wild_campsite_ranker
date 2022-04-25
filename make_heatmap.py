@@ -1,4 +1,5 @@
 #coding : utf8
+from mercantile import Bbox
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -8,13 +9,13 @@ from feature_class import map_feature, map_layer, heatmap_layer
 distance = 20
 n_points = 1000
 effect = 1
-x_cen, y_cen = 360000, 325000
+cen = (360000, 325000)
 min_point = -15000
 max_point = 15000
 values = np.array([0, 0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0])
-
+bbox = [[345000, 375000], [310000, 340000]]
 heatmap = heatmap_layer()
-heatmap.make_grid(x_cen, y_cen, n_points, min_point, max_point)
+heatmap.make_grid(cen, bbox, n_points)
 x, y, z = heatmap.grid
 layer1 = map_layer(x, y, z, 'layer1', effect, distance, values)
 

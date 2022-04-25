@@ -12,6 +12,7 @@ from scipy import ndimage
 import skimage
 from shapely import wkt
 from mpl_toolkits.mplot3d import Axes3D
+from tqdm import tqdm
 
 class map_feature:
     def __init__(self, feature_id, feature_type, shape_type, latlong):
@@ -124,7 +125,7 @@ class map_layer(map_feature):
     
     def dilate_poly(self, struct):
         layer2 = self.dilate_layer(self.poly_bool, struct, self.values[0])
-        for val in self.values[1:]:
+        for val in tqdm(self.values[1:]):
             layer2 = self.dilate_layer(layer2, struct, val)
         self.z = skimage.filters.gaussian(self.z, self.sigma)
     
@@ -139,8 +140,8 @@ class map_layer(map_feature):
 
 class heatmap_layer():
     def make_grid(self, latlon, bbox, n_points):
-        centre_gr = latlong2grid(latlon[0], latlon[1])
-        centre = [centre_gr.E, centre_gr.N]
+        #centre_gr = latlong2grid(latlon[0], latlon[1])
+        #centre = [centre_gr.E, centre_gr.N]
         NW_gr = latlong2grid(bbox[0][0],bbox[0][1])
         NW = [NW_gr.E, NW_gr.N]
         SE_gr = latlong2grid(bbox[1][0],bbox[1][1])
@@ -151,6 +152,7 @@ class heatmap_layer():
         z = np.zeros(x.shape)
         self.grid = [x, y, z]
     def plot_heatmap(self):
+        
         ax = plt.axes(projection ='3d')
-        ax.plot_surface(self.x, self.y, self.z, cmap ='inferno')
+        ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap ='inferno')
         plt.show()
