@@ -87,7 +87,11 @@ class map_layer(map_feature):
             else:                
                 if feat.shape_type == 'MultiPolygon':
                     for poly in feat.shape:
-                        self.polygon_to_points(poly[0])            
+                        self.polygon_to_points(poly[0])
+                        
+            '''
+            Make all the types of geojson data work
+            '''          
 
     def polygon_to_points(self, polygon):
         path = mpltPath.Path(polygon)
@@ -115,7 +119,7 @@ class heatmap_layer():
         
         SE = [SE_gr.E, SE_gr.N]
         '''
-        The grid ref in the 
+        The grid ref in OSGridConverter contains the letters
         '''
         SE, NW = [[356000, 173000], [358000, 175000]]
         x = np.outer(np.linspace(SE[0], NW[0], n_points), np.ones(n_points))
@@ -170,6 +174,9 @@ class heatmap_layer():
         
         for unique_feature in self.unique_features:
             layers[unique_feature] = []
+            '''
+            A function to select features and set the importance of them using the slider data
+            '''
         
         for feature in self.features:
             layers[feature.feature_type].append(feature)
