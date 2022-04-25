@@ -1,5 +1,7 @@
 #coding : utf8
 #%%
+from turtle import distance
+from mercantile import feature
 import numpy as np
 import pandas as pd
 from matplotlib.patches import Polygon
@@ -54,39 +56,23 @@ class map_feature:
         return grid_refs
 
 class map_layer(map_feature):
-    def __init__(self, x, y, z, name, effect, distance, values):
+    def __init__(self, grid, name, effect, distance):
         self.features = []
-        self.x = x
-        self.y = y
-        self.z = z
+        self.x = grid[0]
+        self.y = grid[1]
+        self.z = grid[2]
         self.points = np.concatenate((np.reshape(self.x, (self.x.size, 1)), np.reshape(self.y, (self.y.size, 1))), axis = 1)
         self.layer_name = name
         self.sigma = 1
         self.effect = effect
         self.dist = distance
-        self.values = np.repeat(values, self.dist) * effect
-        self.poly_bool = np.zeros(z.shape).astype(bool)
+        self.values = self.effect_values()
+        self.poly_bool = np.zeros(self.z.shape).astype(bool)
         
-    def get_features(self, file_name = 'data.geojson'):
-        with open(file_name, "r") as read_file:
-            data_list = json.load(read_file)
-        for i in range(len(data_list)):
-            if 'ele' in data_list[i]['properties']:
-                self.features.append(map_feature(i, data_list[i]['properties']['ele'],
-                                                data_list[i]['geometry']['type'], 
-                                               data_list[i]['geometry']['coordinates']))
-            elif 'FID' in data_list[i]['properties']:
-                self.features.append(map_feature(i, data_list[i]['properties']['FID'],
-                                                data_list[i]['geometry']['type'], 
-                                                data_list[i]['geometry']['coordinates']))
-            elif 'class' in data_list[i]['properties']:
-                self.features.append(map_feature(i, data_list[i]['properties']['class'],
-                                                data_list[i]['geometry']['type'], 
-                                                data_list[i]['geometry']['coordinates']))
-            elif 'water' in data_list[i]['layer']['id']:
-                self.features.append(map_feature(i, 'water',
-                                                data_list[i]['geometry']['type'], 
-                                                data_list[i]['geometry']['coordinates']))
+    def effect_values(self):
+        x = np.linspace(0,2*np.pi,self.dist)
+        y = self.effect/2*(- np.cos(x) + 1)
+        return y
     
     def add_feature_to_layer(self):
         for i in self.features:
@@ -112,6 +98,7 @@ class map_layer(map_feature):
         path = mpltPath.Path(polygon)
         new_poly_bool = np.reshape(np.array(path.contains_points(self.points)), self.poly_bool.shape)
         self.poly_bool = np.logical_or(self.poly_bool, new_poly_bool)
+        print('Poly is false: ', (self.poly_bool[2]==False).all())
         
     def make_dilate_struct(self):
         struct = np.ones((3, 3))
@@ -125,38 +112,77 @@ class map_layer(map_feature):
     
     def dilate_poly(self, struct):
         layer2 = self.dilate_layer(self.poly_bool, struct, self.values[0])
-        for val in tqdm(self.values[1:]):
+        for val in self.values[1:]:
             layer2 = self.dilate_layer(layer2, struct, val)
         self.z = skimage.filters.gaussian(self.z, self.sigma)
     
     def draw_heatmap(self):
         struct = self.make_dilate_struct()
         self.dilate_poly(struct)
-
-    def plot_heatmap(self):
-        ax = plt.axes(projection ='3d')
-        ax.plot_surface(self.x, self.y, self.z, cmap ='inferno')
-        plt.show()
+    
 
 class heatmap_layer():
-    def make_grid(self, latlon, bbox, n_points):
+    def __init__(self, latlon, bbox, n_points):
         #centre_gr = latlong2grid(latlon[0], latlon[1])
         #centre = [centre_gr.E, centre_gr.N]
         NW_gr = latlong2grid(bbox[0][0],bbox[0][1])
         NW = [NW_gr.E, NW_gr.N]
         SE_gr = latlong2grid(bbox[1][0],bbox[1][1])
         SE = [SE_gr.E, SE_gr.N]
-
         x = np.outer(np.linspace(SE[0], NW[0], n_points), np.ones(n_points))
         y = np.outer(np.linspace(SE[1], NW[1], n_points), np.ones(n_points)).T
         z = np.zeros(x.shape)
         self.grid = [x, y, z]
+        self.get_features()
+        self.get_unique_feature_types()
+        self.layers = []
+    
+    def get_features(self, file_name = 'data.geojson'):
+        features = []
+        with open(file_name, "r") as read_file:
+            data_list = json.load(read_file)
+        for i in range(len(data_list)):
+            if 'ele' in data_list[i]['properties']:
+                features.append(map_feature(i, data_list[i]['properties']['ele'],
+                                                data_list[i]['geometry']['type'], 
+                                               data_list[i]['geometry']['coordinates']))
+            elif 'FID' in data_list[i]['properties']:
+                features.append(map_feature(i, data_list[i]['properties']['FID'],
+                                                data_list[i]['geometry']['type'], 
+                                                data_list[i]['geometry']['coordinates']))
+            elif 'class' in data_list[i]['properties']:
+                features.append(map_feature(i, data_list[i]['properties']['class'],
+                                                data_list[i]['geometry']['type'], 
+                                                data_list[i]['geometry']['coordinates']))
+            elif 'water' in data_list[i]['layer']['id']:
+                features.append(map_feature(i, 'water',
+                                                data_list[i]['geometry']['type'], 
+                                                data_list[i]['geometry']['coordinates']))
+        self.features = features
+    
+    def get_unique_feature_types(self):
+        desired_features = set()
+        for feature in self.features:
+            desired_features.add(feature.feature_type)
+        self.desired_features = list(desired_features)
+        print(self.desired_features)
+        
+    def make_layers(self):
+        effect = 1
+        distance = 5
+        for feature in self.desired_features:
+            grid = self.grid[:2]
+            grid.append(np.zeros(self.grid[0].shape))
+            layer1 = map_layer(grid, self.desired_features, effect, distance)
+            layer1.bool_features()
+            print(layer1.poly_bool.any())
+            self.grid[2] += layer1.z
+            self.layers.append(layer1)
+
     def plot_heatmap(self):
+        print('z is zero', (self.grid[2]!=0).any())
         ax = plt.axes(projection ='3d')
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap ='inferno')
         plt.show()
 
-    def effect_values(reach, effect):
-        x = np.linspace(0,2*np.pi,reach)
-        y = effect/2*(- np.cos(x) + 1)
-        return y
+

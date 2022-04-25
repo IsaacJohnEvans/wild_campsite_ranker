@@ -32,32 +32,25 @@ class Optimiser():
         self.bbox = self.getBBoxList(bbox)
         self.features = features
         self.preferences = self.updatePreferences(preferences)
-        self.shelterIndex = self.getShelterIndex()
+        #self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
-        self.tempWind = self.getTempWind()
+        #self.tempWind = self.getTempWind()
         self.printStats()
         
         #self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
         #print(self.minPathToPoint, flush=True)
     def make_heatmap(self):
-        heatmap = heatmap_layer()
+        
         '''
         Need to set npoints based on the zoom level
         '''
         n_points = 1000
         distance = 20
         effect = 1
-        values = np.array([0, 0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0])
-        heatmap.make_grid(self.latlon, self.bbox, n_points)
-        x, y, z = heatmap.grid
-        layer1 = map_layer(x, y, z, 'layer1', effect, distance, values)
+        heatmap = heatmap_layer(self.latlon, self.bbox, n_points)
+        heatmap.make_layers()
+        heatmap.plot_heatmap()
 
-        layer1.get_features()
-        layer1.bool_features()
-        print(layer1.poly_bool.any())
-
-        layer1.draw_heatmap()
-        layer1.plot_heatmap()
     def convertToJson(self, minPath):
         geojson = {
             "type": "FeatureCollection",
@@ -168,6 +161,7 @@ def get_preferences():
 @app.route('/get_result', methods=['POST', 'GET'])
 def process_result():
     if request.method == 'POST':
+        
         mouse_pos = request.form['mouse_info']
         zoom_level = request.form['zoom_level']
         bbox = request.form['bbox']
