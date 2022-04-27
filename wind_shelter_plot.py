@@ -4,7 +4,7 @@ from distutils.ccompiler import new_compiler
 import numpy as np
 import math
 
-from yaml import DirectiveToken
+# from yaml import DirectiveToken
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB
 import mercantile
 import basic_weather_calls
@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 import plotly.graph_objects as go
+
 import pandas as pd
 import numpy as np
 from matplotlib import cm
@@ -58,7 +59,6 @@ def wind_shelter_all_data(lat,lng,zoom):
 lat = 53.068611
 lon = -3.086643
 zoom = 12
-
     
 shelter_index,mask,shelter_array,direction = wind_shelter_all_data(lat,lon,zoom)
 
@@ -116,6 +116,7 @@ mask_overlay[coord_mask,coord_mask] = 2
 mask_overlay[defining_point[0],defining_point[1]]=2
 radius = int(radius)
 print(coord_mask-radius)
+# data = elevation_mat
 data = elevation_mat[coord_mask-radius:coord_mask+radius,coord_mask-radius:coord_mask+radius]
 
 mask_overlay = mask_overlay[coord_mask-radius:coord_mask+radius,coord_mask-radius:coord_mask+radius]
@@ -158,6 +159,22 @@ print(w[0].shape)
 
 
 
-ha.quiver(X, Y, data, u, v, w, length=2)
+# ha.quiver(X, Y, data, u, v, w, length=2)
 
-plt.show()
+# plt.show()
+
+
+import plotly.graph_objects as go
+
+import pandas as pd
+
+# Read data from a csv
+z_data = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/api_docs/mt_bruno_elevation.csv')
+
+fig = go.Figure(data=[go.Surface(z=z_data.values)])
+
+fig.update_layout(title='Mt Bruno Elevation', autosize=False,
+                  width=500, height=500,
+                  margin=dict(l=65, r=50, b=65, t=90))
+
+fig.show()
