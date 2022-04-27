@@ -429,6 +429,11 @@
              })
          );
 
+         const popup = new mapboxgl.Popup({ closeOnClick: false })
+            .setLngLat(map.getBounds().getCenter())
+            .setHTML('<h1>Hello World!</h1>')
+            .addTo(map);
+
          map.on('load', () => {
 
              map.addSource(
