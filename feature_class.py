@@ -1,5 +1,4 @@
 #coding : utf8
-#%%
 from turtle import distance
 from mercantile import feature
 import numpy as np
@@ -16,7 +15,21 @@ from shapely import wkt
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 class map_feature:
+    '''
+    A class to represent a map feature.
+    
+    Variables:
+    Feature ID: The ID of the feature
+    Feature Type: The type of the feature
+    Shape Type: The type of the shape out of the following:
+        Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon
+    latlong: A list of tuples of the latitudes and longitudes of the feature
+    Shape: A list of tuples of the grid references of the feature
+    '''
     def __init__(self, feature_id, feature_type, shape_type, latlong):
+        '''
+        
+        '''
         self.number = feature_id
         self.feature_type = feature_type
         self.shape_type = shape_type
@@ -53,7 +66,14 @@ class map_feature:
             grid_ref = latlong2grid(i[1], i[0])
             grid_refs.append([grid_ref.E, grid_ref.N])
         return grid_refs
+    
 class map_layer(map_feature):
+    '''
+    A class of a map layer with a list of features to be added to the map.
+    
+    Variables: 
+    
+    '''
     def __init__(self, grid, name, effect, distance, features):
         self.features = features
         self.x = grid[0]
@@ -105,7 +125,8 @@ class map_layer(map_feature):
         layer2 = self.dilate_layer(self.poly_bool, struct, self.values[0])
         for val in self.values[1:]:
             layer2 = self.dilate_layer(layer2, struct, val)
-        self.z = skimage.filters.gaussian(self.z, self.sigma)    
+        self.z = skimage.filters.gaussian(self.z, self.sigma)
+  
 class heatmap_layer():
     def __init__(self, bbox, n_points):
         NW_gr = latlong2grid(bbox[0][1],bbox[0][0])
@@ -171,7 +192,7 @@ class heatmap_layer():
         for feature in self.features:
             layers[feature.feature_type].append(feature)
         
-        for unique_feature in self.unique_features:
+        for unique_feature in tqdm(self.unique_features):
             layer1 = map_layer(grid, unique_feature, effect, distance, layers[unique_feature])
             layer1.bool_features()
             layer1.dilate_poly(struct)
@@ -181,3 +202,5 @@ class heatmap_layer():
         ax = plt.axes(projection ='3d')
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap ='inferno')
         plt.show()
+
+# %%
