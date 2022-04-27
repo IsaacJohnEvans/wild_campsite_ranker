@@ -407,7 +407,7 @@
                  lng: -2.648202,
                  lat: 54.579422
              },
-             zoom: 5.5,
+             zoom: 15.5,
              pitch: 0,
              container: 'map',
              antialias: true
@@ -696,17 +696,22 @@
              }); 
              
              function showRoute(minPath) {
-                console.log(minPath);
-                console.log(minPath.features[0].geometry);
+  
+                // for (let i = 0; i < minPath.features[0].geometry.coordinates.length; i++) {
+                //     console.log(i+"th"+" coordinates:\n" + minPath.features[0].geometry.coordinates[i]);
+                // }
+                console.log(minPath.features[0].geometry.coordinates);
+                console.log("HELL YEAHHHHHHHHHHHHHHHH");
+                // return minPath.features[0].geometry.coordinates;
 
-                map.addSource('route', {
+                map.addSource('routesource', {
                         'type': 'geojson',
                         'data': {
                             'type': 'Feature',
                             'properties': {},
                             'geometry':{
                                 'type': 'LineString',
-                                'coordinates': [minPath.features[0].geometry.coordinates]
+                                'coordinates': minPath.features[0].geometry.coordinates
                             }
                         }
                     });
@@ -714,7 +719,7 @@
                 map.addLayer({
                     'id': 'route',
                     'type': 'line',
-                    'source': 'route',
+                    'source': 'routesource',
                     'layout': {
                         'line-join': 'round',
                         'line-cap': 'round'
@@ -723,13 +728,9 @@
                         'line-color': '#888',
                         'line-width': 8
                     }
-                });
-
-                 console.log("HELL YEAHHHHHHHHHHHHHHHH");
-             }
-             
-         
-        
+                });  
+            }
+                    
     </script>
   </body>
 </html>
