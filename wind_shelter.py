@@ -1,7 +1,6 @@
 import numpy as np
 import math
 
-from sympy import NonSquareMatrixError
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB
 import mercantile
 import basic_weather_calls
