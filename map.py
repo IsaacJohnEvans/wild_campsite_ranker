@@ -10,7 +10,6 @@ from feature_class import map_feature, map_layer, heatmap_layer
 import mercantile
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB ,getSlopeMatrix
 from pathfinding import construct_lng_lat_matrix, get_min_path
-import numpy as np
 
 class Optimiser():
     def __init__(self):
@@ -32,24 +31,13 @@ class Optimiser():
         self.bbox = self.getBBoxList(bbox)
         self.features = features
         self.preferences = self.updatePreferences(preferences)
-        #self.shelterIndex = self.getShelterIndex()
+        self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
-        #self.tempWind = self.getTempWind()
+        self.tempWind = self.getTempWind()
         self.printStats()
-        
+       
         #self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
         #print(self.minPathToPoint, flush=True)
-    def make_heatmap(self):
-        
-        '''
-        Need to set npoints based on the zoom level
-        '''
-        n_points = 1000
-        distance = 20
-        effect = 1
-        heatmap = heatmap_layer(self.latlon, self.bbox, n_points) # This works
-        heatmap.make_layers()
-        heatmap.plot_heatmap()
 
     def convertToJson(self, minPath):
         geojson = {
@@ -161,7 +149,6 @@ def get_preferences():
 @app.route('/get_result', methods=['POST', 'GET'])
 def process_result():
     if request.method == 'POST':
-        
         mouse_pos = request.form['mouse_info']
         zoom_level = request.form['zoom_level']
         bbox = request.form['bbox']
@@ -174,7 +161,6 @@ def process_result():
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
 
         optimiser.updateOptimiser(latlon, zoom_level, bbox, json.loads(features), preferences)
-        optimiser.make_heatmap()
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
@@ -193,7 +179,7 @@ def process_result():
         # creating elevation matrix (needs to be using the bbox and latlon centre)
         MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
 
-        #tile_coords = mercantile.tile(bbox[0][0], bbox[0][1], zoom_level)
+
         '''tile_coords = mercantile.tile(bbox[0][0], bbox[0][1], zoom_level)
         upper_left = mercantile.ul(tile_coords)
         lnglat_mat = construct_lng_lat_matrix(upper_left, zoom_level)
