@@ -113,15 +113,11 @@ class heatmap_layer():
     def __init__(self, latlon, bbox, n_points):
         #centre_gr = latlong2grid(latlon[0], latlon[1])
         #centre = [centre_gr.E, centre_gr.N]
-        NW_gr = latlong2grid(bbox[0][0],bbox[0][1])
+        NW_gr = latlong2grid(bbox[0][1],bbox[0][0])
         NW = [NW_gr.E, NW_gr.N]
-        SE_gr = latlong2grid(bbox[1][0],bbox[1][1])
+        SE_gr = latlong2grid(bbox[1][1],bbox[1][0])
         
         SE = [SE_gr.E, SE_gr.N]
-        '''
-        The grid ref in OSGridConverter contains the letters
-        '''
-        SE, NW = [[356000, 173000], [358000, 175000]]
         x = np.outer(np.linspace(SE[0], NW[0], n_points), np.ones(n_points))
         y = np.outer(np.linspace(SE[1], NW[1], n_points), np.ones(n_points)).T
         z = np.zeros(x.shape)

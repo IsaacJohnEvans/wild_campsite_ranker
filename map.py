@@ -34,7 +34,7 @@ class Optimiser():
         self.preferences = self.updatePreferences(preferences)
         #self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
-        #self.tempWind = self.getTempWind()
+        self.tempWind = self.getTempWind()
         self.printStats()
         
         #self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
@@ -45,8 +45,8 @@ class Optimiser():
         Need to set npoints based on the zoom level
         '''
         n_points = 1000
-        distance = 20
-        effect = 1
+        print(self.bbox)
+
         heatmap = heatmap_layer(self.latlon, self.bbox, n_points) # This works
         heatmap.make_layers()
         heatmap.plot_heatmap()
