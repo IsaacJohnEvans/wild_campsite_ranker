@@ -429,6 +429,11 @@
              })
          );
 
+         const popup = new mapboxgl.Popup({ closeOnClick: false })
+            .setLngLat(map.getBounds().getCenter())
+            .setHTML('<h1>Welcome!</h1>')
+            .addTo(map);
+
          map.on('load', () => {
 
              map.addSource(
@@ -582,16 +587,16 @@
                          success: callback,
                      });
 
-                 map.addSource('serious_image', {
-                         'type': 'image',
-                         'url': 'https://raw.githubusercontent.com/crispianm/crispianm.github.io/main/images/serious_image.jpg',
-                         'coordinates': [
-                         [map.getBounds().getNorthWest().lng, map.getBounds().getNorthWest().lat],
-                         [map.getBounds().getNorthEast().lng, map.getBounds().getNorthEast().lat],
-                         [map.getBounds().getSouthEast().lng, map.getBounds().getSouthEast().lat],
-                         [map.getBounds().getSouthWest().lng, map.getBounds().getSouthWest().lat]
-                     ]
-                 });
+                //  map.addSource('serious_image', {
+                //          'type': 'image',
+                //          'url': 'https://raw.githubusercontent.com/crispianm/crispianm.github.io/main/images/serious_image.jpg',
+                //          'coordinates': [
+                //          [map.getBounds().getNorthWest().lng, map.getBounds().getNorthWest().lat],
+                //          [map.getBounds().getNorthEast().lng, map.getBounds().getNorthEast().lat],
+                //          [map.getBounds().getSouthEast().lng, map.getBounds().getSouthEast().lat],
+                //          [map.getBounds().getSouthWest().lng, map.getBounds().getSouthWest().lat]
+                //      ]
+                //  });
 
                  /*map.addLayer({
                      id: 'serious_image-layer',
@@ -621,12 +626,12 @@
 
              map.on('idle', () => {
                  // If these two layers were not added to the map, abort
-                 if (!map.getLayer('camp_landuse') || !map.getLayer('National Parks')) {
+                 if (!map.getLayer('Steepness') || !map.getLayer('OSM Crops')) {
                      return;
                  }
 
                  // Enumerate ids of the layers.
-                 const toggleableLayerIds = ['camp_landuse', 'National Parks'];
+                 const toggleableLayerIds = ['Steepness', 'OSM Crops'];
 
 
                  // Set up the corresponding toggle button for each layer.

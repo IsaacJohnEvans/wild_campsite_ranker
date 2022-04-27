@@ -128,3 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 local_config.py
+data.geojson
