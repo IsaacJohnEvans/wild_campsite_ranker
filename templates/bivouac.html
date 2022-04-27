@@ -696,17 +696,17 @@
              }); 
              
              function showRoute(minPath) {
-
                 console.log(minPath);
+                console.log(minPath.features[0].geometry);
 
                 map.addSource('route', {
                         'type': 'geojson',
                         'data': {
                             'type': 'Feature',
                             'properties': {},
-                            'geometry': {
+                            'geometry':{
                                 'type': 'LineString',
-                                'coordinates': minPath.coordinates
+                                'coordinates': [minPath.features[0].geometry.coordinates]
                             }
                         }
                     });
@@ -725,7 +725,7 @@
                     }
                 });
 
-                 console.log(minPath);
+                 console.log("HELL YEAHHHHHHHHHHHHHHHH");
              }
              
          
