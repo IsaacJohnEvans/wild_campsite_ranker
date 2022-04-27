@@ -31,12 +31,12 @@ class Optimiser():
         self.bbox = self.getBBoxList(bbox)
         self.features = features
         self.preferences = self.updatePreferences(preferences)
-        #self.shelterIndex = self.getShelterIndex()
+        self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
-        #self.tempWind = self.getTempWind()
+        self.tempWind = self.getTempWind()
         self.printStats()
         
-        #self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
+        self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
         #print(self.minPathToPoint, flush=True)
     def make_heatmap(self):
         '''
@@ -152,7 +152,7 @@ def process_result():
             json.dump(json.loads(features), f)
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
         optimiser.updateOptimiser(latlon, zoom_level, bbox, json.loads(features), preferences)
-        optimiser.make_heatmap()
+        # optimiser.make_heatmap()
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
