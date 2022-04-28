@@ -13,7 +13,7 @@ from pathfinding import construct_lng_lat_matrix, get_min_path
 import numpy as np
 class Optimiser():
     def __init__(self):
-        self.preferences = None
+        self.preferences = {'Test1':None, 'Test2':None, 'Test3':None,'Test4':None, 'Test5':None, 'Test6':None}
         self.latlon = None
         self.zoom_level = None
         self.bbox = None
@@ -102,10 +102,16 @@ class Optimiser():
         return tempWind
 
     def updatePreferences(self, newPreferences):
-        preferences = []
-        for i in newPreferences:
-            if i.isdigit():
-                preferences.append(i)
+        preferences = {}
+        keys = list(self.preferences.keys())
+        prefList = []
+        for preference in newPreferences:
+            if preference.isdigit():
+                prefList.append(preference)
+
+        for i in range(0,len(prefList)):
+            preferences[keys[i]] = prefList[i]
+
         return preferences
 
     def printStats(self):
@@ -150,6 +156,14 @@ def end_destination():
 
         print("end_destination:\n", minpath)
 
+    return data, 200
+
+@app.route('/create_heatmap', methods=['POST', 'GET'])
+def create_heatmap():
+    if request.method == 'POST':
+        location = request.form['location']
+        optimiser.make_heatmap()
+        data = {'status':"success"}
     return data, 200
 
 @app.route('/set_preferences', methods=['POST', 'GET'])
