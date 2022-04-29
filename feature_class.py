@@ -8,7 +8,6 @@ from scipy import ndimage
 import skimage
 from shapely import wkt
 from tqdm import tqdm
-
 class map_feature:
     '''
     A class to represent a map feature.
