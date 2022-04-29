@@ -359,6 +359,20 @@
                 });
          };
 
+        function createHeatmap() {
+            var coordinate = $("mouse_info").html();
+
+            $.ajax({
+                type: 'POST',
+                async: false,
+                data: {
+                    'location':coordinate},
+                dataType:"json",
+                url: '/create_heatmap'
+            });
+        };
+
+
 
          function toggleSidebar(id) {
              var elem = document.getElementById(id);
@@ -407,7 +421,7 @@
                  lng: -2.648202,
                  lat: 54.579422
              },
-             zoom: 5.5,
+             zoom: 15.5,
              pitch: 0,
              container: 'map',
              antialias: true
@@ -428,6 +442,11 @@
                  showUserHeading: true
              })
          );
+
+        const popup = new mapboxgl.Popup({ closeOnClick: false })
+            .setLngLat(map.getBounds().getCenter())
+            .setHTML('<h1>Welcome!</h1>')
+            .addTo(map);
 
          map.on('load', () => {
 
@@ -582,30 +601,12 @@
                          success: callback,
                      });
 
-                 map.addSource('serious_image', {
-                         'type': 'image',
-                         'url': 'https://raw.githubusercontent.com/crispianm/crispianm.github.io/main/images/serious_image.jpg',
-                         'coordinates': [
-                         [map.getBounds().getNorthWest().lng, map.getBounds().getNorthWest().lat],
-                         [map.getBounds().getNorthEast().lng, map.getBounds().getNorthEast().lat],
-                         [map.getBounds().getSouthEast().lng, map.getBounds().getSouthEast().lat],
-                         [map.getBounds().getSouthWest().lng, map.getBounds().getSouthWest().lat]
-                     ]
-                 });
 
-                 /*map.addLayer({
-                     id: 'serious_image-layer',
-                     'type': 'raster',
-                     'source': 'serious_image',
-                     'paint': {
-                         'raster-fade-duration': 0
-                     }
-                 });*/
                  new mapboxgl.Popup()
                      .setLngLat(e.lngLat)
                      .setHTML(num_features + "<br> Temperature: " + temp + "<br> Wind Speed: " +
                      wind + "<br> Shelter Index: " + shelter + "<br> Grid Ref: " + gridref +
-                     "<br><button class='goFromButton' onclick='startLocation()'>Set Starting Location</button><br><button class='goToButton' onclick='destinationLocation()'>Set Destination</button>" )
+                     "<br><button class='goFromButton' onclick='startLocation()'>Set Starting Location</button><br><button class='goToButton' onclick='destinationLocation()'>Set Destination</button><br><button class='heatmapButton' onclick='createHeatmap()'>Create Heatmap</button>" )
                      .addTo(map);
 
                  });
@@ -621,12 +622,12 @@
 
              map.on('idle', () => {
                  // If these two layers were not added to the map, abort
-                 if (!map.getLayer('camp_landuse') || !map.getLayer('National Parks')) {
+                 if (!map.getLayer('Steepness') || !map.getLayer('OSM Crops')) {
                      return;
                  }
 
                  // Enumerate ids of the layers.
-                 const toggleableLayerIds = ['camp_landuse', 'National Parks'];
+                 const toggleableLayerIds = ['Steepness', 'OSM Crops'];
 
 
                  // Set up the corresponding toggle button for each layer.
@@ -709,11 +710,41 @@
              }); 
              
              function showRoute(minPath) {
-                 console.log(minPath);
-             }
-             
-         
-        
+  
+                // for (let i = 0; i < minPath.features[0].geometry.coordinates.length; i++) {
+                //     console.log(i+"th"+" coordinates:\n" + minPath.features[0].geometry.coordinates[i]);
+                // }
+                console.log(minPath.features[0].geometry.coordinates);
+                console.log("HELL YEAHHHHHHHHHHHHHHHH");
+                // return minPath.features[0].geometry.coordinates;
+
+                map.addSource('routesource', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'Feature',
+                            'properties': {},
+                            'geometry':{
+                                'type': 'LineString',
+                                'coordinates': minPath.features[0].geometry.coordinates
+                            }
+                        }
+                    });
+
+                map.addLayer({
+                    'id': 'route',
+                    'type': 'line',
+                    'source': 'routesource',
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': '#888',
+                        'line-width': 8
+                    }
+                });  
+            }
+                    
     </script>
   </body>
 </html>
