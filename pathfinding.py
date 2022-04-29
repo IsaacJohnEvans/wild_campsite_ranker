@@ -76,7 +76,7 @@ def lng_lat_to_coord(lng_lat_matrix, lng_lat):
     return min_idx
 
 
-def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=12):
+def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=4):
 
     neighbourDiffs = [[0,1], [0,-1], [-1,0], [1,0]]
     visitedNodes = {startNode: 0} # Dictionary of nodes and their shortest discovered cumulative distance

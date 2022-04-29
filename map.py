@@ -49,6 +49,14 @@ class Optimiser():
         heatmap = heatmap_layer(self.bbox, n_points)
         heatmap.make_layers()
         heatmap.plot_heatmap()
+        x = heatmap.grid[0]
+        y = heatmap.grid[1]
+        z = heatmap.grid[2]
+        n_spots = 5
+        best_spots_i = (-z).argsort()[:n_spots]
+
+        return best_spots_i
+
 
     def convertToJson(self, minPath):
         geojson = {
@@ -124,8 +132,6 @@ class Optimiser():
         print("preferences:",self.preferences, flush=True)
 
 
-
-
 @app.route('/')
 
 def home():
@@ -195,7 +201,7 @@ def process_result():
             json.dump(json.loads(features), f)
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
         optimiser.updateOptimiser(latlon, zoom_level, bbox, json.loads(features), preferences)
-        optimiser.make_heatmap()
+        #optimiser.make_heatmap()
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
@@ -229,4 +235,4 @@ def get_num_features(feats):
 if __name__ == "__main__":
     global optimiser
     optimiser = Optimiser()
-    app.run(debug=True)
+    app.run()

@@ -418,8 +418,8 @@
          const map = new mapboxgl.Map({
              style: 'mapbox://styles/crispianm/cl13itnrc005015pbpdw8v5yu',
              center: {
-                 lng: -2.648202,
-                 lat: 54.579422
+                 lng: -2.602678,
+                 lat: 51.455691
              },
              zoom: 15.5,
              pitch: 0,
@@ -606,8 +606,8 @@
 
                  new mapboxgl.Popup()
                      .setLngLat(e.lngLat)
-                     .setHTML(num_features + "<br> Temperature: " + temp + "<br> Wind Speed: " +
-                     wind + "<br> Shelter Index: " + shelter + "<br> Grid Ref: " + gridref +
+                     .setHTML("Temperature: " + temp + "°C<br> Wind Speed: " +
+                     wind + "m/s<br> Shelter Index: " + shelter + "<br> Grid Ref: " + gridref +
                      "<br><button class='goFromButton' onclick='startLocation()'>Set Starting Location</button><br><button class='goToButton' onclick='destinationLocation()'>Set Destination</button><br><button class='heatmapButton' onclick='createHeatmap()'>Create Heatmap</button>" )
                      .addTo(map);
 
