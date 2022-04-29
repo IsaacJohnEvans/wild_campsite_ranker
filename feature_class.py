@@ -14,8 +14,6 @@ import skimage
 from shapely import wkt
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
-
-
 class map_feature:
     '''
     A class to represent a map feature.
@@ -200,10 +198,7 @@ class heatmap_layer():
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.z
             self.layers.append(layer1)
-            
     def plot_heatmap(self):
         ax = plt.axes(projection ='3d')
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap ='inferno')
         plt.show()
-
-# %%
