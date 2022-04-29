@@ -514,6 +514,8 @@
 
              // HTML from the click event's properties.
              map.on('click', (e) => {
+                map.flyTo({center: e.lnglat, zoom:14, essential: true});
+                
 
                  if (map.getLayer("serious_image-layer")) {
                      map.removeLayer("serious_image-layer");
