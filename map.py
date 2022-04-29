@@ -227,4 +227,4 @@ def get_num_features(feats):
 if __name__ == "__main__":
     global optimiser
     optimiser = Optimiser()
-    app.run(debug=True)
+    app.run()
