@@ -118,10 +118,10 @@ def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=12)
         # Add new current node to visited nodes
         visitedNodes[currentNode] = currentDist
         if targetNode in visitedNodes.keys():
-            #print("DONE")
+            print("DONE")
             break
 
-    #print(len(visitedNodes))
+    print(len(visitedNodes))
 
     # Backtracking to get path of nodes
     currentNode = targetNode
@@ -129,7 +129,7 @@ def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=12)
     while currentNode != startNode:
         currentNode = parentDict[currentNode]
         nodePath.append(currentNode)
-    #print(nodePath)
+    print(nodePath)
 
     return nodePath
 
@@ -164,8 +164,8 @@ def get_min_path(start_lng_lat, end_lng_lat, zoom):
     lng_lat_matrix = construct_lng_lat_matrix(upper_left, zoomlevel=zoom)
 
     targetNode = lng_lat_to_coord(lng_lat_matrix, lng_lat=list(end_lng_lat))
-    #print("startNode", startNode)
-    #print("targetNode", targetNode)
+    print("startNode", startNode)
+    print("targetNode", targetNode)
     # Get elevation matrix
     elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
 

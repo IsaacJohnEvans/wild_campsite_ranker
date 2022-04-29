@@ -11,10 +11,9 @@ import mercantile
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB ,getSlopeMatrix
 from pathfinding import construct_lng_lat_matrix, get_min_path
 import numpy as np
-
 class Optimiser():
     def __init__(self):
-        self.preferences = None
+        self.preferences = {'Test1':None, 'Test2':None, 'Test3':None,'Test4':None, 'Test5':None, 'Test6':None}
         self.latlon = None
         self.zoom_level = None
         self.bbox = None
@@ -32,35 +31,36 @@ class Optimiser():
         self.bbox = self.getBBoxList(bbox)
         self.features = features
         self.preferences = self.updatePreferences(preferences)
-        #self.shelterIndex = self.getShelterIndex()
+        self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
-        #self.tempWind = self.getTempWind()
-        self.printStats()
+        self.tempWind = self.getTempWind()
+        # self.printStats()
         
-        #self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
+        self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
         #print(self.minPathToPoint, flush=True)
+
     def make_heatmap(self):
-        
         '''
         Need to set npoints based on the zoom level
         '''
+        print('Making heatmap, please wait')
         n_points = 1000
-        distance = 20
-        effect = 1
-        heatmap = heatmap_layer(self.latlon, self.bbox, n_points) # This works
+        heatmap = heatmap_layer(self.bbox, n_points)
         heatmap.make_layers()
         heatmap.plot_heatmap()
 
     def convertToJson(self, minPath):
         geojson = {
             "type": "FeatureCollection",
-            "features": [
-            {
+            "features": [{
                 "type": "Feature",
+                "properties": {},
                 "geometry" : {
                     "type": "LineString",
                     "coordinates": minPath
-                    }}]}
+                }
+            }]
+        }
         output = open("minPath.geojson", 'w')
         json.dump(geojson, output)
         return geojson
@@ -72,7 +72,7 @@ class Optimiser():
             bboxList.append(latLon.replace('(','').replace(')','').replace(' ','').split(','))
         bbox = [[float(bboxList[0][0]), float(bboxList[0][1])],[float(bboxList[1][0]),float(bboxList[1][1])]]
         return bbox
-
+    
     def setPoint(self, latlonDict, pointType):
         if pointType == "start":
             self.startPoint = [latlonDict['lat'], latlonDict['lng']]
@@ -102,10 +102,16 @@ class Optimiser():
         return tempWind
 
     def updatePreferences(self, newPreferences):
-        preferences = []
-        for i in newPreferences:
-            if i.isdigit():
-                preferences.append(i)
+        preferences = {}
+        keys = list(self.preferences.keys())
+        prefList = []
+        for preference in newPreferences:
+            if preference.isdigit():
+                prefList.append(preference)
+
+        for i in range(0,len(prefList)):
+            preferences[keys[i]] = prefList[i]
+
         return preferences
 
     def printStats(self):
@@ -117,10 +123,12 @@ class Optimiser():
         print("preferences:",self.preferences, flush=True)
 
 
+
+
 @app.route('/')
+
 def home():
     return render_template('bivouac.html')
-
 
 @app.route('/start_destination', methods = ['POST','GET'])
 def start_destination():
@@ -130,6 +138,9 @@ def start_destination():
         minpath = optimiser.setPoint(json.loads(re.findall('\{.*?\}',location)[1]),"start")
         
         data = {'status':"success", "minpath":minpath}
+
+        # print("start_destination:\n", minpath)
+
     return data, 200
 
 @app.route('/end_destination', methods = ['POST','GET'])
@@ -137,11 +148,23 @@ def end_destination():
     if request.method == 'POST':
         location = request.form['location']
         minpath = optimiser.setPoint(json.loads(re.findall('\{.*?\}',location)[1]), "end")
+
+        minpath['features'][0]['geometry']['coordinates'][:] = map(lambda l: list(reversed(l)), minpath['features'][0]['geometry']['coordinates']) # switches lat and long
+
         data = {'status':"success",
         "minpath": minpath}
+
+        print("end_destination:\n", minpath)
+
     return data, 200
 
-
+@app.route('/create_heatmap', methods=['POST', 'GET'])
+def create_heatmap():
+    if request.method == 'POST':
+        location = request.form['location']
+        optimiser.make_heatmap()
+        data = {'status':"success"}
+    return data, 200
 
 @app.route('/set_preferences', methods=['POST', 'GET'])
 def get_preferences():
@@ -157,7 +180,6 @@ def get_preferences():
     
     return data, 200
 
-
 @app.route('/get_result', methods=['POST', 'GET'])
 def process_result():
     if request.method == 'POST':
@@ -170,17 +192,14 @@ def process_result():
         # print(features)
         with open('data.geojson', 'w') as f:
             json.dump(json.loads(features), f)
-
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
-
         optimiser.updateOptimiser(latlon, zoom_level, bbox, json.loads(features), preferences)
-        optimiser.make_heatmap()
+        # optimiser.make_heatmap()
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
         # Define loads of interesting things here, ie list of coords to plot that is a path
         num_features = get_num_features(features)
-
         # add whatever keys and values we want to this
         data = {"status": "success",
             "some": num_features,
@@ -189,23 +208,15 @@ def process_result():
             "wind_shelter": optimiser.shelterIndex,
             "osGrid": optimiser.OSGridReference
             }
-
         # creating elevation matrix (needs to be using the bbox and latlon centre)
         MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
-
         #tile_coords = mercantile.tile(bbox[0][0], bbox[0][1], zoom_level)
         '''tile_coords = mercantile.tile(bbox[0][0], bbox[0][1], zoom_level)
         upper_left = mercantile.ul(tile_coords)
         lnglat_mat = construct_lng_lat_matrix(upper_left, zoom_level)
-
         elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
         slope_mat = getSlopeMatrix(elevation_mat)'''
-
-
-        # create heatmap layer
-        #heatmap = heatmap_layer()
-        #heatmap.make_grid(latlon, bbox, n_points)
-
+        
         
     return data, 200 # 200 tells ajax "success!"
    
@@ -213,7 +224,6 @@ def get_num_features(feats):
     dictionary = json.loads(feats)
     num = len(dictionary)
     return num
-
 
 if __name__ == "__main__":
     global optimiser

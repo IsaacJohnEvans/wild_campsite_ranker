@@ -1,5 +1,6 @@
 import numpy as np
 import math
+
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB
 import mercantile
 import basic_weather_calls
@@ -36,7 +37,7 @@ def centervalue(x):
     i = math.ceil(x.shape[1] / 2)
     return(x[i,i],i)  
 
-def shelter_index(x,mask,radius,cellsize):
+def shelter_index(x,mask,radius,cellsize,array_return=None):
     
     ctr,coord_x = centervalue(x)
     x = x[coord_x-radius:coord_x+1+radius,coord_x-radius:coord_x+1+radius]
@@ -50,19 +51,21 @@ def shelter_index(x,mask,radius,cellsize):
                 x[i,j] = np.nan
     
     res = np.nan
-    x_list =[]
+    x_array = np.zeros((x.shape[0],x.shape[1]))
     for i in range(x.shape[0]):
         for j in range(x.shape[1]):
             if not np.isnan(x[i,j]):
                 point_coords = (i,j)
                 if point_coords != (coord_c,coord_c):
                     distance = np.sqrt((coord_c-point_coords[0])**2+(coord_c-point_coords[1])**2) * cellsize
-                    x_list.append(np.arctan((x[point_coords[0],point_coords[1]]-ctr)/distance))
+                    x_array[i,j] = (np.arctan((x[point_coords[0],point_coords[1]]-ctr)/distance))
            
-    res = max(x_list)
+    res = np.amax(x_array)
     
-    
-    return(res)
+    if array_return !=None:
+        return res,x_array
+    else:
+        return(res)
 
 
 def wind_shelter(lat,lng,zoom):
@@ -100,4 +103,3 @@ def wind_shelter(lat,lng,zoom):
     
     
     
-#usage   
