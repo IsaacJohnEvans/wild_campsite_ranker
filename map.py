@@ -81,7 +81,7 @@ class Optimiser():
         else:
             self.endPoint = [latlonDict['lat'], latlonDict['lng']]
         if self.startPoint != None and self.endPoint != None:
-            min_path = get_min_path(self.startPoint, self.endPoint, math.ceil(float(self.zoom_level)))
+            min_path = get_min_path_from_bbox(self.bbox[0][0], self.bbox[0][1], self.bbox[1][0], self.bbox[1][0])
             return self.convertToJson(min_path)
         else:
             return "False"
@@ -122,8 +122,6 @@ class Optimiser():
         print("shelterIndex:",self.shelterIndex, flush=True)
         print("OSGridReference:",self.OSGridReference, flush=True)
         print("preferences:",self.preferences, flush=True)
-
-
 
 
 @app.route('/')
@@ -195,7 +193,7 @@ def process_result():
             json.dump(json.loads(features), f)
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
         optimiser.updateOptimiser(latlon, zoom_level, bbox, json.loads(features), preferences)
-        optimiser.make_heatmap()
+        #optimiser.make_heatmap()
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)
