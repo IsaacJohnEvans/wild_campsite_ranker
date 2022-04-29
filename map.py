@@ -81,7 +81,7 @@ class Optimiser():
         else:
             self.endPoint = [latlonDict['lat'], latlonDict['lng']]
         if self.startPoint != None and self.endPoint != None:
-            min_path = get_min_path_from_bbox(self.bbox[0][0], self.bbox[0][1], self.bbox[1][0], self.bbox[1][0])
+            min_path = get_min_path(self.startPoint, self.endPoint, math.ceil(float(self.zoom_level)))
             return self.convertToJson(min_path)
         else:
             return "False"
