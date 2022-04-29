@@ -76,7 +76,7 @@ def lng_lat_to_coord(lng_lat_matrix, lng_lat):
     return min_idx
 
 
-def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=12):
+def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=4):
 
     neighbourDiffs = [[0,1], [0,-1], [-1,0], [1,0]]
     visitedNodes = {startNode: 0} # Dictionary of nodes and their shortest discovered cumulative distance
@@ -189,6 +189,17 @@ def get_min_path(start_lng_lat, end_lng_lat, zoom):
 
 
 def get_min_path_from_bbox(bbox):
+    if bbox[0] > bbox[2]: # coord 1 more east
+        if bbox[1] > bbox[3]: # coord 1 more north
+            bbox = [bbox[2], bbox[1], bbox[0], bbox[3]]
+        else: # coord 1 more south
+            bbox = [bbox[2], bbox[3], bbox[0], bbox[1]]
+    else: # coord 1 more west
+        if bbox[1] > bbox[3]:  # coord 1 more north
+            pass
+        else: # coord 1 more south
+            bbox = [bbox[0], bbox[3], bbox[2], bbox[1]]
+
     tile_coords = mercantile.bounding_tile(bbox[0], bbox[1], bbox[2], bbox[3])
 
     upper_left = mercantile.ul(tile_coords)
