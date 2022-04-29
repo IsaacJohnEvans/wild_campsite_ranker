@@ -1,18 +1,12 @@
 #coding : utf8
-from turtle import distance
-from mercantile import feature
 import numpy as np
-import pandas as pd
-from matplotlib.patches import Polygon
 import matplotlib.pyplot as plt
-import numpy as np
 import matplotlib.path as mpltPath
 import json
 from OSGridConverter import latlong2grid
 from scipy import ndimage
 import skimage
 from shapely import wkt
-from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 class map_feature:
     '''
@@ -27,9 +21,6 @@ class map_feature:
     Shape: A list of tuples of the grid references of the feature
     '''
     def __init__(self, feature_id, feature_type, shape_type, latlong):
-        '''
-        
-        '''
         self.number = feature_id
         self.feature_type = feature_type
         self.shape_type = shape_type
@@ -76,16 +67,14 @@ class map_layer(map_feature):
     '''
     def __init__(self, grid, name, effect, distance, features):
         self.features = features
-        self.x = grid[0]
-        self.y = grid[1]
-        self.z = grid[2]
-        self.points = np.concatenate((np.reshape(self.x, (self.x.size, 1)), np.reshape(self.y, (self.y.size, 1))), axis = 1)
+        self.grid = grid
+        self.points = np.concatenate((np.reshape(self.grid[0], (self.grid[0].size, 1)), np.reshape(self.grid[1], (self.grid[1].size, 1))), axis = 1)
         self.layer_name = name
         self.sigma = 1
         self.effect = effect
         self.dist = distance
         self.values = self.effect_values()
-        self.poly_bool = np.zeros(self.z.shape).astype(bool)
+        self.poly_bool = np.zeros(self.grid[2].shape).astype(bool)
         
     def effect_values(self):
         x = np.linspace(0,2*np.pi,self.dist)
@@ -118,17 +107,17 @@ class map_layer(map_feature):
         self.poly_bool = np.logical_or(self.poly_bool, new_poly_bool)
     def dilate_layer(self, layer1, struct, value):
         layer2 = ndimage.binary_dilation(layer1, structure=struct)
-        self.z[np.logical_and(layer2, np.logical_not(layer1.astype(bool)))] = value
+        self.grid[2][np.logical_and(layer2, np.logical_not(layer1.astype(bool)))] = value
         return layer2
     
     def dilate_poly(self, struct):
         layer2 = self.dilate_layer(self.poly_bool, struct, self.values[0])
         for val in self.values[1:]:
             layer2 = self.dilate_layer(layer2, struct, val)
-        self.z = skimage.filters.gaussian(self.z, self.sigma)
+        self.grid[2] = skimage.filters.gaussian(self.grid[2], self.sigma)
   
 class heatmap_layer():
-    def __init__(self, bbox, n_points):
+    def __init__(self, bbox, n_points, preferences = []):
         NW_gr = latlong2grid(bbox[0][1],bbox[0][0])
         NW = [NW_gr.E, NW_gr.N]
         SE_gr = latlong2grid(bbox[1][1],bbox[1][0])
@@ -140,6 +129,14 @@ class heatmap_layer():
         self.get_features()
         self.get_unique_feature_types()
         self.layers = []
+        self.get_preference_features(preferences)
+        
+    def get_preference_features(self, preferences):
+        self.preference_features = preferences
+        '''
+        This needs to be a dictionary with the feature type as the key and the preference as the value
+        '''
+        
     
     def get_features(self, file_name = 'data.geojson'):
         features = []
@@ -169,7 +166,8 @@ class heatmap_layer():
         for feature in self.features:
             desired_features.add(feature.feature_type)
         self.unique_features = list(desired_features)
-        
+        print(self.unique_features)
+    
     def make_dilate_struct(self):
         struct = np.ones((3, 3))
         struct[1, 1] = 0
@@ -185,10 +183,10 @@ class heatmap_layer():
 
         for unique_feature in self.unique_features:
             layers[unique_feature] = []
-            '''
-            A function to select features and set the importance of them using the slider data
-            '''
-
+        '''
+        A function to select features and set the importance of them using the slider data
+        '''
+        
         for feature in self.features:
             layers[feature.feature_type].append(feature)
         
@@ -196,9 +194,11 @@ class heatmap_layer():
             layer1 = map_layer(grid, unique_feature, effect, distance, layers[unique_feature])
             layer1.bool_features()
             layer1.dilate_poly(struct)
-            self.grid[2] += layer1.z
+            self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
     def plot_heatmap(self):
         ax = plt.axes(projection ='3d')
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap ='inferno')
         plt.show()
+
+
