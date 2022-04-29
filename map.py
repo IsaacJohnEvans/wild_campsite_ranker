@@ -11,6 +11,7 @@ import mercantile
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB ,getSlopeMatrix
 from pathfinding import construct_lng_lat_matrix, get_min_path
 import numpy as np
+
 class Optimiser():
     def __init__(self):
         self.preferences = {'Test1':None, 'Test2':None, 'Test3':None,'Test4':None, 'Test5':None, 'Test6':None}
@@ -194,7 +195,7 @@ def process_result():
             json.dump(json.loads(features), f)
         latlon = json.loads(re.findall('\{.*?\}',mouse_pos)[1])
         optimiser.updateOptimiser(latlon, zoom_level, bbox, json.loads(features), preferences)
-        # optimiser.make_heatmap()
+        optimiser.make_heatmap()
         # print("Output :" + mouse_pos, flush=True)
         # print("Zoom level :" + zoom_level, flush=True)
         # print("Features :" + features, flush=True)

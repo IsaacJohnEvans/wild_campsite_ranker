@@ -118,10 +118,10 @@ def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=12)
         # Add new current node to visited nodes
         visitedNodes[currentNode] = currentDist
         if targetNode in visitedNodes.keys():
-            print("DONE")
+            #print("DONE")
             break
 
-    print(len(visitedNodes))
+    #print(len(visitedNodes))
 
     # Backtracking to get path of nodes
     currentNode = targetNode
@@ -129,7 +129,7 @@ def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=12)
     while currentNode != startNode:
         currentNode = parentDict[currentNode]
         nodePath.append(currentNode)
-    print(nodePath)
+    #print(nodePath)
 
     return nodePath
 
@@ -164,8 +164,8 @@ def get_min_path(start_lng_lat, end_lng_lat, zoom):
     lng_lat_matrix = construct_lng_lat_matrix(upper_left, zoomlevel=zoom)
 
     targetNode = lng_lat_to_coord(lng_lat_matrix, lng_lat=list(end_lng_lat))
-    print("startNode", startNode)
-    print("targetNode", targetNode)
+    #print("startNode", startNode)
+    #print("targetNode", targetNode)
     # Get elevation matrix
     elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
 
@@ -187,3 +187,30 @@ def get_min_path(start_lng_lat, end_lng_lat, zoom):
 
     return lnglatPath
 
+
+def get_min_path_from_bbox(bbox):
+    tile_coords = mercantile.bounding_tile(bbox[0], bbox[1], bbox[2], bbox[3])
+
+    upper_left = mercantile.ul(tile_coords)
+
+    elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
+    lng_lat_mat = construct_lng_lat_matrix(upper_left, tile_coords.z)
+
+    # Pad matrix with infinities to represent boundaries
+    padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
+
+    # resolution = 156543.03 meters/pixel * cos(latitude) / (2 ^ zoomlevel)
+    latitude_radians = bbox[1] * math.pi / 180
+    resolution = abs(156543.03 * np.cos(latitude_radians) / (2 ** tile_coords.z))
+
+    startNode = lng_lat_to_coord(lng_lat_mat, [bbox[0], bbox[1]])
+    targetNode = lng_lat_to_coord(lng_lat_mat, [bbox[2], bbox[3]])
+
+    # Generate the shortest path as a sequence of lng, lat tuples
+    node_path = djikstra(padded_mat, startNode=startNode, targetNode=(targetNode[0]+1, targetNode[1]+1),
+                         resolution=resolution, elevation_multiplier=5)
+
+    # Gets path as series of longitude and latitude coordinates
+    lnglatPath = [coord_to_lng_lat(upper_left, coord, tile_coords.z) for coord in node_path]
+
+    return lnglatPath
