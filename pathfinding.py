@@ -20,7 +20,7 @@ def get_tile(lat, lng, zoom_level):
     tile_coords = mercantile.tile(lng=lng, lat=lat, zoom=zoom_level)
     elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
     padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
-    print(padded_mat, flush=True)
+    #print(padded_mat, flush=True)
     # Get latitude and longitude at upper-left of tile
     upper_left = mercantile.ul(tile_coords)
     djikstra(padded_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=zoom_level, latitude=lat, elevation_multiplier=10, show_plot=True)
@@ -85,7 +85,8 @@ def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=12)
 
     currentNode = startNode
     currentDist = 0
-
+    #print("startNode:", startNode)
+    #print("targetNode:", targetNode)
     while True:
 
         neighbourNodes = set(tuple(np.array(currentNode) + np.array(diff)) for diff in neighbourDiffs)
@@ -134,7 +135,7 @@ def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=12)
     return nodePath
 
 
-def get_min_path(start_lng_lat, end_lng_lat, zoom):
+def get_min_path(start_lng_lat, end_lng_lat, zoom, elevation_multiplier=5, show_img=False):
 
     # Get direction of end location relative to start
     x_delta = end_lng_lat[0]-start_lng_lat[0]
@@ -177,18 +178,25 @@ def get_min_path(start_lng_lat, end_lng_lat, zoom):
     resolution = abs(156543.03 * np.cos(latitude_radians) / (2 ** zoom))
 
     # Generate the shortest path as a sequence of lng, lat tuples
-    node_path = djikstra(padded_mat, startNode=startNode, targetNode=(targetNode[0]+1, targetNode[1]+1), resolution=resolution,
-                        elevation_multiplier=5)
+    node_path = djikstra(padded_mat, startNode=startNode, targetNode=(targetNode[0]+1, targetNode[1]+1),
+                         resolution=resolution, elevation_multiplier=elevation_multiplier)
 
     # Get lng and lat of upper-left of tile
     upper_left = mercantile.ul(tile_coords)
     # Gets path as series of longitude and latitude coordinates
     lnglatPath = [coord_to_lng_lat(upper_left, coord, zoom) for coord in node_path]
 
+    if show_img:
+        plt.imshow(elevation_mat, interpolation='nearest')
+        xs = [x[0] for x in node_path]
+        ys = [x[1] for x in node_path]
+        plt.plot(xs, ys, 'r-')
+        plt.show()
+
     return lnglatPath
 
 
-def get_min_path_from_bbox(bbox):
+def get_min_path_from_bbox(bbox, elevation_multiplier=10, show_img=False):
     if bbox[0] > bbox[2]: # coord 1 more east
         if bbox[1] > bbox[3]: # coord 1 more north
             bbox = [bbox[2], bbox[1], bbox[0], bbox[3]]
@@ -218,10 +226,17 @@ def get_min_path_from_bbox(bbox):
     targetNode = lng_lat_to_coord(lng_lat_mat, [bbox[2], bbox[3]])
 
     # Generate the shortest path as a sequence of lng, lat tuples
-    node_path = djikstra(padded_mat, startNode=startNode, targetNode=(targetNode[0]+1, targetNode[1]+1),
-                         resolution=resolution, elevation_multiplier=5)
+    node_path = djikstra(padded_mat, startNode=(startNode[0]+1, startNode[1]+1), targetNode=(targetNode[0]+1, targetNode[1]+1),
+                         resolution=resolution, elevation_multiplier=elevation_multiplier)
 
     # Gets path as series of longitude and latitude coordinates
     lnglatPath = [coord_to_lng_lat(upper_left, coord, tile_coords.z) for coord in node_path]
+
+    if show_img:
+        plt.imshow(elevation_mat, interpolation='nearest')
+        xs = [x[0] for x in node_path]
+        ys = [x[1] for x in node_path]
+        plt.plot(xs, ys, 'r-')
+        plt.show()
 
     return lnglatPath
