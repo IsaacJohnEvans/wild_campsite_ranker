@@ -1,5 +1,4 @@
 #coding : utf8
-from enum import unique
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.path as mpltPath
@@ -10,7 +9,6 @@ import skimage
 from shapely import wkt
 from tqdm import tqdm
 
-from map import get_preferences
 class map_feature:
     '''
     A class to represent a map feature.
@@ -199,10 +197,9 @@ class heatmap_layer():
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
-
     def plot_heatmap(self):
         ax = plt.axes(projection ='3d')
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap ='inferno')
         plt.show()
 
-# %%
+
