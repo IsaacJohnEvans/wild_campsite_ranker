@@ -11,9 +11,10 @@ import mercantile
 from elevation import getElevationMatrix, rasterToImage, getRasterRGB ,getSlopeMatrix
 from pathfinding import construct_lng_lat_matrix, get_min_path
 import numpy as np
+
 class Optimiser():
     def __init__(self):
-        self.preferences = None
+        self.preferences = {'Test1':None, 'Test2':None, 'Test3':None,'Test4':None, 'Test5':None, 'Test6':None}
         self.latlon = None
         self.zoom_level = None
         self.bbox = None
@@ -31,13 +32,14 @@ class Optimiser():
         self.bbox = self.getBBoxList(bbox)
         self.features = features
         self.preferences = self.updatePreferences(preferences)
-        #self.shelterIndex = self.getShelterIndex()
+        self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
-        #self.tempWind = self.getTempWind()
-        self.printStats()
+        self.tempWind = self.getTempWind()
+        # self.printStats()
         
-        #self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
+        self.convertToJson(get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level)))
         #print(self.minPathToPoint, flush=True)
+
     def make_heatmap(self):
         '''
         Need to set npoints based on the zoom level
@@ -51,16 +53,19 @@ class Optimiser():
     def convertToJson(self, minPath):
         geojson = {
             "type": "FeatureCollection",
-            "features": [
-            {
+            "features": [{
                 "type": "Feature",
+                "properties": {},
                 "geometry" : {
                     "type": "LineString",
                     "coordinates": minPath
-                    }}]}
+                }
+            }]
+        }
         output = open("minPath.geojson", 'w')
         json.dump(geojson, output)
         return geojson
+
     def getBBoxList(self, bbox):
         bboxLatLon = re.findall('\(.*?\)', bbox)
         bboxList = []
@@ -80,24 +85,36 @@ class Optimiser():
             return self.convertToJson(min_path)
         else:
             return "False"
+
     def getFeatures(self):
         pass
         #print(self.features)
+
     def getShelterIndex(self):
         shelterIndex = wind_shelter(self.latlon['lat'], self.latlon['lng'], math.ceil(float(self.zoom_level)))
         return shelterIndex
+
     def getOSGridReference(self):
         return str(latlong2grid(self.latlon['lat'], self.latlon['lng']))
+
     def getTempWind(self):
         get_weather = weather_mesh([self.latlon['lat']], [self.latlon['lng']])
         tempWind = get_weather['features'][0]['properties']
         return tempWind
+
     def updatePreferences(self, newPreferences):
-        preferences = []
-        for i in newPreferences:
-            if i.isdigit():
-                preferences.append(i)
+        preferences = {}
+        keys = list(self.preferences.keys())
+        prefList = []
+        for preference in newPreferences:
+            if preference.isdigit():
+                prefList.append(preference)
+
+        for i in range(0,len(prefList)):
+            preferences[keys[i]] = prefList[i]
+
         return preferences
+
     def printStats(self):
         print("Latlon:",self.latlon, flush=True)
         print("zoom_level:",self.zoom_level, flush=True)
@@ -105,9 +122,15 @@ class Optimiser():
         print("shelterIndex:",self.shelterIndex, flush=True)
         print("OSGridReference:",self.OSGridReference, flush=True)
         print("preferences:",self.preferences, flush=True)
+
+
+
+
 @app.route('/')
+
 def home():
     return render_template('bivouac.html')
+
 @app.route('/start_destination', methods = ['POST','GET'])
 def start_destination():
     if request.method == 'POST':
@@ -116,15 +139,34 @@ def start_destination():
         minpath = optimiser.setPoint(json.loads(re.findall('\{.*?\}',location)[1]),"start")
         
         data = {'status':"success", "minpath":minpath}
+
+        # print("start_destination:\n", minpath)
+
     return data, 200
+
 @app.route('/end_destination', methods = ['POST','GET'])
 def end_destination():
     if request.method == 'POST':
         location = request.form['location']
         minpath = optimiser.setPoint(json.loads(re.findall('\{.*?\}',location)[1]), "end")
+
+        minpath['features'][0]['geometry']['coordinates'][:] = map(lambda l: list(reversed(l)), minpath['features'][0]['geometry']['coordinates']) # switches lat and long
+
         data = {'status':"success",
         "minpath": minpath}
+
+        print("end_destination:\n", minpath)
+
     return data, 200
+
+@app.route('/create_heatmap', methods=['POST', 'GET'])
+def create_heatmap():
+    if request.method == 'POST':
+        location = request.form['location']
+        optimiser.make_heatmap()
+        data = {'status':"success"}
+    return data, 200
+
 @app.route('/set_preferences', methods=['POST', 'GET'])
 def get_preferences():
     if request.method == 'POST':
@@ -138,6 +180,7 @@ def get_preferences():
         #print(preferences, flush=True)
     
     return data, 200
+
 @app.route('/get_result', methods=['POST', 'GET'])
 def process_result():
     if request.method == 'POST':
