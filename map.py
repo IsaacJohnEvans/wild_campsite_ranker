@@ -49,6 +49,14 @@ class Optimiser():
         heatmap = heatmap_layer(self.bbox, n_points)
         heatmap.make_layers()
         heatmap.plot_heatmap()
+        x = heatmap.grid[0]
+        y = heatmap.grid[1]
+        z = heatmap.grid[2]
+        n_spots = 5
+        best_spots_i = (-z).argsort()[:n_spots]
+
+        return best_spots_i
+
 
     def convertToJson(self, minPath):
         geojson = {
@@ -227,4 +235,4 @@ def get_num_features(feats):
 if __name__ == "__main__":
     global optimiser
     optimiser = Optimiser()
-    app.run(debug=True)
+    app.run()
