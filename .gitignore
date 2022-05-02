@@ -5,7 +5,10 @@ __pycache__/
 
 # Data
 data.geojson
-
+bbox.csv
+bbox.txt
+*.geojson
+*.csv
 
 # C extensions
 *.so
