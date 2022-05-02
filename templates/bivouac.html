@@ -640,7 +640,13 @@
                 },
                 dataType: "json",
                 url: "/create_heatmap",
+                success: function (points) {
+                    best_points = points.points;
+                    showPoints(best_points);
+                },
             });
+
+            console.log("Heatmap created.");
         }
 
         function toggleSidebar(id) {
@@ -750,6 +756,22 @@
                     "line-opacity": 0.75,
                     "line-width": 6,
                 },
+            });
+
+            map.addSource("points", {
+                type: "geojson",
+                data: [],
+            });
+
+            map.addLayer({
+                id: "points",
+                type: "heatmap",
+                source: "points",
+                // paint: {
+                //     "line-color": "#888",
+                //     "line-opacity": 0.75,
+                //     "line-width": 6,
+                // },
             });
 
             // map.addLayer({
@@ -1027,8 +1049,40 @@
                 } else {
                     window.clearInterval(timer);
                 }
-            }, 0.1);
+            }, 2);
 
+        };
+
+        function showPoints(best_points) {
+
+            const pointdata = {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": []
+                        }
+                    }
+                ]
+            }
+
+            const coordinates = best_points.features[0].geometry.coordinates;
+            pointdata.features[0].geometry.coordinates = [coordinates[0]];
+            // console.log(routedata);
+
+            let i = 0;
+            const timer = setInterval(() => {
+                if (i < coordinates.length) {
+                    pointdata.features[0].geometry.coordinates.push(coordinates[i]);
+                    map.getSource('points').setData(pointdata);
+                    map.panTo(coordinates[i]);
+                    i++;
+                } else {
+                    window.clearInterval(timer);
+                }
+            }, 0.1);
         };
 
     </script>
