@@ -18,7 +18,7 @@
     />
     <!-- Load the `mapbox-gl-geocoder` plugin. -->
     <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
-    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+    <link rel="stylesheet" href="mapbox-gl-geocoder.css" type="text/css">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <style>
@@ -32,8 +32,8 @@
           background: #fff;
           position: absolute;
           z-index: 1;
-          top: 10px;
-          right: 60px;
+          bottom: 25px;
+          right: 10px;
           border-radius: 3px;
           width: 140px;
           border: 1px solid rgba(0, 0, 0, 0.4);
@@ -205,6 +205,56 @@
                   padding: 10px;
 
               }
+
+
+
+            .filter-group {
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            font-weight: 600;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+            border-radius: 3px;
+            width: 120px;
+            color: #fff;
+            }
+            
+            .filter-group input[type='checkbox']:first-child + label {
+            border-radius: 3px 3px 0 0;
+            }
+            
+            .filter-group label:last-child {
+            border-radius: 0 0 3px 3px;
+            border: none;
+            }
+            
+            .filter-group input[type='checkbox'] {
+            display: none;
+            }
+            
+            .filter-group input[type='checkbox'] + label {
+            background-color: #3386c0;
+            display: block;
+            cursor: pointer;
+            padding: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+            }
+            
+            .filter-group input[type='checkbox'] + label {
+            background-color: #3386c0;
+            text-transform: capitalize;
+            }
+            
+            .filter-group input[type='checkbox'] + label:hover,
+            .filter-group input[type='checkbox']:checked + label {
+            background-color: #4ea0da;
+            }
+            
+            .filter-group input[type='checkbox']:checked + label:before {
+            content: '✔';
+            margin-right: 5px;
+            }
     </style>
 
     <nav id="menu"></nav>
@@ -430,6 +480,13 @@
              antialias: true
          });
 
+         map.addControl(
+            new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl
+            })
+        );
+
          map.addControl(new mapboxgl.FullscreenControl());
 
          map.addControl(new mapboxgl.NavigationControl());
@@ -446,17 +503,10 @@
              })
          );
 
-         // Add the control to the map.
-        map.addControl(
-            new MapboxGeocoder({
-            accessToken: mapboxgl.accessToken,
-            mapboxgl: mapboxgl
-            })
-        );
-
-        const popup = new mapboxgl.Popup({ closeOnClick: false })
+        const popup = new mapboxgl.Popup({ closeOnClick: true })
             .setLngLat(map.getBounds().getCenter())
-            .setHTML('<h1>Welcome!</h1>')
+            .setHTML('<h2>Welcome to Bivouac!</h2>'+
+                     '<p>Click on the map to start your journey!</p>')
             .addTo(map);
 
          map.on('load', () => {
@@ -651,7 +701,8 @@
                      }
 
                      // Create a link.
-                     const link = document.createElement('a');
+                     const link = document.createElement('input');
+                     link.type = 'checkbox';
                      link.id = id;
                      link.href = '#';
                      link.textContent = id;
