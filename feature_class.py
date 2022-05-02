@@ -272,6 +272,7 @@ class heatmap_layer():
                 contour_lines.append(unique_feature)
         self.unique_features = good_features
         contour_lines = sorted(contour_lines)
+        
         for contour in tqdm(contour_lines):
             distance = 1
             layer1 = map_layer(
@@ -291,16 +292,16 @@ class heatmap_layer():
             self.preferences = {}
             for unique_feature in self.unique_features:
                 self.preferences[unique_feature] = 10
-        self.preferences = {'path': 10}
         
         if set(self.preferences.keys()).intersection(self.unique_features) == set():
             print('No preferential features in the area selected.')
         
+        #self.preferences = {'path': 100}
+        #self.preferences = {'Food and '}
         print('Unique features: ', self.unique_features)
         print('Preferences: ', self.preferences)
         for unique_feature in tqdm(self.preferences.keys()):
             distance = self.preferences[unique_feature]
-            print('effect', effect)
             effect = 1
             layer1 = map_layer(
                 grid, unique_feature, effect, distance, layers[unique_feature], 0
@@ -311,8 +312,7 @@ class heatmap_layer():
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
-        self.grid[2] += self.gradient * 1
-        
+        self.grid[2] += self.gradient         
         
         zero = np.zeros(self.grid[2].shape)
         zero[np.nonzero(self.grid[2])] = 1
@@ -325,8 +325,10 @@ class heatmap_layer():
     def plot_heatmap(self):
         ax = plt.axes(projection="3d")
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap='inferno')
-        ax.plot_surface(self.grid[0], self.grid[1], self.uncampable, cmap='viridis')
         plt.show()
+        #ax.plot_surface(self.grid[0], self.grid[1], self.uncampable, cmap='viridis')
+        #plt.show()
+        
 
 
 def main():    
