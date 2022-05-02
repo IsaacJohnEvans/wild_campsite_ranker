@@ -134,7 +134,7 @@ class map_layer(map_feature):
         self.grid[2] = skimage.filters.gaussian(self.grid[2], self.sigma)
   
 class heatmap_layer():
-    def __init__(self, bbox, preferences = []):
+    def __init__(self, bbox, preferences = {'stream': 10, 'wood': 10}):
         pd.DataFrame(np.array(bbox)).to_csv('bbox.csv', index = False, header = False)
         NW_gr = latlong2grid(bbox[0][1],bbox[1][0])
         NW = np.array([NW_gr.E, NW_gr.N])
@@ -152,13 +152,7 @@ class heatmap_layer():
         self.get_features()
         self.get_unique_feature_types()
         self.layers = []
-        self.get_preference_features(preferences)
-
-    def get_preference_features(self, preferences):
-        self.preference_features = preferences
-        '''
-        This needs to be a dictionary with the feature type as the key and the preference as the value
-        '''
+        self.preferences = preferences
     
     def get_features(self, file_name = 'data.geojson'):
         features = []
@@ -208,7 +202,6 @@ class heatmap_layer():
         for feature in self.features:
             desired_features.add(feature.feature_type)
         self.unique_features = list(desired_features)
-        print(self.unique_features)
     
     def make_dilate_struct(self):
         struct = np.ones((3, 3))
@@ -217,7 +210,6 @@ class heatmap_layer():
 
     def make_layers(self):
         effect = 1
-        distance = 10
         grid = self.grid[:2]
         grid.append(np.zeros(self.grid[0].shape))
         layers = {}
@@ -225,16 +217,13 @@ class heatmap_layer():
 
         for unique_feature in self.unique_features:
             layers[unique_feature] = []
-        
-        '''
-        Need to add a function to select features and set the importance of them using the slider data
-        '''
          
         for feature in self.features:
             layers[feature.feature_type].append(feature)
         print(self.unique_features)
-        self.unique_features = ['stream', 'wood']
-        for unique_feature in tqdm(self.unique_features):
+        print(self.preferences)
+        for unique_feature in tqdm(self.preferences.keys()):
+            distance = self.preferences[unique_feature]
             layer1 = map_layer(
                 grid, unique_feature, effect, distance, layers[unique_feature]
             )
