@@ -5,7 +5,7 @@ import math
 app = Flask(__name__)
 from basic_weather_calls import weather_mesh
 from wind_shelter import wind_shelter
-from OSGridConverter import latlong2grid
+from OSGridConverter import *
 from pathfinding import get_tile
 from feature_class import map_feature, map_layer, heatmap_layer
 import mercantile
@@ -33,6 +33,7 @@ class Optimiser:
         self.shelterIndex = None
         self.OSGridReference = None
         self.tempWind = None
+        self.numberOfPoints = 100
 
     def updateOptimiser(self, latlon, zoom_level, bbox, features, preferences):
         self.latlon = latlon
@@ -54,14 +55,26 @@ class Optimiser:
         print("Making heatmap, please wait")
         heatmap = heatmap_layer(self.bbox)
         heatmap.make_layers()
-        heatmap.plot_heatmap()
+        
         x = heatmap.grid[0]
         y = heatmap.grid[1]
         z = heatmap.grid[2]
-        n_spots = 5
-        best_spots_i = (-z).argsort()[:n_spots]
 
-        return best_spots_i
+        n_spots = self.numberOfPoints
+        grid_spots = np.concatenate(
+        (np.array([x[np.unravel_index(np.argsort(z.flatten())[-n_spots:], z.shape)[0], 0]]).T,
+         np.array([y[0, np.unravel_index(np.argsort(z.flatten())[-n_spots:], z.shape)[1]]]).T),
+        1)
+    
+        latlong_spots = []
+        print(grid2latlong(str(OSGridReference(grid_spots[0][0], grid_spots[0][1]))))
+        for i in range(grid_spots.shape[0]):
+            latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
+            latlong_spots.append([latlong.longitude, latlong.latitude])
+
+        heatmap.plot_heatmap()
+        print(latlong_spots, flush=True)
+        return latlong_spots
 
     def convertToJson(self, minPath):
         geojson = {
@@ -102,6 +115,7 @@ class Optimiser:
             min_path = get_min_path(
                 self.startPoint, self.endPoint, math.ceil(float(self.zoom_level))
             )
+            print(min_path, flush=True)
             return self.convertToJson(min_path)
         else:
             return "False"
@@ -134,7 +148,7 @@ class Optimiser:
 
         for i in range(0, len(prefList)):
             preferences[keys[i]] = prefList[i]
-
+        print(preferences)
         return preferences
 
     def printStats(self):
@@ -193,8 +207,10 @@ def end_destination():
 def create_heatmap():
     if request.method == "POST":
         location = request.form["location"]
-        print(optimiser.make_heatmap())
-        data = {"status": "success"}
+        best_points = optimiser.convertToJson(optimiser.make_heatmap())
+        #best_points = optimiser.convertToJson([-2.602678,51.455691])
+        print(best_points, flush=True)
+        data = {"status": "success", "points":best_points}
     return data, 200
 
 
@@ -240,7 +256,7 @@ def process_result():
             "some": num_features,
             "temp": optimiser.tempWind["Temp"],
             "wind": optimiser.tempWind["Wind"],
-            "wind_shelter": optimiser.shelterIndex,
+            "wind_shelter": round(optimiser.shelterIndex,4),
             "osGrid": optimiser.OSGridReference,
         }
         # creating elevation matrix (needs to be using the bbox and latlon centre)
