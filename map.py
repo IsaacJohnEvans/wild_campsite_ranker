@@ -73,7 +73,6 @@ class Optimiser:
             latlong_spots.append([latlong.longitude, latlong.latitude])
 
         heatmap.plot_heatmap()
-        print(latlong_spots, flush=True)
         return latlong_spots
 
     def convertToJson(self, minPath):
