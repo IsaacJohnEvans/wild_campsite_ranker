@@ -274,12 +274,12 @@ class heatmap_layer():
         contour_lines = sorted(contour_lines)
         for contour in tqdm(contour_lines):
             distance = 1
-            effect = contour
             layer1 = map_layer(
                 grid,contour, effect, distance, layers[contour]
             )
             layer1.bool_features()
             self.elevation[layer1.poly_bool] = contour + 5
+        
         self.elevation[self.elevation == 0] = contour_lines[0]
         self.elevation = skimage.filters.gaussian(self.elevation, sigma = 20)
 
@@ -300,7 +300,8 @@ class heatmap_layer():
         print('Preferences: ', self.preferences)
         for unique_feature in tqdm(self.preferences.keys()):
             distance = self.preferences[unique_feature]
-            print(effect)
+            print('effect', effect)
+            effect = 1
             layer1 = map_layer(
                 grid, unique_feature, effect, distance, layers[unique_feature], 0
             )
