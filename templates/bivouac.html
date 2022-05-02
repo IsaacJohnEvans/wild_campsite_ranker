@@ -286,6 +286,7 @@
         function startLocation() {
             var coordinate = $("#mouse_info").html();
             //use feat_matrix variable here
+            console.log("Starting location: ", coordinate);
 
             $.ajax({
                 type: "POST",
@@ -306,6 +307,7 @@
 
         function destinationLocation() {
             var coordinate = $("#mouse_info").html();
+            console.log("Destination location: ", coordinate);
 
             $.ajax({
                 type: "POST",
@@ -433,7 +435,7 @@
 
             map.addSource("route", {
                 type: "geojson",
-                data: [],
+                data: [[-2.602678, 51.455691]],
             });
 
             map.addLayer({
@@ -716,7 +718,7 @@
 
             const coordinates = minPath.features[0].geometry.coordinates;
             routedata.features[0].geometry.coordinates = [coordinates[0]];
-            // console.log(routedata);
+            console.log("here we goooo");
 
             let i = 0;
             const timer = setInterval(() => {
@@ -728,7 +730,7 @@
                 } else {
                     window.clearInterval(timer);
                 }
-            }, 2);
+            }, 10);
 
 
 

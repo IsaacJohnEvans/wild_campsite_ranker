@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.path as mpltPath
 import json
-from OSGridConverter import latlong2grid
+from OSGridConverter import grid2latlong, latlong2grid, OSGridReference
 from scipy import ndimage
 import skimage
 from shapely import wkt
@@ -25,6 +25,10 @@ class map_feature:
     """
 
     def __init__(self, feature_id, feature_type, shape_type, latlong):
+        '''
+        Initialisation of the map feature and conversion of latlong to grid references.
+        
+        '''
         self.number = feature_id
         self.feature_type = feature_type
         self.shape_type = shape_type
@@ -55,20 +59,21 @@ class map_feature:
                     poly_grid_refs.append(grid_refs)
                 self.shape.append(poly_grid_refs)
 
-    def poly_latlong_to_grid(self, coords):
-        grid_refs = []
-        for i in coords:
-            grid_ref = latlong2grid(i[1], i[0])
-            grid_refs.append([grid_ref.E, grid_ref.N])
-        return grid_refs
-
-
 class map_layer(map_feature):
     """
     A class of a map layer with a list of features to be added to the map.
+    The features are instances of the map_feature class.
 
     Variables:
-
+    features: A list of map_feature instances
+    grid: The grid on which the layer is to be placed
+    points: A list of tuples of the grid references of the layer
+    layer_name: The name of the layer 
+    sigma: The sigma of the layer (for the gaussian filter)
+    effect: The effect of the layer
+    dist: The distance that the effect of the feature spreads out
+    values: The values of the layer sampled from a sinusoid
+    poly_bool: A boolean array of the shape of the grid indicating which points are features in the layer
     """
 
     def __init__(self, grid, name, effect, distance, features):
@@ -143,7 +148,6 @@ class heatmap_layer():
         n_points = NW - SE
         NW[1] = SE[1] + n_points[0]
         n_points = NW - SE
-        print(n_points)
         x = np.outer(np.linspace(SE[0], NW[0], 1 + n_points[0]), np.ones(1 + n_points[0]))
         y = np.outer(np.linspace(SE[1], NW[1], 1 + n_points[0]), np.ones(1 + n_points[0])).T
         z = np.zeros(x.shape)
@@ -220,13 +224,23 @@ class heatmap_layer():
          
         for feature in self.features:
             layers[feature.feature_type].append(feature)
+        
+        good_features = []
+        for unique_feature in self.unique_features:
+            if type(unique_feature) == str:
+                good_features += [unique_feature]
+        self.unique_features = good_features
+        
         if self.preferences == None:
             self.preferences = {}
             for unique_feature in self.unique_features:
                 self.preferences[unique_feature] = 10
-        print(self.unique_features)
-        print(self.preferences)
-        #self.preferences = {'path': 10, 'arts_and_entertainment': 10, 'wood': 10, 'parking': 10, 633: 10, 'park': 10}
+        
+        if set(self.preferences.keys()).intersection(self.unique_features) == set():
+            print('No preferential features in the area selected.')
+        
+        print('Unique features: ', self.unique_features)
+        print('Preferences: ', self.preferences)
         for unique_feature in tqdm(self.preferences.keys()):
             distance = self.preferences[unique_feature]
             layer1 = map_layer(
@@ -237,6 +251,9 @@ class heatmap_layer():
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
+        zero = np.zeros(self.grid[2].shape)
+        zero[np.nonzero(self.grid[2])] = 1
+        print('Features everywhere = ',(self.uncampable != 0).all(), ' \n Grid nonzero in some places = ', zero.astype(bool).all())
         if (self.uncampable != 0) == (np.nonzero(self.grid[2])):
             self.grid[2][self.uncampable] = 0
         else:
@@ -251,6 +268,22 @@ def main():
     bbox = pd.read_csv('bbox.csv', header = None).to_numpy()
     heatmap = heatmap_layer(bbox)
     heatmap.make_layers()
+    x = heatmap.grid[0]
+    y = heatmap.grid[1]
+    z = heatmap.grid[2]
+    n_spots = 5
+    grid_spots = np.concatenate(
+        (np.array([x[np.unravel_index(np.argsort(z.flatten())[-n_spots:], z.shape)[0], 0]]).T,
+         np.array([y[0, np.unravel_index(np.argsort(z.flatten())[-n_spots:], z.shape)[1]]]).T),
+        1)
+    
+    latlong_spots = []
+    print(grid2latlong(str(OSGridReference(grid_spots[0][0], grid_spots[0][1]))))
+    for i in range(grid_spots.shape[0]):
+        latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
+        latlong_spots.append([latlong.longitude, latlong.latitude])
+    
+    print(latlong_spots)
     heatmap.plot_heatmap()
     
 if __name__ == '__main__':
