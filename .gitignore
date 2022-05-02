@@ -132,3 +132,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 local_config.py
+*.geojson
+*.geojson
+minPath.geojson
+*.geojson

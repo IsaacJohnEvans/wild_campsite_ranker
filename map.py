@@ -52,7 +52,7 @@ class Optimiser:
 
     def make_heatmap(self):
         print("Making heatmap, please wait")
-        heatmap = heatmap_layer(self.bbox, self.preferences)
+        heatmap = heatmap_layer(self.bbox)
         heatmap.make_layers()
         heatmap.plot_heatmap()
         x = heatmap.grid[0]
@@ -93,10 +93,11 @@ class Optimiser:
 
     def setPoint(self, latlonDict, pointType):
         if pointType == "start":
-            self.startPoint = [latlonDict["lat"], latlonDict["lng"]]
+            self.startPoint = [latlonDict["lng"], latlonDict["lat"]]
 
         else:
-            self.endPoint = [latlonDict["lat"], latlonDict["lng"]]
+            self.endPoint = [latlonDict["lng"], latlonDict["lat"]]
+
         if self.startPoint != None and self.endPoint != None:
             min_path = get_min_path(
                 self.startPoint, self.endPoint, math.ceil(float(self.zoom_level))
@@ -153,15 +154,15 @@ def home():
 @app.route("/start_destination", methods=["POST", "GET"])
 def start_destination():
     if request.method == "POST":
-        location = request.form["location"]
 
-        minpath = optimiser.setPoint(
-            json.loads(re.findall("\{.*?\}", location)[1]), "start"
-        )
+        location = json.loads(re.findall("\{.*?\}", request.form["location"])[1])
+
+        minpath = optimiser.setPoint(location, "start")
 
         data = {"status": "success", "minpath": minpath}
 
-        # print("start_destination:\n", minpath)
+        print("start_destination coords:\n", location, "\n")
+        # print("start_destination coords:\n", type(location[1]), "\n")
 
     return data, 200
 
@@ -169,19 +170,21 @@ def start_destination():
 @app.route("/end_destination", methods=["POST", "GET"])
 def end_destination():
     if request.method == "POST":
-        location = request.form["location"]
-        minpath = optimiser.setPoint(
-            json.loads(re.findall("\{.*?\}", location)[1]), "end"
-        )
 
-        minpath["features"][0]["geometry"]["coordinates"][:] = map(
-            lambda l: list(reversed(l)),
-            minpath["features"][0]["geometry"]["coordinates"],
-        )  # switches lat and long
+        location = json.loads(re.findall("\{.*?\}", request.form["location"])[1])
+
+        minpath = optimiser.setPoint(location, "end")
+
+        # switches lat and long (changed it in setPoint instead)
+        # minpath["features"][0]["geometry"]["coordinates"][:] = map(
+        #     lambda l: list(reversed(l)),
+        #     minpath["features"][0]["geometry"]["coordinates"],
+        # )
 
         data = {"status": "success", "minpath": minpath}
 
-        print("end_destination:\n", minpath)
+        print("end_destination coords:\n", location, "\n")
+        # print("end_dest function minpath:\n", minpath, "\n")
 
     return data, 200
 
@@ -190,7 +193,7 @@ def end_destination():
 def create_heatmap():
     if request.method == "POST":
         location = request.form["location"]
-        optimiser.make_heatmap()
+        print(optimiser.make_heatmap())
         data = {"status": "success"}
     return data, 200
 
@@ -202,7 +205,6 @@ def get_preferences():
         data = {"status": "success"}
         try:
             optimiser.preferences = optimiser.updatePreferences(preferences)
-
         except NameError:
             pass
         # print(preferences, flush=True)

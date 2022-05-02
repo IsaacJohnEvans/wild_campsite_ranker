@@ -25,6 +25,10 @@ class map_feature:
     """
 
     def __init__(self, feature_id, feature_type, shape_type, latlong):
+        '''
+        Initialisation of the map feature and conversion of latlong to grid references.
+        
+        '''
         self.number = feature_id
         self.feature_type = feature_type
         self.shape_type = shape_type
@@ -55,20 +59,21 @@ class map_feature:
                     poly_grid_refs.append(grid_refs)
                 self.shape.append(poly_grid_refs)
 
-    def poly_latlong_to_grid(self, coords):
-        grid_refs = []
-        for i in coords:
-            grid_ref = latlong2grid(i[1], i[0])
-            grid_refs.append([grid_ref.E, grid_ref.N])
-        return grid_refs
-
-
 class map_layer(map_feature):
     """
     A class of a map layer with a list of features to be added to the map.
+    The features are instances of the map_feature class.
 
     Variables:
-
+    features: A list of map_feature instances
+    grid: The grid on which the layer is to be placed
+    points: A list of tuples of the grid references of the layer
+    layer_name: The name of the layer 
+    sigma: The sigma of the layer (for the gaussian filter)
+    effect: The effect of the layer
+    dist: The distance that the effect of the feature spreads out
+    values: The values of the layer sampled from a sinusoid
+    poly_bool: A boolean array of the shape of the grid indicating which points are features in the layer
     """
 
     def __init__(self, grid, name, effect, distance, features):
@@ -134,7 +139,7 @@ class map_layer(map_feature):
         self.grid[2] = skimage.filters.gaussian(self.grid[2], self.sigma)
   
 class heatmap_layer():
-    def __init__(self, bbox, preferences = []):
+    def __init__(self, bbox, preferences = None):
         pd.DataFrame(np.array(bbox)).to_csv('bbox.csv', index = False, header = False)
         NW_gr = latlong2grid(bbox[0][1],bbox[1][0])
         NW = np.array([NW_gr.E, NW_gr.N])
@@ -143,7 +148,6 @@ class heatmap_layer():
         n_points = NW - SE
         NW[1] = SE[1] + n_points[0]
         n_points = NW - SE
-        print(n_points)
         x = np.outer(np.linspace(SE[0], NW[0], 1 + n_points[0]), np.ones(1 + n_points[0]))
         y = np.outer(np.linspace(SE[1], NW[1], 1 + n_points[0]), np.ones(1 + n_points[0])).T
         z = np.zeros(x.shape)
@@ -152,13 +156,7 @@ class heatmap_layer():
         self.get_features()
         self.get_unique_feature_types()
         self.layers = []
-        self.get_preference_features(preferences)
-
-    def get_preference_features(self, preferences):
-        self.preference_features = preferences
-        '''
-        This needs to be a dictionary with the feature type as the key and the preference as the value
-        '''
+        self.preferences = preferences
     
     def get_features(self, file_name = 'data.geojson'):
         features = []
@@ -208,7 +206,6 @@ class heatmap_layer():
         for feature in self.features:
             desired_features.add(feature.feature_type)
         self.unique_features = list(desired_features)
-        print(self.unique_features)
     
     def make_dilate_struct(self):
         struct = np.ones((3, 3))
@@ -217,7 +214,6 @@ class heatmap_layer():
 
     def make_layers(self):
         effect = 1
-        distance = 10
         grid = self.grid[:2]
         grid.append(np.zeros(self.grid[0].shape))
         layers = {}
@@ -225,16 +221,28 @@ class heatmap_layer():
 
         for unique_feature in self.unique_features:
             layers[unique_feature] = []
-        
-        '''
-        Need to add a function to select features and set the importance of them using the slider data
-        '''
          
         for feature in self.features:
             layers[feature.feature_type].append(feature)
-        print(self.unique_features)
-        self.unique_features = ['stream', 'wood']
-        for unique_feature in tqdm(self.unique_features):
+        
+        good_features = []
+        for unique_feature in self.unique_features:
+            if type(unique_feature) == str:
+                good_features += [unique_feature]
+        self.unique_features = good_features
+        
+        if self.preferences == None:
+            self.preferences = {}
+            for unique_feature in self.unique_features:
+                self.preferences[unique_feature] = 10
+        
+        if set(self.preferences.keys()).intersection(self.unique_features) == set():
+            print('No preferential features in the area selected.')
+        
+        print('Unique features: ', self.unique_features)
+        print('Preferences: ', self.preferences)
+        for unique_feature in tqdm(self.preferences.keys()):
+            distance = self.preferences[unique_feature]
             layer1 = map_layer(
                 grid, unique_feature, effect, distance, layers[unique_feature]
             )
@@ -243,7 +251,13 @@ class heatmap_layer():
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
-        self.grid[2][self.uncampable] = 0
+        zero = np.zeros(self.grid[2].shape)
+        zero[np.nonzero(self.grid[2])] = 1
+        print('Features everywhere = ',(self.uncampable != 0).all(), ' \n Grid nonzero in some places = ', zero.astype(bool).all())
+        if (self.uncampable != 0) == (np.nonzero(self.grid[2])):
+            self.grid[2][self.uncampable] = 0
+        else:
+            print('All of the area is a feature')
     def plot_heatmap(self):
         ax = plt.axes(projection="3d")
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap='inferno')
