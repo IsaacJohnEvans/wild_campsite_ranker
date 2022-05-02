@@ -296,8 +296,8 @@ class heatmap_layer():
         if set(self.preferences.keys()).intersection(self.unique_features) == set():
             print('No preferential features in the area selected.')
         
-        print('Unique features: ', self.unique_features)
-        print('Preferences: ', self.preferences)
+        #print('Unique features: ', self.unique_features)
+        #print('Preferences: ', self.preferences)
         for unique_feature in tqdm(self.preferences.keys()):
             distance = self.preferences[unique_feature]
             print('effect', effect)
@@ -316,7 +316,7 @@ class heatmap_layer():
         
         zero = np.zeros(self.grid[2].shape)
         zero[np.nonzero(self.grid[2])] = 1
-        print('Features everywhere = ',(self.uncampable != 0).all(), ' \n Grid nonzero in some places = ', zero.astype(bool).all())
+        #print('Features everywhere = ',(self.uncampable != 0).all(), ' \n Grid nonzero in some places = ', zero.astype(bool).all())
         if (self.uncampable != 0) == (np.nonzero(self.grid[2])):
             self.grid[2][self.uncampable] = 0
         else:
@@ -343,7 +343,7 @@ def main():
         1)
     
     latlong_spots = []
-    print(grid2latlong(str(OSGridReference(grid_spots[0][0], grid_spots[0][1]))))
+    #print(grid2latlong(str(OSGridReference(grid_spots[0][0], grid_spots[0][1]))))
     for i in range(grid_spots.shape[0]):
         latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
         latlong_spots.append([latlong.longitude, latlong.latitude])

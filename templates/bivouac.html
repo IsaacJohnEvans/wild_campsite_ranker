@@ -137,7 +137,7 @@
         .mapboxgl-ctrl-geocoder--icon {
             display: inline-block;
             vertical-align: middle;
-            speak: none;
+            /* speak: none; */
             fill: #757575;
             top: 15px;
         }
@@ -539,6 +539,12 @@
                 <div class="slidecontainer grid-item">
                     Test 6<input type="range" min="1" max="5" value="2.5" class="slider" id="myRange" />
                 </div>
+                <div class="slidecontainer grid-item">
+                    Test 7<input type="range" min="1" max="5" value="2.5" class="slider" id="myRange" />
+                </div>
+                <div class="slidecontainer grid-item">
+                    Test 8<input type="range" min="1" max="5" value="2.5" class="slider" id="myRange" />
+                </div>
                 <button class="preference-button" onclick="savePreferences()">
                     Submit Preferences
                 </button>
@@ -568,6 +574,9 @@
         }
 
         function startLocation() {
+
+            console.log("Setting start location....");
+
             var coordinate = $("#mouse_info").html();
             //use feat_matrix variable here
 
@@ -581,14 +590,20 @@
                 url: "/start_destination",
                 success: function (json) {
                     min_path = json.minpath;
-                    if (min_path != "False") {
+                    if (min_path != 0) {
                         showRoute(min_path);
                     }
                 },
             });
+
+            console.log("Start location set.");
+
         }
 
         function destinationLocation() {
+
+            console.log("Setting destination location....");
+
             var coordinate = $("#mouse_info").html();
 
             $.ajax({
@@ -601,16 +616,22 @@
                 url: "/end_destination",
                 success: function (json) {
                     min_path = json.minpath;
-                    if (min_path != "False") {
+                    if (min_path != 0) {
                         showRoute(min_path);
                     }
                 },
             });
+
+            console.log("Destination location set.");
+
         }
 
         function createHeatmap() {
+
+            console.log("Creating heatmap....");
+
             var coordinate = $("mouse_info").html();
-            
+
             $.ajax({
                 type: "POST",
                 async: false,
@@ -978,7 +999,7 @@
         });
 
         function showRoute(minPath) {
-
+            console.log("starting calcs");
             const routedata = {
                 "type": "FeatureCollection",
                 "features": [
@@ -1006,7 +1027,7 @@
                 } else {
                     window.clearInterval(timer);
                 }
-            }, 10);
+            }, 0.1);
 
         };
 
