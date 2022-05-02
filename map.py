@@ -43,7 +43,7 @@ class Optimiser:
         self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
         self.tempWind = self.getTempWind()
-        # self.printStats()
+        self.printStats()
 
         self.convertToJson(
             get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level))
@@ -51,12 +51,8 @@ class Optimiser:
         # print(self.minPathToPoint, flush=True)
 
     def make_heatmap(self):
-        """
-        Need to set npoints based on the zoom level
-        """
         print("Making heatmap, please wait")
-        n_points = 1000
-        heatmap = heatmap_layer(self.bbox, n_points)
+        heatmap = heatmap_layer(self.bbox, self.preferences)
         heatmap.make_layers()
         heatmap.plot_heatmap()
         x = heatmap.grid[0]
