@@ -133,3 +133,6 @@ dmypy.json
 .pyre/
 local_config.py
 *.geojson
+*.geojson
+minPath.geojson
+*.geojson
