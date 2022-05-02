@@ -23,6 +23,8 @@ class Optimiser:
             "Test4": None,
             "Test5": None,
             "Test6": None,
+            "Test7":None,
+            "Test8":None
         }
         self.latlon = None
         self.zoom_level = None
@@ -33,6 +35,7 @@ class Optimiser:
         self.shelterIndex = None
         self.OSGridReference = None
         self.tempWind = None
+        self.debug = True
         self.numberOfPoints = 100
 
     def updateOptimiser(self, latlon, zoom_level, bbox, features, preferences):
@@ -44,7 +47,7 @@ class Optimiser:
         self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
         self.tempWind = self.getTempWind()
-        self.printStats()
+        #self.printStats()
 
         self.convertToJson(
             get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level))
@@ -52,7 +55,6 @@ class Optimiser:
         # print(self.minPathToPoint, flush=True)
 
     def make_heatmap(self):
-        print("Making heatmap, please wait")
         heatmap = heatmap_layer(self.bbox)
         heatmap.make_layers()
         
@@ -67,13 +69,12 @@ class Optimiser:
         1)
     
         latlong_spots = []
-        print(grid2latlong(str(OSGridReference(grid_spots[0][0], grid_spots[0][1]))))
         for i in range(grid_spots.shape[0]):
             latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
             latlong_spots.append([latlong.longitude, latlong.latitude])
-
-        heatmap.plot_heatmap()
-        print(latlong_spots, flush=True)
+        #if self.debug == True:
+        heatmap.plot_heatmap(self.debug)
+       
         return latlong_spots
 
     def convertToJson(self, minPath):
@@ -115,7 +116,6 @@ class Optimiser:
             min_path = get_min_path(
                 self.startPoint, self.endPoint, math.ceil(float(self.zoom_level))
             )
-            print(min_path, flush=True)
             return self.convertToJson(min_path)
         else:
             return "False"
@@ -148,7 +148,6 @@ class Optimiser:
 
         for i in range(0, len(prefList)):
             preferences[keys[i]] = prefList[i]
-        print(preferences)
         return preferences
 
     def printStats(self):
@@ -175,7 +174,6 @@ def start_destination():
 
         data = {"status": "success", "minpath": minpath}
 
-        print("start_destination coords:\n", location, "\n")
         # print("start_destination coords:\n", type(location[1]), "\n")
 
     return data, 200
@@ -194,10 +192,9 @@ def end_destination():
         #     lambda l: list(reversed(l)),
         #     minpath["features"][0]["geometry"]["coordinates"],
         # )
-
+        #print(minpath, flush=True)
         data = {"status": "success", "minpath": minpath}
 
-        print("end_destination coords:\n", location, "\n")
         # print("end_dest function minpath:\n", minpath, "\n")
 
     return data, 200
@@ -209,7 +206,6 @@ def create_heatmap():
         location = request.form["location"]
         best_points = optimiser.convertToJson(optimiser.make_heatmap())
         #best_points = optimiser.convertToJson([-2.602678,51.455691])
-        print(best_points, flush=True)
         data = {"status": "success", "points":best_points}
     return data, 200
 
