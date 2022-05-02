@@ -612,8 +612,7 @@
 
         function createHeatmap() {
             var coordinate = $("mouse_info").html();
-            console.log("Heatmap location: ", coordinate);
-
+            
             $.ajax({
                 type: "POST",
                 async: false,
@@ -622,6 +621,10 @@
                 },
                 dataType: "json",
                 url: "/create_heatmap",
+                success: function (points) {
+                    best_points = points.points;
+                    showPoints(best_points);
+                }
             });
         }
 
@@ -733,8 +736,30 @@
                     "line-width": 6,
                 },
             });
+            map.addSource("points", {
+                type: "geojson",
+                data: [],
+            });
 
             // map.on("click", "National Parks", (e) => {
+            map.addLayer({
+                id: "points",
+                type: "heatmap",
+                source: "points",
+            });
+
+
+        
+            // map.addLayer({
+            //     'id': 'hillshading',
+            //     'source': 'mapbox-dem',
+            //     'type': 'hillshade'
+            //    },
+            //     'waterway-river-canal-shadow'
+            // );
+
+            // // HTML from the click event's properties.
+            // map.on('click', 'Legality', (e) => {
             //     new mapboxgl.Popup()
             //         .setLngLat(e.lngLat)
             //         .setHTML(e.features[0].properties.name)
@@ -936,7 +961,7 @@
         });
 
         function showRoute(minPath) {
-
+           
             const routedata = {
                 "type": "FeatureCollection",
                 "features": [
@@ -995,8 +1020,70 @@
             //         "line-width": 8,
             //     },
             // });
-        }
+        };
+        function showPoints(best_points) {
+           
+           const routedata = {
+               "type": "FeatureCollection",
+               "features": [
+                   {
+                       "type": "Feature",
+                       "geometry": {
+                           "type": "LineString",
+                           "coordinates": []
+                       }
+                   }
+               ]
+           }
+
+           const coordinates = best_points.features[0].geometry.coordinates;
+           routedata.features[0].geometry.coordinates = [coordinates[0]];
+           // console.log(routedata);
+
+           let i = 0;
+           const timer = setInterval(() => {
+               if (i < coordinates.length) {
+                   routedata.features[0].geometry.coordinates.push(coordinates[i]);
+                   map.getSource('points').setData(routedata);
+                   map.panTo(coordinates[i]);
+                   i++;
+               } else {
+                   window.clearInterval(timer);
+               }
+           }, 2);
+
+
+
+
+
+           // map.addSource("route", {
+           //     type: "geojson",
+           //     data: {
+           //         type: "Feature",
+           //         properties: {},
+           //         geometry: {
+           //             type: "LineString",
+           //             coordinates: minPath.features[0].geometry.coordinates,
+           //         },
+           //     },
+           // });
+
+           // map.addLayer({
+           //     id: "route",
+           //     type: "line",
+           //     source: "route",
+           //     layout: {
+           //         "line-join": "round",
+           //         "line-cap": "round",
+           //     },
+           //     paint: {
+           //         "line-color": "#888",
+           //         "line-width": 8,
+           //     },
+           // });
+       };
+
     </script>
 </body>
 
-</html>
+</html>S
