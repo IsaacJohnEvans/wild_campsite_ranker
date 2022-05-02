@@ -741,42 +741,11 @@
                 data: [],
             });
 
-            // map.on("click", "National Parks", (e) => {
             map.addLayer({
                 id: "points",
                 type: "heatmap",
                 source: "points",
             });
-
-
-        
-            // map.addLayer({
-            //     'id': 'hillshading',
-            //     'source': 'mapbox-dem',
-            //     'type': 'hillshade'
-            //    },
-            //     'waterway-river-canal-shadow'
-            // );
-
-            // // HTML from the click event's properties.
-            // map.on('click', 'Legality', (e) => {
-            //     new mapboxgl.Popup()
-            //         .setLngLat(e.lngLat)
-            //         .setHTML(e.features[0].properties.name)
-            //         .addTo(map);
-            // });
-
-            // // Change the cursor to a pointer when
-            // // the mouse is over the states layer.
-            // map.on("mouseenter", "National Parks", () => {
-            //     map.getCanvas().style.cursor = "pointer";
-            // });
-
-            // // Change the cursor back to a pointer
-            // // when it leaves the states layer.
-            // map.on("mouseleave", "National Parks", () => {
-            //     map.getCanvas().style.cursor = "";
-            // });
 
             // HTML from the click event's properties.
             map.on("click", (e) => {
