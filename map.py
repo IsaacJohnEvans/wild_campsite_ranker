@@ -190,7 +190,7 @@ def end_destination():
 def create_heatmap():
     if request.method == "POST":
         location = request.form["location"]
-        optimiser.make_heatmap()
+        print(optimiser.make_heatmap())
         data = {"status": "success"}
     return data, 200
 

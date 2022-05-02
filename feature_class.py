@@ -226,7 +226,7 @@ class heatmap_layer():
                 self.preferences[unique_feature] = 10
         print(self.unique_features)
         print(self.preferences)
-        self.preferences = {'path': 10, 'arts_and_entertainment': 10, 'wood': 10, 'parking': 10, 633: 10, 'park': 10}
+        #self.preferences = {'path': 10, 'arts_and_entertainment': 10, 'wood': 10, 'parking': 10, 633: 10, 'park': 10}
         for unique_feature in tqdm(self.preferences.keys()):
             distance = self.preferences[unique_feature]
             layer1 = map_layer(
