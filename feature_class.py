@@ -8,6 +8,8 @@ from scipy import ndimage
 import skimage
 from shapely import wkt
 from tqdm import tqdm
+import pandas as pd
+
 class map_feature:
     '''
     A class to represent a map feature.
@@ -84,11 +86,14 @@ class map_layer(map_feature):
     def bool_features(self):
         for feat in self.features:
             if feat.shape_type == 'Point':
-                pass
+                poly_point = np.logical_and(self.grid[0] == feat.shape[0][0], self.grid[1] == feat.shape[0][1])
+                self.poly_bool = np.logical_or(self.poly_bool, poly_point)
+            
             elif feat.shape_type == 'LineString':
-                pass
+                self.polygon_to_points(feat.shape)
             elif feat.shape_type == 'MultiLineString':
-                pass
+                for i in feat.shape:
+                    self.polygon_to_points(i)
             elif feat.shape_type == 'Polygon':
                 self.polygon_to_points(feat.shape[0])
             else:                
@@ -96,15 +101,16 @@ class map_layer(map_feature):
                     for poly in feat.shape:
                         self.polygon_to_points(poly[0])            
                         self.polygon_to_points(poly[0])
-
+             
             '''
-            Make all the types of geojson data work
-            '''          
-
+            Also because this is a for loop it will only not add to the last layer 
+            so need a features there absolutely can't camp there numpy boolean array
+            '''
     def polygon_to_points(self, polygon):
         path = mpltPath.Path(polygon)
         new_poly_bool = np.reshape(np.array(path.contains_points(self.points)), self.poly_bool.shape)
         self.poly_bool = np.logical_or(self.poly_bool, new_poly_bool)
+    
     def dilate_layer(self, layer1, struct, value):
         layer2 = ndimage.binary_dilation(layer1, structure=struct)
         self.grid[2][np.logical_and(layer2, np.logical_not(layer1.astype(bool)))] = value
@@ -117,13 +123,18 @@ class map_layer(map_feature):
         self.grid[2] = skimage.filters.gaussian(self.grid[2], self.sigma)
   
 class heatmap_layer():
-    def __init__(self, bbox, n_points, preferences = []):
-        NW_gr = latlong2grid(bbox[0][1],bbox[0][0])
-        NW = [NW_gr.E, NW_gr.N]
-        SE_gr = latlong2grid(bbox[1][1],bbox[1][0])
-        SE = [SE_gr.E, SE_gr.N]
-        x = np.outer(np.linspace(SE[0], NW[0], n_points), np.ones(n_points))
-        y = np.outer(np.linspace(SE[1], NW[1], n_points), np.ones(n_points)).T
+    def __init__(self, bbox, preferences = []):
+        pd.DataFrame(np.array(bbox)).to_csv('bbox.csv', index = False, header = False)
+        NW_gr = latlong2grid(bbox[0][1],bbox[1][0])
+        NW = np.array([NW_gr.E, NW_gr.N])
+        SE_gr = latlong2grid(bbox[1][1],bbox[0][0])
+        SE = np.array([SE_gr.E, SE_gr.N])
+        n_points = NW - SE
+        NW[1] = SE[1] + n_points[0]
+        n_points = NW - SE
+        print(n_points)
+        x = np.outer(np.linspace(SE[0], NW[0], 1 + n_points[0]), np.ones(1 + n_points[0]))
+        y = np.outer(np.linspace(SE[1], NW[1], 1 + n_points[0]), np.ones(1 + n_points[0])).T
         z = np.zeros(x.shape)
         self.grid = [x, y, z]
         self.get_features()
@@ -136,7 +147,6 @@ class heatmap_layer():
         '''
         This needs to be a dictionary with the feature type as the key and the preference as the value
         '''
-        
     
     def get_features(self, file_name = 'data.geojson'):
         features = []
@@ -166,7 +176,6 @@ class heatmap_layer():
         for feature in self.features:
             desired_features.add(feature.feature_type)
         self.unique_features = list(desired_features)
-        print(self.unique_features)
     
     def make_dilate_struct(self):
         struct = np.ones((3, 3))
@@ -175,7 +184,7 @@ class heatmap_layer():
         
     def make_layers(self):
         effect = 1
-        distance = 100
+        distance = 10
         grid = self.grid[:2]
         grid.append(np.zeros(self.grid[0].shape))
         layers = {}
@@ -183,8 +192,9 @@ class heatmap_layer():
 
         for unique_feature in self.unique_features:
             layers[unique_feature] = []
+        
         '''
-        A function to select features and set the importance of them using the slider data
+        Need to add a function to select features and set the importance of them using the slider data
         '''
         
         for feature in self.features:
@@ -196,9 +206,18 @@ class heatmap_layer():
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
+        
     def plot_heatmap(self):
         ax = plt.axes(projection ='3d')
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap ='inferno')
         plt.show()
 
 
+def main():    
+    bbox = pd.read_csv('bbox.csv', header = None).to_numpy()
+    heatmap = heatmap_layer(bbox)
+    heatmap.make_layers()
+    heatmap.plot_heatmap()
+    
+if __name__ == '__main__':
+    main()
