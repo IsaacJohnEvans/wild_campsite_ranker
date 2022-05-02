@@ -171,6 +171,7 @@ def start_destination():
         location = json.loads(re.findall("\{.*?\}", request.form["location"])[1])
 
         minpath = optimiser.setPoint(location, "start")
+        print("start minpath:\n", minpath, "\n")
 
         data = {"status": "success", "minpath": minpath}
 
@@ -187,6 +188,7 @@ def end_destination():
         location = json.loads(re.findall("\{.*?\}", request.form["location"])[1])
 
         minpath = optimiser.setPoint(location, "end")
+        print("end minpath:\n", minpath, "\n")
 
         # switches lat and long (changed it in setPoint instead)
         # minpath["features"][0]["geometry"]["coordinates"][:] = map(
