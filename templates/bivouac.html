@@ -137,7 +137,7 @@
         .mapboxgl-ctrl-geocoder--icon {
             display: inline-block;
             vertical-align: middle;
-            /* speak: none; */
+            speak: none;
             fill: #757575;
             top: 15px;
         }
@@ -570,7 +570,6 @@
         function startLocation() {
             var coordinate = $("#mouse_info").html();
             //use feat_matrix variable here
-            console.log("Starting location: ", coordinate);
 
             $.ajax({
                 type: "POST",
@@ -591,7 +590,6 @@
 
         function destinationLocation() {
             var coordinate = $("#mouse_info").html();
-            console.log("Destination location: ", coordinate);
 
             $.ajax({
                 type: "POST",
@@ -621,10 +619,6 @@
                 },
                 dataType: "json",
                 url: "/create_heatmap",
-                success: function (points) {
-                    best_points = points.points;
-                    showPoints(best_points);
-                }
             });
         }
 
@@ -700,7 +694,7 @@
             .setLngLat(map.getBounds().getCenter())
             .setHTML(
                 "<h2>Welcome to Bivouac!</h2>" +
-                "<p>Click on the map to start your journey!</p>"
+                "<p>Click on the map to start your journey.</p>"
             )
             .addTo(map);
 
@@ -719,7 +713,7 @@
 
             map.addSource("route", {
                 type: "geojson",
-                data: [[-2.602678, 51.455691]],
+                data: [],
             });
 
             map.addLayer({
@@ -736,27 +730,81 @@
                     "line-width": 6,
                 },
             });
-            map.addSource("points", {
-                type: "geojson",
-                data: [],
-            });
 
-            map.addLayer({
-                id: "points",
-                type: "heatmap",
-                source: "points",
-            });
+            // map.addLayer({
+            //     'id': 'hillshading',
+            //     'source': 'mapbox-dem',
+            //     'type': 'hillshade'
+            //    },
+            //     'waterway-river-canal-shadow'
+            // );
+
+            // // HTML from the click event's properties.
+            // map.on('click', 'Legality', (e) => {
+            //     new mapboxgl.Popup()
+            //         .setLngLat(e.lngLat)
+            //         .setHTML(e.features[0].properties.spr16nm)
+            //         .addTo(map);
+            //     });
+
+            // // Change the cursor to a pointer when
+            // // the mouse is over the states layer.
+            // map.on('mouseenter', 'Legality', () => {
+            //     map.getCanvas().style.cursor = 'pointer';
+            // });
+
+            // // Change the cursor back to a pointer
+            // // when it leaves the states layer.
+            // map.on('mouseleave', 'Legality', () => {
+            //     map.getCanvas().style.cursor = '';
+            // });
+
+            // map.on("click", "National Parks", (e) => {
+            //     new mapboxgl.Popup()
+            //         .setLngLat(e.lngLat)
+            //         .setHTML(e.features[0].properties.name)
+            //         .addTo(map);
+            // });
+
+            // // Change the cursor to a pointer when
+            // // the mouse is over the states layer.
+            // map.on("mouseenter", "National Parks", () => {
+            //     map.getCanvas().style.cursor = "pointer";
+            // });
+
+            // // Change the cursor back to a pointer
+            // // when it leaves the states layer.
+            // map.on("mouseleave", "National Parks", () => {
+            //     map.getCanvas().style.cursor = "";
+            // });
 
             // HTML from the click event's properties.
             map.on("click", (e) => {
 
+
+                map.flyTo({ center: e.lnglat, zoom: 14, essential: true });
+
+                // if (map.getLayer("serious_image-layer")) {
+                //     map.removeLayer("serious_image-layer");
+                // }
+                // if (map.getSource("serious_image")) {
+                //     map.removeSource("serious_image");
+                // }
                 // map.removeLayer('serious_image-layer')
 
                 var radius = 100;
+                var padding = 10;
+
                 const bbox = [
                     [e.point.x - radius, e.point.y - radius],
                     [e.point.x + radius, e.point.y + radius],
                 ];
+
+                // const bbox = [
+                //     [padding, padding],
+                //     [screen.width-padding, screen.height-padding],
+                // ];
+
                 var bboxLatLng = String([
                     map.unproject(bbox[0]),
                     map.unproject(bbox[1]),
@@ -903,13 +951,13 @@
             //Layers for zoom based Symbols
         });
 
-        map.on("mouseenter", "camp_landuse", () => {
-            map.getCanvas().style.cursor = "pointer";
-        });
+        // map.on("mouseenter", "camp_landuse", () => {
+        //     map.getCanvas().style.cursor = "pointer";
+        // });
 
-        map.on("mouseleave", "camp_landuse", () => {
-            map.getCanvas().style.cursor = "";
-        });
+        // map.on("mouseleave", "camp_landuse", () => {
+        //     map.getCanvas().style.cursor = "";
+        // });
 
         map.on("mousemove", (g) => {
             // var northCenter = mapboxgl.LngLat(map.getCenter().lng, map.getBounds().getNorth())
@@ -930,7 +978,7 @@
         });
 
         function showRoute(minPath) {
-           
+
             const routedata = {
                 "type": "FeatureCollection",
                 "features": [
@@ -960,99 +1008,9 @@
                 }
             }, 10);
 
-
-
-
-
-            // map.addSource("route", {
-            //     type: "geojson",
-            //     data: {
-            //         type: "Feature",
-            //         properties: {},
-            //         geometry: {
-            //             type: "LineString",
-            //             coordinates: minPath.features[0].geometry.coordinates,
-            //         },
-            //     },
-            // });
-
-            // map.addLayer({
-            //     id: "route",
-            //     type: "line",
-            //     source: "route",
-            //     layout: {
-            //         "line-join": "round",
-            //         "line-cap": "round",
-            //     },
-            //     paint: {
-            //         "line-color": "#888",
-            //         "line-width": 8,
-            //     },
-            // });
         };
-        function showPoints(best_points) {
-           
-           const routedata = {
-               "type": "FeatureCollection",
-               "features": [
-                   {
-                       "type": "Feature",
-                       "geometry": {
-                           "type": "LineString",
-                           "coordinates": []
-                       }
-                   }
-               ]
-           }
-
-           const coordinates = best_points.features[0].geometry.coordinates;
-           routedata.features[0].geometry.coordinates = [coordinates[0]];
-           // console.log(routedata);
-
-           let i = 0;
-           const timer = setInterval(() => {
-               if (i < coordinates.length) {
-                   routedata.features[0].geometry.coordinates.push(coordinates[i]);
-                   map.getSource('points').setData(routedata);
-                   map.panTo(coordinates[i]);
-                   i++;
-               } else {
-                   window.clearInterval(timer);
-               }
-           }, 2);
-
-
-
-
-
-           // map.addSource("route", {
-           //     type: "geojson",
-           //     data: {
-           //         type: "Feature",
-           //         properties: {},
-           //         geometry: {
-           //             type: "LineString",
-           //             coordinates: minPath.features[0].geometry.coordinates,
-           //         },
-           //     },
-           // });
-
-           // map.addLayer({
-           //     id: "route",
-           //     type: "line",
-           //     source: "route",
-           //     layout: {
-           //         "line-join": "round",
-           //         "line-cap": "round",
-           //     },
-           //     paint: {
-           //         "line-color": "#888",
-           //         "line-width": 8,
-           //     },
-           // });
-       };
 
     </script>
 </body>
 
-</html>S
+</html>
