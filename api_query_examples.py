@@ -1,4 +1,4 @@
-#coding utf8
+# coding utf8
 import overpy
 
 
@@ -14,8 +14,7 @@ def get_query_response(query_str):
 
 def uk_pubs():
 
-    query = \
-        """             [out:json];
+    query = """             [out:json];
                         (area["ISO3166-1"="GB"][admin_level=2];)->.a;
                         (node["amenity"="pub"](area);
                          way["amenity"="pub"](area);

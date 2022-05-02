@@ -6,12 +6,12 @@ import io
 import numpy as np
 
 global MAPBOX_TOKEN
-MAPBOX_TOKEN = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ'
+MAPBOX_TOKEN = "pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ"
 
 
 def getFeatureData(lng, lat, ACCESS_TOKEN):
     # Construct the API request.
-    url = f'https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery/{lng},{lat}.json?layers=contour&limit=50&access_token={ACCESS_TOKEN}'
+    url = f"https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery/{lng},{lat}.json?layers=contour&limit=50&access_token={ACCESS_TOKEN}"
 
     response = requests.get(url)
 
@@ -60,7 +60,11 @@ def getElevationMatrix(MAPBOX_TOKEN, zoom, x, y):
             coord = i, j
             pixel_rgba = img.getpixel(coord)
             # elevation = -10000 + (({R} * 256 * 256 + {G} * 256 + {B}) * 0.1)
-            elevation = -10000 + ((pixel_rgba[0] * 256 * 256 + pixel_rgba[1] * 256 + pixel_rgba[2])) * 0.1
+            elevation = (
+                -10000
+                + ((pixel_rgba[0] * 256 * 256 + pixel_rgba[1] * 256 + pixel_rgba[2]))
+                * 0.1
+            )
             elevation_matrix[i, j] = elevation
     return elevation_matrix.transpose()
 
