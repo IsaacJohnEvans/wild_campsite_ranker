@@ -238,8 +238,8 @@ def process_result():
         features = request.form["features"]
 
         # print(features)
-        # with open("data.geojson", "w") as f:
-        #     json.dump(json.loads(features), f)
+        with open("data.geojson", "w") as f:
+            json.dump(json.loads(features), f)
         
 
         latlon = json.loads(re.findall("\{.*?\}", mouse_pos)[1])
