@@ -291,19 +291,19 @@ class heatmap_layer():
             self.preferences = {}
             for unique_feature in self.unique_features:
                 self.preferences[unique_feature] = 10
-        self.preferences = {'path': 10}
+        # self.preferences = {'water': 100}
         
         if set(self.preferences.keys()).intersection(self.unique_features) == set():
             print('No preferential features in the area selected.')
         
-        #print('Unique features: ', self.unique_features)
-        #print('Preferences: ', self.preferences)
+        print('Unique features: ', self.unique_features)
+        print('Preferences: ', self.preferences)
+        effect = 1
         for unique_feature in tqdm(self.preferences.keys()):
             distance = self.preferences[unique_feature]
-            print('effect', effect)
-            effect = 1
+            
             layer1 = map_layer(
-                grid, unique_feature, effect, distance, layers[unique_feature], 0
+                grid, unique_feature, effect, distance, layers[unique_feature], 1
             )
             layer1.bool_features()
             self.uncampable = np.logical_or(self.uncampable, layer1.uncampable)
@@ -311,7 +311,7 @@ class heatmap_layer():
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
-        self.grid[2] += self.gradient * 1
+        self.grid[2] += self.gradient
         
         
         zero = np.zeros(self.grid[2].shape)
@@ -325,7 +325,7 @@ class heatmap_layer():
     def plot_heatmap(self):
         ax = plt.axes(projection="3d")
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap='inferno')
-        ax.plot_surface(self.grid[0], self.grid[1], self.uncampable, cmap='viridis')
+        #ax.plot_surface(self.grid[0], self.grid[1], self.uncampable, cmap='viridis')
         plt.show()
 
 
