@@ -10,6 +10,7 @@ import skimage
 from shapely import wkt
 from tqdm import tqdm
 from matplotlib import cm
+from elevation import getSlopeMatrix
 
 class map_feature:
     """
@@ -27,7 +28,6 @@ class map_feature:
     def __init__(self, feature_id, feature_type, shape_type, latlong):
         '''
         Initialisation of the map feature and conversion of latlong to grid references.
-        
         '''
         self.number = feature_id
         self.feature_type = feature_type
@@ -76,7 +76,7 @@ class map_layer(map_feature):
     poly_bool: A boolean array of the shape of the grid indicating which points are features in the layer
     """
 
-    def __init__(self, grid, name, effect, distance, features):
+    def __init__(self, grid, name, effect, distance, features, sigma = 1):
         self.features = features
         self.grid = grid
         self.points = np.concatenate(
@@ -87,23 +87,29 @@ class map_layer(map_feature):
             axis=1,
         )
         self.layer_name = name
-        self.sigma = 1
+        self.sigma = sigma
         self.effect = effect
         self.dist = distance
         self.values = self.effect_values()
         self.poly_bool = np.zeros(self.grid[2].shape).astype(bool)
 
     def effect_values(self):
+        '''
+        Creates a sinusoid of the effect of the shape of the layer.
+        '''
         x = np.linspace(0, 2 * np.pi, self.dist)
         y = self.effect / 2 * (-np.cos(x) + 1)
         return y
 
     def bool_features(self):
+        '''
+        Creates a boolean array of the shape of the grid indicating which points on the grid are features in the layer.
+        Uncampable is returned as the same as the poly bool array in order to indicate features as uncampable.
+        '''
         for feat in self.features:
             if feat.shape_type == 'Point':
                 poly_point = np.logical_and(self.grid[0] == feat.shape[0][0], self.grid[1] == feat.shape[0][1])
                 self.poly_bool = np.logical_or(self.poly_bool, poly_point)
-            
             elif feat.shape_type == 'LineString':
                 self.polygon_to_points(feat.shape)
             elif feat.shape_type == 'MultiLineString':
@@ -119,6 +125,9 @@ class map_layer(map_feature):
         self.uncampable = self.poly_bool
             
     def polygon_to_points(self, polygon):
+        '''
+        Converts a polygon to a list of points on the grid.
+        '''
         path = mpltPath.Path(polygon)
         new_poly_bool = np.reshape(
             np.array(path.contains_points(self.points)), self.poly_bool.shape
@@ -126,19 +135,42 @@ class map_layer(map_feature):
         self.poly_bool = np.logical_or(self.poly_bool, new_poly_bool)
     
     def dilate_layer(self, layer1, struct, value):
+        '''
+        Dilates a layer by the structuring element and assigns it a value.
+        Parameters:
+        layer1: The layer to be dilated
+        struct: The structuring element
+        value: The value to be assigned to the dilated layer
+        
+        returns:
+        layer2 : The dilated layer
+        '''
         layer2 = ndimage.binary_dilation(layer1, structure=struct)
-        self.grid[2][
-            np.logical_and(layer2, np.logical_not(layer1.astype(bool)))
-        ] = value
+        self.grid[2][np.logical_and(layer2, np.logical_not(layer1.astype(bool)))] = value
         return layer2
 
     def dilate_poly(self, struct):
+        '''
+        Dilation of a polygon by the structuring element followed by a filter of the layer using a gaussian filter.
+        '''
         layer2 = self.dilate_layer(self.poly_bool, struct, self.values[0])
         for val in self.values[1:]:
             layer2 = self.dilate_layer(layer2, struct, val)
         self.grid[2] = skimage.filters.gaussian(self.grid[2], self.sigma)
   
 class heatmap_layer():
+    '''
+    The heatmap layer.
+    
+    Parameters:
+    bbox: The bounding box of the heatmap
+    uncampable: The uncampable points of the heatmap
+    grid: The grid of the heatmap compromised of x, y, and z
+    layers: The layers of the heatmap
+    preferences: The preferences of the heatmap
+    features: The features of the heatmap
+    unique_features: The unique features of the heatmap
+    '''
     def __init__(self, bbox, preferences = None):
         pd.DataFrame(np.array(bbox)).to_csv('bbox.csv', index = False, header = False)
         NW_gr = latlong2grid(bbox[0][1],bbox[1][0])
@@ -151,12 +183,14 @@ class heatmap_layer():
         x = np.outer(np.linspace(SE[0], NW[0], 1 + n_points[0]), np.ones(1 + n_points[0]))
         y = np.outer(np.linspace(SE[1], NW[1], 1 + n_points[0]), np.ones(1 + n_points[0])).T
         z = np.zeros(x.shape)
-        self.uncampable = z.astype(bool)
+        self.uncampable = z.copy().astype(bool)
         self.grid = [x, y, z]
         self.get_features()
         self.get_unique_feature_types()
         self.layers = []
         self.preferences = preferences
+        self.elevation = z.copy()
+        self.gradient = z.copy()
     
     def get_features(self, file_name = 'data.geojson'):
         features = []
@@ -168,15 +202,6 @@ class heatmap_layer():
                     map_feature(
                         i,
                         data_list[i]["properties"]["ele"],
-                        data_list[i]["geometry"]["type"],
-                        data_list[i]["geometry"]["coordinates"],
-                    )
-                )
-            elif "FID" in data_list[i]["properties"]:
-                features.append(
-                    map_feature(
-                        i,
-                        data_list[i]["properties"]["FID"],
                         data_list[i]["geometry"]["type"],
                         data_list[i]["geometry"]["coordinates"],
                     )
@@ -200,6 +225,18 @@ class heatmap_layer():
                     )
                 )
         self.features = features
+        '''
+            elif "FID" in data_list[i]["properties"]:
+                features.append(
+                    map_feature(
+                        i,
+                        data_list[i]["properties"]["FID"],
+                        data_list[i]["geometry"]["type"],
+                        data_list[i]["geometry"]["coordinates"],
+                    )
+                )
+        '''
+            
 
     def get_unique_feature_types(self):
         desired_features = set()
@@ -226,15 +263,35 @@ class heatmap_layer():
             layers[feature.feature_type].append(feature)
         
         good_features = []
+        contour_lines = []
+        
         for unique_feature in self.unique_features:
             if type(unique_feature) == str:
                 good_features += [unique_feature]
+            elif type(unique_feature) == int:
+                contour_lines.append(unique_feature)
         self.unique_features = good_features
+        contour_lines = sorted(contour_lines)
+        for contour in tqdm(contour_lines):
+            distance = 1
+            layer1 = map_layer(
+                grid,contour, effect, distance, layers[contour]
+            )
+            layer1.bool_features()
+            self.elevation[layer1.poly_bool] = contour + 5
+        
+        self.elevation[self.elevation == 0] = contour_lines[0]
+        self.elevation = skimage.filters.gaussian(self.elevation, sigma = 20)
+
+        self.gradient = np.absolute(getSlopeMatrix(self.elevation))
+        self.gradient = -(self.gradient / np.max(self.gradient))
+        
         
         if self.preferences == None:
             self.preferences = {}
             for unique_feature in self.unique_features:
                 self.preferences[unique_feature] = 10
+        self.preferences = {'path': 10}
         
         if set(self.preferences.keys()).intersection(self.unique_features) == set():
             print('No preferential features in the area selected.')
@@ -243,27 +300,33 @@ class heatmap_layer():
         #print('Preferences: ', self.preferences)
         for unique_feature in tqdm(self.preferences.keys()):
             distance = self.preferences[unique_feature]
+            print('effect', effect)
+            effect = 1
             layer1 = map_layer(
-                grid, unique_feature, effect, distance, layers[unique_feature]
+                grid, unique_feature, effect, distance, layers[unique_feature], 0
             )
             layer1.bool_features()
             self.uncampable = np.logical_or(self.uncampable, layer1.uncampable)
+            self.uncampable[layer1.poly_bool] = 10
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
+        self.grid[2] += self.gradient * 1
+        
+        
         zero = np.zeros(self.grid[2].shape)
         zero[np.nonzero(self.grid[2])] = 1
         #print('Features everywhere = ',(self.uncampable != 0).all(), ' \n Grid nonzero in some places = ', zero.astype(bool).all())
         if (self.uncampable != 0) == (np.nonzero(self.grid[2])):
             self.grid[2][self.uncampable] = 0
         else:
-            print('All of the area is a feature')
-    def plot_heatmap(self, debug):
+            print('The uncampable points are the same as the features')
+        
+    def plot_heatmap(self):
         ax = plt.axes(projection="3d")
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap='inferno')
-        if debug == True:
-            plt.show()
-            plt.close()
+        ax.plot_surface(self.grid[0], self.grid[1], self.uncampable, cmap='viridis')
+        plt.show()
 
 
 def main():    
@@ -284,8 +347,6 @@ def main():
     for i in range(grid_spots.shape[0]):
         latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
         latlong_spots.append([latlong.longitude, latlong.latitude])
-    
-    #print(latlong_spots)
     heatmap.plot_heatmap()
     
 if __name__ == '__main__':

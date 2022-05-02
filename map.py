@@ -72,9 +72,8 @@ class Optimiser:
         for i in range(grid_spots.shape[0]):
             latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
             latlong_spots.append([latlong.longitude, latlong.latitude])
-        #if self.debug == True:
-        heatmap.plot_heatmap(self.debug)
-       
+
+        heatmap.plot_heatmap()
         return latlong_spots
 
     def convertToJson(self, minPath):
@@ -112,13 +111,15 @@ class Optimiser:
         else:
             self.endPoint = [latlonDict["lng"], latlonDict["lat"]]
 
+        print("or hereeeee??")
+
         if self.startPoint != None and self.endPoint != None:
             min_path = get_min_path(
                 self.startPoint, self.endPoint, math.ceil(float(self.zoom_level))
             )
             return self.convertToJson(min_path)
         else:
-            return "False"
+            return 0
 
     def getFeatures(self):
         pass
@@ -171,6 +172,7 @@ def start_destination():
         location = json.loads(re.findall("\{.*?\}", request.form["location"])[1])
 
         minpath = optimiser.setPoint(location, "start")
+        print("start minpath:\n", minpath, "\n")
 
         data = {"status": "success", "minpath": minpath}
 
@@ -186,6 +188,7 @@ def end_destination():
         location = json.loads(re.findall("\{.*?\}", request.form["location"])[1])
 
         minpath = optimiser.setPoint(location, "end")
+        print("end minpath:\n", minpath, "\n")
 
         # switches lat and long (changed it in setPoint instead)
         # minpath["features"][0]["geometry"]["coordinates"][:] = map(
@@ -233,9 +236,12 @@ def process_result():
         bbox = request.form["bbox"]
         preferences = request.form["vals"]
         features = request.form["features"]
+
         # print(features)
-        with open("data.geojson", "w") as f:
-            json.dump(json.loads(features), f)
+        # with open("data.geojson", "w") as f:
+        #     json.dump(json.loads(features), f)
+        
+
         latlon = json.loads(re.findall("\{.*?\}", mouse_pos)[1])
         optimiser.updateOptimiser(
             latlon, zoom_level, bbox, json.loads(features), preferences
