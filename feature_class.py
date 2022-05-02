@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.path as mpltPath
 import json
-from OSGridConverter import latlong2grid
+from OSGridConverter import grid2latlong, latlong2grid, OSGridReference
 from scipy import ndimage
 import skimage
 from shapely import wkt
@@ -268,6 +268,22 @@ def main():
     bbox = pd.read_csv('bbox.csv', header = None).to_numpy()
     heatmap = heatmap_layer(bbox)
     heatmap.make_layers()
+    x = heatmap.grid[0]
+    y = heatmap.grid[1]
+    z = heatmap.grid[2]
+    n_spots = 5
+    grid_spots = np.concatenate(
+        (np.array([x[np.unravel_index(np.argsort(z.flatten())[-n_spots:], z.shape)[0], 0]]).T,
+         np.array([y[0, np.unravel_index(np.argsort(z.flatten())[-n_spots:], z.shape)[1]]]).T),
+        1)
+    
+    latlong_spots = []
+    print(grid2latlong(str(OSGridReference(grid_spots[0][0], grid_spots[0][1]))))
+    for i in range(grid_spots.shape[0]):
+        latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
+        latlong_spots.append([latlong.longitude, latlong.latitude])
+    
+    print(latlong_spots)
     heatmap.plot_heatmap()
     
 if __name__ == '__main__':
