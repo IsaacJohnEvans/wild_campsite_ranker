@@ -1,6 +1,7 @@
 # coding : utf8
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 import matplotlib.path as mpltPath
 import json
 from OSGridConverter import latlong2grid
@@ -8,7 +9,6 @@ from scipy import ndimage
 import skimage
 from shapely import wkt
 from tqdm import tqdm
-import pandas as pd
 
 class map_feature:
     """
