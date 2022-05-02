@@ -20,7 +20,6 @@ def get_tile(lat, lng, zoom_level):
     tile_coords = mercantile.tile(lng=lng, lat=lat, zoom=zoom_level)
     elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
     padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
-    print(padded_mat, flush=True)
     # Get latitude and longitude at upper-left of tile
     upper_left = mercantile.ul(tile_coords)
     djikstra(padded_mat, startNode=(1,1), targetNode=(248, 250), zoomlevel=zoom_level, latitude=lat, elevation_multiplier=10, show_plot=True)

@@ -105,6 +105,7 @@ class map_layer(map_feature):
         path = mpltPath.Path(polygon)
         new_poly_bool = np.reshape(np.array(path.contains_points(self.points)), self.poly_bool.shape)
         self.poly_bool = np.logical_or(self.poly_bool, new_poly_bool)
+    
     def dilate_layer(self, layer1, struct, value):
         layer2 = ndimage.binary_dilation(layer1, structure=struct)
         self.grid[2][np.logical_and(layer2, np.logical_not(layer1.astype(bool)))] = value

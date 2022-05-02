@@ -180,7 +180,7 @@ def get_preferences():
         data = {'status':"success"}
         try:
             optimiser.preferences = optimiser.updatePreferences(preferences)
-            
+            print(optimiser.preferences, flush=True)
         except NameError:
             pass
         #print(preferences, flush=True)
