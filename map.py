@@ -110,6 +110,8 @@ class Optimiser:
         else:
             self.endPoint = [latlonDict["lng"], latlonDict["lat"]]
 
+        print("or hereeeee??")
+
         if self.startPoint != None and self.endPoint != None:
             min_path = get_min_path(
                 self.startPoint, self.endPoint, math.ceil(float(self.zoom_level))
@@ -117,7 +119,7 @@ class Optimiser:
             print(min_path, flush=True)
             return self.convertToJson(min_path)
         else:
-            return "False"
+            return 0
 
     def getFeatures(self):
         pass
@@ -238,9 +240,12 @@ def process_result():
         bbox = request.form["bbox"]
         preferences = request.form["vals"]
         features = request.form["features"]
+
         # print(features)
-        with open("data.geojson", "w") as f:
-            json.dump(json.loads(features), f)
+        # with open("data.geojson", "w") as f:
+        #     json.dump(json.loads(features), f)
+        
+
         latlon = json.loads(re.findall("\{.*?\}", mouse_pos)[1])
         optimiser.updateOptimiser(
             latlon, zoom_level, bbox, json.loads(features), preferences
