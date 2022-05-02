@@ -26,7 +26,8 @@
   background-color: transparent;
   margin: 0;
   height: 50px;
-  color: #404040; /* fallback */
+  color: #404040;
+  /* fallback */
   color: rgba(0, 0, 0, 0.75);
   padding: 6px 45px;
   text-overflow: ellipsis;
@@ -35,18 +36,20 @@
 }
 
 .mapboxgl-ctrl-geocoder--input::-ms-clear {
-  display: none; /* hide input clear button in IE */
+  display: none;
+  /* hide input clear button in IE */
 }
 
 .mapboxgl-ctrl-geocoder--input:focus {
-  color: #404040; /* fallback */
+  color: #404040;
+  /* fallback */
   color: rgba(0, 0, 0, 0.75);
   outline: 0;
   box-shadow: none;
   outline: thin dotted;
 }
 
-.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right > * {
+.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right>* {
   z-index: 2;
   position: absolute;
   right: 8px;
@@ -56,7 +59,7 @@
 
 .mapboxgl-ctrl-geocoder,
 .mapboxgl-ctrl-geocoder .suggestions {
-  box-shadow: 0 0 10px 2px rgba(0,0,0,.1);
+  box-shadow: 0 0 10px 2px rgba(0, 0, 0, .1);
 }
 
 /* Collapsed */
@@ -76,7 +79,8 @@
   padding: 0;
   position: absolute;
   width: 100%;
-  top: 110%; /* fallback */
+  top: 110%;
+  /* fallback */
   top: calc(100% + 6px);
   z-index: 1000;
   overflow: hidden;
@@ -89,15 +93,15 @@
   bottom: 100%;
 }
 
-.mapboxgl-ctrl-geocoder .suggestions > li > a {
+.mapboxgl-ctrl-geocoder .suggestions>li>a {
   cursor: default;
   display: block;
   padding: 6px 12px;
   color: #404040;
 }
 
-.mapboxgl-ctrl-geocoder .suggestions > .active > a,
-.mapboxgl-ctrl-geocoder .suggestions > li > a:hover {
+.mapboxgl-ctrl-geocoder .suggestions>.active>a,
+.mapboxgl-ctrl-geocoder .suggestions>li>a:hover {
   color: #404040;
   background-color: #f3f3f3;
   text-decoration: none;
@@ -182,7 +186,7 @@
 }
 
 .mapboxgl-ctrl-geocoder--powered-by a:not(:hover) {
-  text-decoration: none;  
+  text-decoration: none;
 }
 
 /* Animation */
@@ -191,6 +195,7 @@
     -webkit-transform: rotate(0);
     transform: rotate(0);
   }
+
   to {
     -webkit-transform: rotate(360deg);
     transform: rotate(360deg);
@@ -202,6 +207,7 @@
     -webkit-transform: rotate(0);
     transform: rotate(0);
   }
+
   to {
     -webkit-transform: rotate(360deg);
     transform: rotate(360deg);
@@ -222,6 +228,7 @@
     line-height: 20px;
     max-width: 360px;
   }
+
   .mapboxgl-ctrl-geocoder .suggestions {
     font-size: 13px;
   }
@@ -262,8 +269,8 @@
     margin-right: -5px;
   }
 
-  .mapbox-gl-geocoder--error{
-    color:#909090;
+  .mapbox-gl-geocoder--error {
+    color: #909090;
     padding: 6px 12px;
     font-size: 16px;
     text-align: center;

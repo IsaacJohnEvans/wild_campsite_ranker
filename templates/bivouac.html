@@ -1,215 +1,235 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="utf-8" />
-    <link
-      rel="icon"
-      href="images/favicon.ico"
-      type="image/vnd.microsoft.icon"
-    />
+    <link rel="icon" href="images/favicon.ico" type="image/vnd.microsoft.icon" />
     <title>bivouac</title>
-    <meta
-      name="viewport"
-      content="initial-scale=1,maximum-scale=1,user-scalable=no"
-    />
-    <link
-      href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css"
-      rel="stylesheet"
-    />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css" rel="stylesheet" />
     <!-- Load the `mapbox-gl-geocoder` plugin. -->
-    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
-    <link rel="stylesheet" href="mapbox-gl-geocoder.css" type="text/css">
+    <script
+        src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="mapbox-gl-geocoder.css" type="text/css" />
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <style>
-      body { margin: 100; padding: 0; }
-      #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        body {
+            margin: 100;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
     </style>
-  </head>
-  <body>
+</head>
+
+<body>
     <style>
-          #menu {
-          background: #fff;
-          position: absolute;
-          z-index: 1;
-          bottom: 25px;
-          right: 10px;
-          border-radius: 3px;
-          width: 140px;
-          border: 1px solid rgba(0, 0, 0, 0.4);
-          font-family: 'Open Sans', sans-serif;
-          }
+        #menu {
+            background: #fff;
+            position: absolute;
+            z-index: 1;
+            bottom: 25px;
+            right: 10px;
+            border-radius: 3px;
+            width: 140px;
+            border: 1px solid rgba(0, 0, 0, 0.4);
+            font-family: "Open Sans", sans-serif;
+        }
 
-          #mouse_info {
-          display: table;
-          position: relative;
-          margin: 0px auto;
-          word-wrap: anywhere;
-          white-space: pre-wrap;
-          padding: 10px;
-          border: none;
-          border-radius: 3px;
-          font-size: 12px;
-          text-align: center;
-          color: #222;
-          background: #fff;
-      }
+        #mouse_info {
+            display: table;
+            position: relative;
+            margin: 0px auto;
+            word-wrap: anywhere;
+            white-space: pre-wrap;
+            padding: 10px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            text-align: center;
+            color: #222;
+            background: #fff;
+        }
 
-          #menu a {
-          font-size: 13px;
-          color: #404040;
-          display: block;
-          margin: 0;
-          padding: 0;
-          padding: 10px;
-          text-decoration: none;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-          text-align: center;
-          }
+        #menu a {
+            font-size: 13px;
+            color: #404040;
+            display: block;
+            margin: 0;
+            padding: 0;
+            padding: 10px;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
 
-          #menu a:last-child {
-          border: none;
-          }
+        #menu a:last-child {
+            border: none;
+        }
 
-          #menu a:hover {
-          background-color: #f8f8f8;
-          color: #404040;
-          }
+        #menu a:hover {
+            background-color: #f8f8f8;
+            color: #404040;
+        }
 
-          #menu a.active {
-          background-color: #3887be;
-          color: #ffffff;
-          }
+        #menu a.active {
+            background-color: #3887be;
+            color: #ffffff;
+        }
 
-          #menu a.active:hover {
-          background: #3074a4;
-          }
+        #menu a.active:hover {
+            background: #3074a4;
+        }
 
-          .rounded-rect {
-                      background: white;
-                      border-radius: 10px;
-                      box-shadow: 0 0 50px -25px black;
-                  }
+        .rounded-rect {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 50px -25px black;
+        }
 
-          .flex-center {
-              position: absolute;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-          }
+        .flex-center {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-          .flex-center.left {
-              left: 0px;
-          }
+        .flex-center.left {
+            left: 0px;
+        }
 
-          .flex-center.right {
-              right: 0px;
-          }
-          .clicked { box-shadow:0 0 5px rgba(255, 0, 0, .5) }
+        .flex-center.right {
+            right: 0px;
+        }
 
-          .sidebar-content {
-              position: relative;
-              justify-content: center;
-              vertical-align: top;
-              width: 95%;
-              height: 95%;
-              font-family: Arial, Helvetica, sans-serif;
-              font-size: 32px;
-              color: gray;
-          }
+        .clicked {
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
 
-          .sidebar-toggle {
-              position: absolute;
-              width: 1.3em;
-              height: 1.3em;
-              overflow: visible;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-          }
+        .sidebar-content {
+            position: relative;
+            justify-content: center;
+            vertical-align: top;
+            width: 95%;
+            height: 95%;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 32px;
+            color: gray;
+        }
 
-          .sidebar-toggle.left {
-              right: -1.5em;
-          }
+        .sidebar-toggle {
+            position: absolute;
+            width: 1.3em;
+            height: 1.3em;
+            overflow: visible;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-          .sidebar-toggle.right {
-              left: -1.5em;
-          }
+        .sidebar-toggle.left {
+            right: -1.5em;
+        }
 
-          .sidebar-toggle:hover {
-              color: #0aa1cf;
-              cursor: pointer;
-          }
+        .sidebar-toggle.right {
+            left: -1.5em;
+        }
 
-          .sidebar {
-              transition: transform 1s;
-              z-index: 1;
-              width: 300px;
-              height: 100%;
-          }
+        .sidebar-toggle:hover {
+            color: #0aa1cf;
+            cursor: pointer;
+        }
 
-          /*
+        .sidebar {
+            transition: transform 1s;
+            z-index: 1;
+            width: 300px;
+            height: 100%;
+        }
+
+        /*
           The sidebar styling has them "expanded" by default, we use CSS transforms to push them offscreen
           The toggleSidebar() function removes this class from the element in order to expand it.
           */
-          .left.collapsed {
-              transform: translateX(-295px);
-          }
+        .left.collapsed {
+            transform: translateX(-295px);
+        }
 
-          .right.collapsed {
-              transform: translateX(295px);
-          }
+        .right.collapsed {
+            transform: translateX(295px);
+        }
 
-          .slidercontainer {
-              width: 100%;
-          }
-          .slider {
+        .slidercontainer {
+            width: 100%;
+        }
 
-              -webkit-appearance: none;  /* Override default CSS styles */
-              appearance: none;
-              width: 100%; /* Full-width */
-              height: 25px; /* Specified height */
-              background: #d3d3d3; /* Grey background */
-              outline: none; /* Remove outline */
-              opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
-              -webkit-transition: .2s; /* 0.2 seconds transition on hover */
-              transition: opacity .2s;
-              }
-              .slider:hover {
-                  opacity: 1; /* Fully shown on mouse-over */
-                  }
+        .slider {
+            -webkit-appearance: none;
+            /* Override default CSS styles */
+            appearance: none;
+            width: 100%;
+            /* Full-width */
+            height: 25px;
+            /* Specified height */
+            background: #d3d3d3;
+            /* Grey background */
+            outline: none;
+            /* Remove outline */
+            opacity: 0.7;
+            /* Set transparency (for mouse-over effects on hover) */
+            -webkit-transition: 0.2s;
+            /* 0.2 seconds transition on hover */
+            transition: opacity 0.2s;
+        }
 
-                  /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
-                  .slider::-webkit-slider-thumb {
-                  -webkit-appearance: none; /* Override default look */
-                  appearance: none;
-                  width: 25px; /* Set a specific slider handle width */
-                  height: 25px; /* Slider handle height */
-                  background: #000000; /* Green background */
-                  cursor: pointer; /* Cursor on hover */
-                  }
+        .slider:hover {
+            opacity: 1;
+            /* Fully shown on mouse-over */
+        }
 
-                  .slider::-moz-range-thumb {
-                  width: 25px; /* Set a specific slider handle width */
-                  height: 25px; /* Slider handle height */
-                  background: #04AA6D; /* Green background */
-                  cursor: pointer; /* Cursor on hover */
-                  }
-              .grid-container {
-                  display: grid;
+        /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            /* Override default look */
+            appearance: none;
+            width: 25px;
+            /* Set a specific slider handle width */
+            height: 25px;
+            /* Slider handle height */
+            background: #000000;
+            /* Green background */
+            cursor: pointer;
+            /* Cursor on hover */
+        }
 
+        .slider::-moz-range-thumb {
+            width: 25px;
+            /* Set a specific slider handle width */
+            height: 25px;
+            /* Slider handle height */
+            background: #04aa6d;
+            /* Green background */
+            cursor: pointer;
+            /* Cursor on hover */
+        }
 
-              }
-              .grid-item {
-                  font-size: 20px;
-                  padding: 10px;
+        .grid-container {
+            display: grid;
+        }
 
-              }
+        .grid-item {
+            font-size: 20px;
+            padding: 10px;
+        }
 
-
-
-            .filter-group {
-            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        .filter-group {
+            font: 12px/20px "Helvetica Neue", Arial, Helvetica, sans-serif;
             font-weight: 600;
             position: absolute;
             top: 10px;
@@ -218,597 +238,515 @@
             border-radius: 3px;
             width: 120px;
             color: #fff;
-            }
-            
-            .filter-group input[type='checkbox']:first-child + label {
+        }
+
+        .filter-group input[type="checkbox"]:first-child+label {
             border-radius: 3px 3px 0 0;
-            }
-            
-            .filter-group label:last-child {
+        }
+
+        .filter-group label:last-child {
             border-radius: 0 0 3px 3px;
             border: none;
-            }
-            
-            .filter-group input[type='checkbox'] {
+        }
+
+        .filter-group input[type="checkbox"] {
             display: none;
-            }
-            
-            .filter-group input[type='checkbox'] + label {
+        }
+
+        .filter-group input[type="checkbox"]+label {
             background-color: #3386c0;
             display: block;
             cursor: pointer;
             padding: 10px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-            }
-            
-            .filter-group input[type='checkbox'] + label {
+        }
+
+        .filter-group input[type="checkbox"]+label {
             background-color: #3386c0;
             text-transform: capitalize;
-            }
-            
-            .filter-group input[type='checkbox'] + label:hover,
-            .filter-group input[type='checkbox']:checked + label {
+        }
+
+        .filter-group input[type="checkbox"]+label:hover,
+        .filter-group input[type="checkbox"]:checked+label {
             background-color: #4ea0da;
-            }
-            
-            .filter-group input[type='checkbox']:checked + label:before {
-            content: '✔';
+        }
+
+        .filter-group input[type="checkbox"]:checked+label:before {
+            content: "✔";
             margin-right: 5px;
-            }
+        }
     </style>
 
     <nav id="menu"></nav>
     <div id="map">
-      <div id="left" class="sidebar flex-center left collapsed">
-        <div class="sidebar-content rounded-rect flex-center grid-container">
-          Preferences
-          <div
-            class="sidebar-toggle rounded-rect left"
-            onclick="toggleSidebar('left')"
-          >
-            &rarr;
-          </div>
-          <div class="slidecontainer grid-item">
-            Test 1<input
-              type="range"
-              min="1"
-              max="5"
-              value="2.5"
-              class="slider"
-              id="myRange"
-            />
-          </div>
-          <div class="slidecontainer grid-item">
-            Test 2<input
-              type="range"
-              min="1"
-              max="5"
-              value="2.5"
-              class="slider"
-              id="myRange"
-            />
-          </div>
-          <div class="slidecontainer grid-item">
-            Test 3<input
-              type="range"
-              min="1"
-              max="5"
-              value="2.5"
-              class="slider"
-              id="myRange"
-            />
-          </div>
-          <div class="slidecontainer grid-item">
-            Test 4<input
-              type="range"
-              min="1"
-              max="5"
-              value="2.5"
-              class="slider"
-              id="myRange"
-            />
-          </div>
-          <div class="slidecontainer grid-item">
-            Test 5<input
-              type="range"
-              min="1"
-              max="5"
-              value="2.5"
-              class="slider"
-              id="myRange"
-            />
-          </div>
-          <div class="slidecontainer grid-item">
-            Test 6<input
-              type="range"
-              min="1"
-              max="5"
-              value="2.5"
-              class="slider"
-              id="myRange"
-            />
-          </div>
-          <button class="preference-button" onclick="savePreferences()">
-            Submit Preferences
-          </button>
+        <div id="left" class="sidebar flex-center left collapsed">
+            <div class="sidebar-content rounded-rect flex-center grid-container">
+                Preferences
+                <div class="sidebar-toggle rounded-rect left" onclick="toggleSidebar('left')">
+                    &rarr;
+                </div>
+                <div class="slidecontainer grid-item">
+                    Test 1<input type="range" min="1" max="5" value="2.5" class="slider" id="myRange" />
+                </div>
+                <div class="slidecontainer grid-item">
+                    Test 2<input type="range" min="1" max="5" value="2.5" class="slider" id="myRange" />
+                </div>
+                <div class="slidecontainer grid-item">
+                    Test 3<input type="range" min="1" max="5" value="2.5" class="slider" id="myRange" />
+                </div>
+                <div class="slidecontainer grid-item">
+                    Test 4<input type="range" min="1" max="5" value="2.5" class="slider" id="myRange" />
+                </div>
+                <div class="slidecontainer grid-item">
+                    Test 5<input type="range" min="1" max="5" value="2.5" class="slider" id="myRange" />
+                </div>
+                <div class="slidecontainer grid-item">
+                    Test 6<input type="range" min="1" max="5" value="2.5" class="slider" id="myRange" />
+                </div>
+                <button class="preference-button" onclick="savePreferences()">
+                    Submit Preferences
+                </button>
+            </div>
         </div>
-      </div>
     </div>
     <pre id="mouse_info"></pre>
 
     <script>
+        function savePreferences() {
+            var sliderValues = [];
+            var sliders = document.getElementsByClassName("slider");
+            for (var i = 0; i < sliders.length; i++) {
+                sliderValues.push(sliders[i].value);
+            }
 
-         function savePreferences() {
-             var sliderValues = [];
-             var sliders = document.getElementsByClassName("slider");
-             for(var i=0; i<(sliders.length); i++) {
-
-                 sliderValues.push(sliders[i].value);
-                 };
-
-             var vals = JSON.stringify(sliderValues);
-
-             $.ajax({
-
-                      type: 'POST',
-                      async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
-                      data: {
-                          'preferences': vals
-
-                      },
-                      url: '/set_preferences'
-                  });
-
-
-         }
-
-         
-
-         function startLocation() {
-            var coordinate = $("#mouse_info").html();
-                     //use feat_matrix variable here
-            
+            var vals = JSON.stringify(sliderValues);
 
             $.ajax({
-
-                type: 'POST',
+                type: "POST",
                 async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
                 data: {
-                    'location': coordinate
+                    preferences: vals,
+                },
+                url: "/set_preferences",
+            });
+        }
 
+        function startLocation() {
+            var coordinate = $("#mouse_info").html();
+            //use feat_matrix variable here
+
+            $.ajax({
+                type: "POST",
+                async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
+                data: {
+                    location: coordinate,
                 },
                 dataType: "json",
-                url: '/start_destination',
+                url: "/start_destination",
                 success: function (json) {
-                    min_path = json.minpath
-                    if (min_path != "False"){
+                    min_path = json.minpath;
+                    if (min_path != "False") {
                         showRoute(min_path);
-                }
-},
-});
-         };
+                    }
+                },
+            });
+        }
 
-         
-
-         function destinationLocation() {
+        function destinationLocation() {
             var coordinate = $("#mouse_info").html();
 
             $.ajax({
-
-                type: 'POST',
+                type: "POST",
                 async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
                 data: {
-                    'location': coordinate
-
+                    location: coordinate,
                 },
                 dataType: "json",
-                url: '/end_destination',
+                url: "/end_destination",
                 success: function (json) {
-                    min_path = json.minpath
-                    if (min_path != "False"){
+                    min_path = json.minpath;
+                    if (min_path != "False") {
                         showRoute(min_path);
-                }
+                    }
                 },
-                });
-         };
+            });
+        }
 
         function createHeatmap() {
             var coordinate = $("mouse_info").html();
 
             $.ajax({
-                type: 'POST',
+                type: "POST",
                 async: false,
                 data: {
-                    'location':coordinate},
-                dataType:"json",
-                url: '/create_heatmap'
+                    location: coordinate,
+                },
+                dataType: "json",
+                url: "/create_heatmap",
             });
-        };
+        }
 
+        function toggleSidebar(id) {
+            var elem = document.getElementById(id);
+            var classes = elem.className.split(" ");
+            var collapsed = classes.indexOf("collapsed") !== -1;
+            var padding = {};
 
+            if (collapsed) {
+                // Remove the 'collapsed' class from the class list of the element, this sets it back to the expanded state.
+                classes.splice(classes.indexOf("collapsed"), 1);
 
-         function toggleSidebar(id) {
-             var elem = document.getElementById(id);
-             var classes = elem.className.split(' ');
-             var collapsed = classes.indexOf('collapsed') !== -1;
-             var padding = {};
+                padding[id] = 300; // In px, matches the width of the sidebars set in .sidebar CSS class
+                map.easeTo({
+                    padding: padding,
+                    duration: 1000, // In ms, CSS transition duration property for the sidebar matches this value
+                });
+            } else {
+                padding[id] = 0;
+                // Add the 'collapsed' class to the class list of the element
+                classes.push("collapsed");
 
-             if ( collapsed )
-                     {
-                         // Remove the 'collapsed' class from the class list of the element, this sets it back to the expanded state.
-                         classes.splice(classes.indexOf('collapsed'), 1);
+                map.easeTo({
+                    padding: padding,
+                    duration: 1000,
+                });
+            }
 
-                         padding[id] = 300; // In px, matches the width of the sidebars set in .sidebar CSS class
-                         map.easeTo({
-                             padding: padding,
-                             duration: 1000 // In ms, CSS transition duration property for the sidebar matches this value
-                         });
-                     }
+            // Update the class list on the element
+            elem.className = classes.join(" ");
+        }
 
-                     else
-                     {
+        mapboxgl.accessToken =
+            "pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ";
+        // Use a minimal variant of the Mapbox Dark style, with certain features removed.
+        const map = new mapboxgl.Map({
+            style: "mapbox://styles/crispianm/cl13itnrc005015pbpdw8v5yu",
+            center: {
+                lng: -2.602678,
+                lat: 51.455691,
+            },
+            zoom: 15.5,
+            pitch: 0,
+            container: "map",
+            antialias: true,
+        });
 
-                         padding[id] = 0;
-                         // Add the 'collapsed' class to the class list of the element
-                         classes.push('collapsed');
-
-                         map.easeTo({
-                             padding: padding,
-                             duration: 1000
-                         });
-
-                     }
-
-                     // Update the class list on the element
-                     elem.className = classes.join(' ');
-
-
-
-         }
-
-      mapboxgl.accessToken = 'pk.eyJ1IjoiY3Jpc3BpYW5tIiwiYSI6ImNsMG1oazJhejE0YzAzZHVvd2Z1Zjlhb2YifQ.cv0zlPYY6WnoKM9YLD1lMQ';
-         // Use a minimal variant of the Mapbox Dark style, with certain features removed.
-         const map = new mapboxgl.Map({
-             style: 'mapbox://styles/crispianm/cl13itnrc005015pbpdw8v5yu',
-             center: {
-                 lng: -2.602678,
-                 lat: 51.455691
-             },
-             zoom: 15.5,
-             pitch: 0,
-             container: 'map',
-             antialias: true
-         });
-
-         map.addControl(
+        map.addControl(
             new MapboxGeocoder({
-            accessToken: mapboxgl.accessToken,
-            mapboxgl: mapboxgl
+                accessToken: mapboxgl.accessToken,
+                mapboxgl: mapboxgl,
             })
         );
 
-         map.addControl(new mapboxgl.FullscreenControl());
+        map.addControl(new mapboxgl.FullscreenControl());
 
-         map.addControl(new mapboxgl.NavigationControl());
+        map.addControl(new mapboxgl.NavigationControl());
 
-         map.addControl(
-             new mapboxgl.GeolocateControl({
-                 positionOptions: {
-                     enableHighAccuracy: true
-                 },
-                 // When active the map will receive updates to the device's location as it changes.
-                 trackUserLocation: true,
-                 // Draw an arrow next to the location dot to indicate which direction the device is heading.
-                 showUserHeading: true
-             })
-         );
+        map.addControl(
+            new mapboxgl.GeolocateControl({
+                positionOptions: {
+                    enableHighAccuracy: true,
+                },
+                // When active the map will receive updates to the device's location as it changes.
+                trackUserLocation: true,
+                // Draw an arrow next to the location dot to indicate which direction the device is heading.
+                showUserHeading: true,
+            })
+        );
 
         const popup = new mapboxgl.Popup({ closeOnClick: true })
             .setLngLat(map.getBounds().getCenter())
-            .setHTML('<h2>Welcome to Bivouac!</h2>'+
-                     '<p>Click on the map to start your journey!</p>')
+            .setHTML(
+                "<h2>Welcome to Bivouac!</h2>" +
+                "<p>Click on the map to start your journey!</p>"
+            )
             .addTo(map);
 
-         map.on('load', () => {
+        map.on("load", () => {
+            map.addSource("mapbox-dem", {
+                type: "raster-dem",
+                url: "mapbox://mapbox.terrain-rgb",
+                tileSize: 512,
+                maxzoom: 14,
+            });
 
-             map.addSource(
-                 'mapbox-dem', {
-                     'type': 'raster-dem',
-                     'url': 'mapbox://mapbox.terrain-rgb',
-                     'tileSize': 512,
-                     'maxzoom': 14
-                 });
+            map.setTerrain({
+                source: "mapbox-dem",
+                exaggeration: 1.5,
+            });
 
-             map.setTerrain({
-                 'source': 'mapbox-dem',
-                 'exaggeration': 1.5});
+            // map.addLayer({
+            //     'id': 'hillshading',
+            //     'source': 'mapbox-dem',
+            //     'type': 'hillshade'
+            //    },
+            //     'waterway-river-canal-shadow'
+            // );
 
+            // // HTML from the click event's properties.
+            // map.on('click', 'Legality', (e) => {
+            //     new mapboxgl.Popup()
+            //         .setLngLat(e.lngLat)
+            //         .setHTML(e.features[0].properties.spr16nm)
+            //         .addTo(map);
+            //     });
 
-             // map.addLayer({
-             //     'id': 'hillshading',
-             //     'source': 'mapbox-dem',
-             //     'type': 'hillshade'
-             //    },
-             //     'waterway-river-canal-shadow'
-             // );
+            // // Change the cursor to a pointer when
+            // // the mouse is over the states layer.
+            // map.on('mouseenter', 'Legality', () => {
+            //     map.getCanvas().style.cursor = 'pointer';
+            // });
 
-             // // HTML from the click event's properties.
-             // map.on('click', 'Legality', (e) => {
-             //     new mapboxgl.Popup()
-             //         .setLngLat(e.lngLat)
-             //         .setHTML(e.features[0].properties.spr16nm)
-             //         .addTo(map);
-             //     });
+            // // Change the cursor back to a pointer
+            // // when it leaves the states layer.
+            // map.on('mouseleave', 'Legality', () => {
+            //     map.getCanvas().style.cursor = '';
+            // });
 
-             // // Change the cursor to a pointer when
-             // // the mouse is over the states layer.
-             // map.on('mouseenter', 'Legality', () => {
-             //     map.getCanvas().style.cursor = 'pointer';
-             // });
+            map.on("click", "National Parks", (e) => {
+                new mapboxgl.Popup()
+                    .setLngLat(e.lngLat)
+                    .setHTML(e.features[0].properties.name)
+                    .addTo(map);
+            });
 
-             // // Change the cursor back to a pointer
-             // // when it leaves the states layer.
-             // map.on('mouseleave', 'Legality', () => {
-             //     map.getCanvas().style.cursor = '';
-             // });
+            // Change the cursor to a pointer when
+            // the mouse is over the states layer.
+            map.on("mouseenter", "National Parks", () => {
+                map.getCanvas().style.cursor = "pointer";
+            });
 
+            // Change the cursor back to a pointer
+            // when it leaves the states layer.
+            map.on("mouseleave", "National Parks", () => {
+                map.getCanvas().style.cursor = "";
+            });
 
-             map.on('click', 'National Parks', (e) => {
-                 new mapboxgl.Popup()
-                     .setLngLat(e.lngLat)
-                     .setHTML(e.features[0].properties.name)
-                     .addTo(map);
-                 });
+            // HTML from the click event's properties.
+            map.on("click", (e) => {
+                map.flyTo({ center: e.lnglat, zoom: 14, essential: true });
 
-             // Change the cursor to a pointer when
-             // the mouse is over the states layer.
-             map.on('mouseenter', 'National Parks', () => {
-                 map.getCanvas().style.cursor = 'pointer';
-             });
+                if (map.getLayer("serious_image-layer")) {
+                    map.removeLayer("serious_image-layer");
+                }
+                if (map.getSource("serious_image")) {
+                    map.removeSource("serious_image");
+                }
+                // map.removeLayer('serious_image-layer')
 
-             // Change the cursor back to a pointer
-             // when it leaves the states layer.
-             map.on('mouseleave', 'National Parks', () => {
-                 map.getCanvas().style.cursor = '';
-             });
+                var radius = 100;
+                const bbox = [
+                    [e.point.x - radius, e.point.y - radius],
+                    [e.point.x + radius, e.point.y + radius],
+                ];
+                var bboxLatLng = String([
+                    map.unproject(bbox[0]),
+                    map.unproject(bbox[1]),
+                ]);
 
+                // Find features in the bounding box.
+                // const features = map.queryRenderedFeatures(bbox, {
+                //     layers: ['camp_landcover', 'camp_landuse']
+                // });
 
-             // HTML from the click event's properties.
-             map.on('click', (e) => {
-                map.flyTo({center: e.lnglat, zoom:14, essential: true});
-                
+                const features = map.queryRenderedFeatures(bbox);
 
-                 if (map.getLayer("serious_image-layer")) {
-                     map.removeLayer("serious_image-layer");
-                 }
-                 if (map.getSource("serious_image")) {
-                     map.removeSource("serious_image");
-                 }
-                 // map.removeLayer('serious_image-layer')
+                const displayProperties = [
+                    // 'type',
+                    "properties",
+                    "id",
+                    "layer",
+                    // 'source',
+                    "geometry",
+                ];
 
-                 var radius = 100
-                 const bbox = [
-                     [e.point.x - radius, e.point.y - radius],
-                     [e.point.x + radius, e.point.y + radius]
-                 ];
-                 var bboxLatLng = String([map.unproject(bbox[0]), map.unproject(bbox[1])]);
-
-
-                 // Find features in the bounding box.
-                 // const features = map.queryRenderedFeatures(bbox, {
-                 //     layers: ['camp_landcover', 'camp_landuse']
-                 // });
-
-                 const features = map.queryRenderedFeatures(bbox);
-
-                 const displayProperties = [
-                     // 'type',
-                     'properties',
-                     'id',
-                     'layer',
-                     // 'source',
-                     'geometry',
-                 ];
-
-                 const displayFeatures = features.map((feat) => {
-                     const displayFeat = {};
-                     displayProperties.forEach((prop) => {
-                         displayFeat[prop] = feat[prop];
-                     });
-                     return displayFeat;
-                 });
-
-                 var camp_landuse_features = displayFeatures[0].properties;
-
-                 // new mapboxgl.Popup()
-                 //     .setLngLat(e.lngLat)
-                 //     .setHTML(
-                 //         '<h3>' + camp_landuse_features.class + '</h3>' +
-                 //         '<p>' + "(" + camp_landuse_features.type + ")" + '</p>'
-                 //     )
-                 //     .addTo(map);
-
-                 var mouse_info = $("#mouse_info").html();
-                 var zoom_level = map.getZoom();
-                 var feats = JSON.stringify(displayFeatures);
-                 var sliderValues = [];
-                 var sliders = document.getElementsByClassName("slider");
-                 for(var i=0; i<(sliders.length);i++) {
-                     sliderValues.push(sliders[i].value);
-                 };
-                 var vals = JSON.stringify(sliderValues);
-
-                 var num_features = 'Waiting for result...';
-                 function callback(response) {
-                     num_features = response.some;
-                     temp = response.temp;
-                     wind = response.wind;
-                     shelter = response.wind_shelter;
-                     gridref = response.osGrid;
-                     console.log("Inside ajax: "+ num_features)
-                     //use feat_matrix variable here
-                 }
-
-                     $.ajax({
-
-                         type: 'POST',
-                         async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
-                         data: {
-                             'features': feats,
-                             'zoom_level': zoom_level,
-                             'mouse_info': mouse_info,
-                             'bbox' : bboxLatLng,
-                             'vals':vals
-                         },
-                         url: '/get_result',
-                         success: callback,
-                     });
-
-
-                 new mapboxgl.Popup()
-                     .setLngLat(e.lngLat)
-                     .setHTML("Temperature: " + temp + "°C<br> Wind Speed: " +
-                     wind + "m/s<br> Shelter Index: " + shelter + "<br> Grid Ref: " + gridref +
-                     "<br><button class='goFromButton' onclick='startLocation()'>Set Starting Location</button><br><button class='goToButton' onclick='destinationLocation()'>Set Destination</button><br><button class='heatmapButton' onclick='createHeatmap()'>Create Heatmap</button>" )
-                     .addTo(map);
-
-                 });
-
-
-                 // new mapboxgl.Popup()
-                 //     .setLngLat(e.lngLat)
-                 //     .setHTML(camp_landuse_features.class + " (" + camp_landuse_features.type  + ")")
-                 //     .addTo(map);
-
-         });
-
-
-             map.on('idle', () => {
-                 // If these two layers were not added to the map, abort
-                 if (!map.getLayer('Steepness') || !map.getLayer('OSM Crops')) {
-                     return;
-                 }
-
-                 // Enumerate ids of the layers.
-                 const toggleableLayerIds = ['Steepness', 'OSM Crops'];
-
-
-                 // Set up the corresponding toggle button for each layer.
-                 for (const id of toggleableLayerIds) {
-                     // Skip layers that already have a button set up.
-                     if (document.getElementById(id)) {
-                     continue;
-                     }
-
-                     // Create a link.
-                     const link = document.createElement('input');
-                     link.type = 'checkbox';
-                     link.id = id;
-                     link.href = '#';
-                     link.textContent = id;
-                     link.className = 'active';
-
-                     // Show or hide layer when the toggle is clicked.
-                     link.onclick = function (e) {
-                     const clickedLayer = this.textContent;
-                     e.preventDefault();
-                     e.stopPropagation();
-                     const visibility = map.getLayoutProperty(
-                     clickedLayer,
-                     'visibility'
-                     );
-
-
-                     // Toggle layer visibility by changing the layout object's visibility property.
-                     if (visibility === 'visible') {
-                     map.setLayoutProperty(clickedLayer, 'visibility', 'none');
-                     this.className = '';
-                     } else {
-                     this.className = 'active';
-                     map.setLayoutProperty(
-                     clickedLayer,
-                     'visibility',
-                     'visible'
-                     );
-                     }
-                 };
-
-                 const layers = document.getElementById('menu');
-                 layers.appendChild(link);
-             }
-
-             //Layers for zoom based Symbols
-
-         }
-         );
-
-         map.on('mouseenter', 'camp_landuse', () => {
-                 map.getCanvas().style.cursor = 'pointer';
-             });
-
-         map.on('mouseleave', 'camp_landuse', () => {
-                 map.getCanvas().style.cursor = '';
-             });
-
-         map.on('mousemove', (g) => {
-
-             // var northCenter = mapboxgl.LngLat(map.getCenter().lng, map.getBounds().getNorth())
-
-             document.getElementById('mouse_info').innerHTML =
-             // `e.point` is the x, y coordinates of the `mousemove` event
-             // relative to the top-left corner of the map.
-             JSON.stringify(g.point) + '<br />' +
-             // `e.lngLat` is the longitude, latitude geographical position of the event.
-
-
-             // "<br> Top Left: " + JSON.stringify(map.getBounds().getNorthWest()) + '<br />' +
-             // "<br> Top Right: " + JSON.stringify(map.getBounds().getNorthEast()) + '<br />' +
-             // "<br> Bottom Right: " + JSON.stringify(map.getBounds().getSouthEast()) + '<br />' +
-             // "<br> Bottom Left: " + JSON.stringify(map.getBounds().getSouthWest()) + '<br />' +
-
-
-             JSON.stringify(g.lngLat.wrap());
-
-
-
-             }); 
-             
-             function showRoute(minPath) {
-  
-                // for (let i = 0; i < minPath.features[0].geometry.coordinates.length; i++) {
-                //     console.log(i+"th"+" coordinates:\n" + minPath.features[0].geometry.coordinates[i]);
-                // }
-                console.log(minPath.features[0].geometry.coordinates);
-                console.log("HELL YEAHHHHHHHHHHHHHHHH");
-                // return minPath.features[0].geometry.coordinates;
-
-                map.addSource('routesource', {
-                        'type': 'geojson',
-                        'data': {
-                            'type': 'Feature',
-                            'properties': {},
-                            'geometry':{
-                                'type': 'LineString',
-                                'coordinates': minPath.features[0].geometry.coordinates
-                            }
-                        }
+                const displayFeatures = features.map((feat) => {
+                    const displayFeat = {};
+                    displayProperties.forEach((prop) => {
+                        displayFeat[prop] = feat[prop];
                     });
+                    return displayFeat;
+                });
 
-                map.addLayer({
-                    'id': 'route',
-                    'type': 'line',
-                    'source': 'routesource',
-                    'layout': {
-                        'line-join': 'round',
-                        'line-cap': 'round'
+                var camp_landuse_features = displayFeatures[0].properties;
+
+                // new mapboxgl.Popup()
+                //     .setLngLat(e.lngLat)
+                //     .setHTML(
+                //         '<h3>' + camp_landuse_features.class + '</h3>' +
+                //         '<p>' + "(" + camp_landuse_features.type + ")" + '</p>'
+                //     )
+                //     .addTo(map);
+
+                var mouse_info = $("#mouse_info").html();
+                var zoom_level = map.getZoom();
+                var feats = JSON.stringify(displayFeatures);
+                var sliderValues = [];
+                var sliders = document.getElementsByClassName("slider");
+                for (var i = 0; i < sliders.length; i++) {
+                    sliderValues.push(sliders[i].value);
+                }
+                var vals = JSON.stringify(sliderValues);
+
+                var num_features = "Waiting for result...";
+                function callback(response) {
+                    num_features = response.some;
+                    temp = response.temp;
+                    wind = response.wind;
+                    shelter = response.wind_shelter;
+                    gridref = response.osGrid;
+                    console.log("Inside ajax: " + num_features);
+                    //use feat_matrix variable here
+                }
+
+                $.ajax({
+                    type: "POST",
+                    async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
+                    data: {
+                        features: feats,
+                        zoom_level: zoom_level,
+                        mouse_info: mouse_info,
+                        bbox: bboxLatLng,
+                        vals: vals,
                     },
-                    'paint': {
-                        'line-color': '#888',
-                        'line-width': 8
-                    }
-                });  
+                    url: "/get_result",
+                    success: callback,
+                });
+
+                new mapboxgl.Popup()
+                    .setLngLat(e.lngLat)
+                    .setHTML(
+                        "Temperature: " +
+                        temp +
+                        "°C<br> Wind Speed: " +
+                        wind +
+                        "m/s<br> Shelter Index: " +
+                        shelter +
+                        "<br> Grid Ref: " +
+                        gridref +
+                        "<br><button class='goFromButton' onclick='startLocation()'>Set Starting Location</button><br><button class='goToButton' onclick='destinationLocation()'>Set Destination</button><br><button class='heatmapButton' onclick='createHeatmap()'>Create Heatmap</button>"
+                    )
+                    .addTo(map);
+            });
+
+            // new mapboxgl.Popup()
+            //     .setLngLat(e.lngLat)
+            //     .setHTML(camp_landuse_features.class + " (" + camp_landuse_features.type  + ")")
+            //     .addTo(map);
+        });
+
+        map.on("idle", () => {
+            // If these two layers were not added to the map, abort
+            if (!map.getLayer("Steepness") || !map.getLayer("OSM Crops")) {
+                return;
             }
-                    
+
+            // Enumerate ids of the layers.
+            const toggleableLayerIds = ["Steepness", "OSM Crops"];
+
+            // Set up the corresponding toggle button for each layer.
+            for (const id of toggleableLayerIds) {
+                // Skip layers that already have a button set up.
+                if (document.getElementById(id)) {
+                    continue;
+                }
+
+                // Create a link.
+                const link = document.createElement("input");
+                link.type = "checkbox";
+                link.id = id;
+                link.href = "#";
+                link.textContent = id;
+                link.className = "active";
+
+                // Show or hide layer when the toggle is clicked.
+                link.onclick = function (e) {
+                    const clickedLayer = this.textContent;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const visibility = map.getLayoutProperty(
+                        clickedLayer,
+                        "visibility"
+                    );
+
+                    // Toggle layer visibility by changing the layout object's visibility property.
+                    if (visibility === "visible") {
+                        map.setLayoutProperty(clickedLayer, "visibility", "none");
+                        this.className = "";
+                    } else {
+                        this.className = "active";
+                        map.setLayoutProperty(clickedLayer, "visibility", "visible");
+                    }
+                };
+
+                const layers = document.getElementById("menu");
+                layers.appendChild(link);
+            }
+
+            //Layers for zoom based Symbols
+        });
+
+        map.on("mouseenter", "camp_landuse", () => {
+            map.getCanvas().style.cursor = "pointer";
+        });
+
+        map.on("mouseleave", "camp_landuse", () => {
+            map.getCanvas().style.cursor = "";
+        });
+
+        map.on("mousemove", (g) => {
+            // var northCenter = mapboxgl.LngLat(map.getCenter().lng, map.getBounds().getNorth())
+
+            document.getElementById("mouse_info").innerHTML =
+                // `e.point` is the x, y coordinates of the `mousemove` event
+                // relative to the top-left corner of the map.
+                JSON.stringify(g.point) +
+                "<br />" +
+                // `e.lngLat` is the longitude, latitude geographical position of the event.
+
+                // "<br> Top Left: " + JSON.stringify(map.getBounds().getNorthWest()) + '<br />' +
+                // "<br> Top Right: " + JSON.stringify(map.getBounds().getNorthEast()) + '<br />' +
+                // "<br> Bottom Right: " + JSON.stringify(map.getBounds().getSouthEast()) + '<br />' +
+                // "<br> Bottom Left: " + JSON.stringify(map.getBounds().getSouthWest()) + '<br />' +
+
+                JSON.stringify(g.lngLat.wrap());
+        });
+
+        function showRoute(minPath) {
+            // for (let i = 0; i < minPath.features[0].geometry.coordinates.length; i++) {
+            //     console.log(i+"th"+" coordinates:\n" + minPath.features[0].geometry.coordinates[i]);
+            // }
+            console.log(minPath.features[0].geometry.coordinates);
+            console.log("HELL YEAHHHHHHHHHHHHHHHH");
+            // return minPath.features[0].geometry.coordinates;
+
+            map.addSource("routesource", {
+                type: "geojson",
+                data: {
+                    type: "Feature",
+                    properties: {},
+                    geometry: {
+                        type: "LineString",
+                        coordinates: minPath.features[0].geometry.coordinates,
+                    },
+                },
+            });
+
+            map.addLayer({
+                id: "route",
+                type: "line",
+                source: "routesource",
+                layout: {
+                    "line-join": "round",
+                    "line-cap": "round",
+                },
+                paint: {
+                    "line-color": "#888",
+                    "line-width": 8,
+                },
+            });
+        }
     </script>
-  </body>
+</body>
+
 </html>
