@@ -272,11 +272,10 @@ class heatmap_layer():
                 contour_lines.append(unique_feature)
         self.unique_features = good_features
         contour_lines = sorted(contour_lines)
+        
         for contour in tqdm(contour_lines):
             distance = 1
-            layer1 = map_layer(
-                grid,contour, effect, distance, layers[contour]
-            )
+            layer1 = map_layer(grid,contour, effect, distance, layers[contour])
             layer1.bool_features()
             self.elevation[layer1.poly_bool] = contour + 5
         
@@ -291,43 +290,72 @@ class heatmap_layer():
             self.preferences = {}
             for unique_feature in self.unique_features:
                 self.preferences[unique_feature] = 10
-        # self.preferences = {'water': 100}
         
         if set(self.preferences.keys()).intersection(self.unique_features) == set():
             print('No preferential features in the area selected.')
         
         print('Unique features: ', self.unique_features)
         print('Preferences: ', self.preferences)
-        effect = 1
-        for unique_feature in tqdm(self.preferences.keys()):
-            distance = self.preferences[unique_feature]
+        self.preferences = {'path': 1, 'pubs': 1, 'water': 1, 'shops': 1, 'elevation': 1, 'landmark': 1, 'lodging': 1, 'medical': 1}
+        
+        if 'shops' in self.preferences.keys():
+            self.preferences = self.preferences | {'commercial_area': self.preferences['shops'],
+                                                   'food_and_drink_stores': self.preferences['shops']}
+        if 'water' in self.preferences.keys():
+            self.preferences = self.preferences | {'water': self.preferences['water'], 
+                                                   'stream' : self.preferences['water'], 
+                                                   'river': self.preferences['water']}
+        if 'landmark' in self.preferences.keys():
+            self.preferences = self.preferences | {'landmark': self.preferences['landmark'], 
+                                                   'historical': self.preferences['landmark'], 
+                                                   'Place-like': self.preferences['landmark']}
+        if 'pubs' in self.preferences.keys():
+            self.preferences = self.preferences | {'pubs': self.preferences['pubs'],
+                                                   'food_and_drink' : self.preferences['pubs']}
+        if 'path' in self.preferences.keys():
+            self.preferences = self.preferences | {'path': self.preferences['path'], 'track': self.preferences['path']}
+        '''  
+        if 'lodging' in self.preferences.keys():
+            self.preferences = self.preferences | {'lodging': self.preferences['lodging']}
             
-            layer1 = map_layer(
-                grid, unique_feature, effect, distance, layers[unique_feature], 1
-            )
+        if 'medical' in self.preferences.keys():
+            self.preferences = self.preferences | {'medical': self.preferences['medical']}
+        '''
+        effect = 1
+        if 'elevation' not in self.preferences.keys():
+            self.preferences = self.preferences | {'elevation': effect}
+        
+        print('selected preferences: ', self.preferences)
+        
+        self.bad_features = []
+        self.bad_features += ['major_rail', 'minor_rail', 'primary', 'secondary', 'tertiary', 'wetland',
+                              'arts_and_entertainment', 'residential', 'street', 'school', 'service']
+        
+        for unique_feature in set(self.bad_features).intersection(set(layers.keys())):
+            layer1 = map_layer(grid, unique_feature, 1, 
+                distance, layers[unique_feature], 1)
             layer1.bool_features()
             self.uncampable = np.logical_or(self.uncampable, layer1.uncampable)
-            self.uncampable[layer1.poly_bool] = 10
+            self.uncampable[layer1.poly_bool] = 1
+            
+        distance = 100
+        for unique_feature in tqdm(set(self.preferences.keys()).intersection(set(layers.keys()))):
+            layer1 = map_layer(grid, unique_feature, 
+                self.preferences[unique_feature], 
+                distance, layers[unique_feature], 1)
+            layer1.bool_features()
+            self.uncampable = np.logical_or(self.uncampable, layer1.uncampable)
+            self.uncampable[layer1.poly_bool] = 1
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
-        self.grid[2] += self.gradient
-        
-        
-        zero = np.zeros(self.grid[2].shape)
-        zero[np.nonzero(self.grid[2])] = 1
-        #print('Features everywhere = ',(self.uncampable != 0).all(), ' \n Grid nonzero in some places = ', zero.astype(bool).all())
-        if (self.uncampable != 0) == (np.nonzero(self.grid[2])):
-            self.grid[2][self.uncampable] = 0
-        else:
-            print('The uncampable points are the same as the features')
+        self.grid[2] += self.gradient * self.preferences['elevation']
+        self.grid[2][self.uncampable] -= 5
         
     def plot_heatmap(self):
         ax = plt.axes(projection="3d")
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap='inferno')
-        #ax.plot_surface(self.grid[0], self.grid[1], self.uncampable, cmap='viridis')
         plt.show()
-
 
 def main():    
     bbox = pd.read_csv('bbox.csv', header = None).to_numpy()
