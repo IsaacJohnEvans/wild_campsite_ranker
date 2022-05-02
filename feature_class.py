@@ -291,17 +291,17 @@ class heatmap_layer():
             self.preferences = {}
             for unique_feature in self.unique_features:
                 self.preferences[unique_feature] = 10
-        #self.preferences = {'water': 100}
+        # self.preferences = {'water': 100}
         
         if set(self.preferences.keys()).intersection(self.unique_features) == set():
             print('No preferential features in the area selected.')
         
-        #print('Unique features: ', self.unique_features)
-        #print('Preferences: ', self.preferences)
+        print('Unique features: ', self.unique_features)
+        print('Preferences: ', self.preferences)
+        effect = 1
         for unique_feature in tqdm(self.preferences.keys()):
             distance = self.preferences[unique_feature]
-            print('effect', effect)
-            effect = 1
+            
             layer1 = map_layer(
                 grid, unique_feature, effect, distance, layers[unique_feature], 1
             )
