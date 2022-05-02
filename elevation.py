@@ -22,7 +22,7 @@ def getFeatureData(lng, lat, ACCESS_TOKEN):
     data_raw = response.content
     data_dict = ast.literal_eval(data_raw)
 
-    print(data_dict)
+    #print(data_dict)
 
     return data_dict
 
