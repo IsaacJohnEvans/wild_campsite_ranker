@@ -1068,19 +1068,19 @@
                 ]
             }
 
-            const coordinates = best_points.features[0].geometry.coordinates;
-            pointdata.features[0].geometry.coordinates = [coordinates[0]];
+            const pointcoordinates = best_points.features[0].geometry.coordinates;
+            pointdata.features[0].geometry.coordinates = [pointcoordinates[0]];
             // console.log(routedata);
 
             let i = 0;
-            const timer = setInterval(() => {
-                if (i < coordinates.length) {
-                    pointdata.features[0].geometry.coordinates.push(coordinates[i]);
+            const pointtimer = setInterval(() => {
+                if (i < pointcoordinates.length) {
+                    pointdata.features[0].geometry.coordinates.push(pointcoordinates[i]);
                     map.getSource('points').setData(pointdata);
-                    map.panTo(coordinates[i]);
+                    // map.panTo(coordinates[i]);
                     i++;
                 } else {
-                    window.clearInterval(timer);
+                    window.clearInterval(pointtimer);
                 }
             }, 0.1);
         };

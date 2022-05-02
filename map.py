@@ -6,11 +6,11 @@ app = Flask(__name__)
 from basic_weather_calls import weather_mesh
 from wind_shelter import wind_shelter
 from OSGridConverter import *
-from pathfinding import get_tile
+# from pathfinding import get_tile
 from feature_class import map_feature, map_layer, heatmap_layer
 import mercantile
-from elevation import getElevationMatrix, rasterToImage, getRasterRGB, getSlopeMatrix
-from pathfinding import construct_lng_lat_matrix, get_min_path
+# from elevation import getElevationMatrix, rasterToImage, getRasterRGB, getSlopeMatrix
+from new_pathfinding import get_min_path
 import numpy as np
 
 
@@ -111,7 +111,6 @@ class Optimiser:
         else:
             self.endPoint = [latlonDict["lng"], latlonDict["lat"]]
 
-        print("or hereeeee??")
 
         if self.startPoint != None and self.endPoint != None:
             min_path = get_min_path(
