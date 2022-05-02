@@ -9,6 +9,7 @@ from scipy import ndimage
 import skimage
 from shapely import wkt
 from tqdm import tqdm
+from matplotlib import cm
 
 class map_feature:
     """
@@ -110,11 +111,8 @@ class map_layer(map_feature):
                     for poly in feat.shape:
                         self.polygon_to_points(poly[0])
                         self.polygon_to_points(poly[0])
-             
-            '''
-            Also because this is a for loop it will only not add to the last layer 
-            so need a features there absolutely can't camp there numpy boolean array
-            '''
+        self.uncampable = self.poly_bool
+            
     def polygon_to_points(self, polygon):
         path = mpltPath.Path(polygon)
         new_poly_bool = np.reshape(
@@ -149,6 +147,7 @@ class heatmap_layer():
         x = np.outer(np.linspace(SE[0], NW[0], 1 + n_points[0]), np.ones(1 + n_points[0]))
         y = np.outer(np.linspace(SE[1], NW[1], 1 + n_points[0]), np.ones(1 + n_points[0])).T
         z = np.zeros(x.shape)
+        self.uncampable = z.astype(bool)
         self.grid = [x, y, z]
         self.get_features()
         self.get_unique_feature_types()
@@ -209,6 +208,7 @@ class heatmap_layer():
         for feature in self.features:
             desired_features.add(feature.feature_type)
         self.unique_features = list(desired_features)
+        print(self.unique_features)
     
     def make_dilate_struct(self):
         struct = np.ones((3, 3))
@@ -229,22 +229,24 @@ class heatmap_layer():
         '''
         Need to add a function to select features and set the importance of them using the slider data
         '''
-        
+         
         for feature in self.features:
             layers[feature.feature_type].append(feature)
-
+        print(self.unique_features)
+        self.unique_features = ['stream', 'wood']
         for unique_feature in tqdm(self.unique_features):
             layer1 = map_layer(
                 grid, unique_feature, effect, distance, layers[unique_feature]
             )
             layer1.bool_features()
+            self.uncampable = np.logical_or(self.uncampable, layer1.uncampable)
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
-        
+        self.grid[2][self.uncampable] = 0
     def plot_heatmap(self):
         ax = plt.axes(projection="3d")
-        ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap="inferno")
+        ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap='inferno')
         plt.show()
 
 
