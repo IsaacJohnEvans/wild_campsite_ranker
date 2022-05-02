@@ -52,7 +52,7 @@ class Optimiser:
 
     def make_heatmap(self):
         print("Making heatmap, please wait")
-        heatmap = heatmap_layer(self.bbox, self.preferences)
+        heatmap = heatmap_layer(self.bbox)
         heatmap.make_layers()
         heatmap.plot_heatmap()
         x = heatmap.grid[0]

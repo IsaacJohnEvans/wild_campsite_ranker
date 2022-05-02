@@ -134,7 +134,7 @@ class map_layer(map_feature):
         self.grid[2] = skimage.filters.gaussian(self.grid[2], self.sigma)
   
 class heatmap_layer():
-    def __init__(self, bbox, preferences = {'stream': 10, 'wood': 10}):
+    def __init__(self, bbox, preferences = None):
         pd.DataFrame(np.array(bbox)).to_csv('bbox.csv', index = False, header = False)
         NW_gr = latlong2grid(bbox[0][1],bbox[1][0])
         NW = np.array([NW_gr.E, NW_gr.N])
@@ -220,8 +220,13 @@ class heatmap_layer():
          
         for feature in self.features:
             layers[feature.feature_type].append(feature)
+        if self.preferences == None:
+            self.preferences = {}
+            for unique_feature in self.unique_features:
+                self.preferences[unique_feature] = 10
         print(self.unique_features)
         print(self.preferences)
+        self.preferences = {'path': 10, 'arts_and_entertainment': 10, 'wood': 10, 'parking': 10, 633: 10, 'park': 10}
         for unique_feature in tqdm(self.preferences.keys()):
             distance = self.preferences[unique_feature]
             layer1 = map_layer(
@@ -232,7 +237,10 @@ class heatmap_layer():
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
-        self.grid[2][self.uncampable] = 0
+        if (self.uncampable != 0) == (np.nonzero(self.grid[2])):
+            self.grid[2][self.uncampable] = 0
+        else:
+            print('All of the area is a feature')
     def plot_heatmap(self):
         ax = plt.axes(projection="3d")
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap='inferno')
