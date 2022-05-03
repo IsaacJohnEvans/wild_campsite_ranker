@@ -1,4 +1,3 @@
-from tkinter import OptionMenu
 from flask import Flask, render_template, url_for, jsonify, request, json
 import re
 import math

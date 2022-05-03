@@ -8,7 +8,6 @@ from OSGridConverter import grid2latlong, latlong2grid, OSGridReference
 from scipy import ndimage
 import skimage
 from shapely import wkt
-from sympy import Q
 from tqdm import tqdm
 from matplotlib import cm
 from elevation import getSlopeMatrix
@@ -173,8 +172,8 @@ class heatmap_layer():
     unique_features: The unique features of the heatmap
     
     '''
-    def __init__(self, bbox, preferences = None):
-        self.unpack_bbox(bbox)
+    def __init__(self, bbox, preferences = None, n_points = None):
+        self.unpack_bbox(bbox, n_points)
         self.make_grid()
         self.uncampable = self.grid[2].copy().astype(bool)
         self.layers = []
@@ -182,7 +181,7 @@ class heatmap_layer():
         self.elevation = self.grid[2].copy()
         self.gradient = self.grid[2].copy()
     
-    def unpack_bbox(self, bbox):
+    def unpack_bbox(self, bbox, n_points):
         '''
         A function to unpack the bounding box and turn it into OS grid references and the number of points in the grid.
         
@@ -194,17 +193,23 @@ class heatmap_layer():
         NW: The top right element
         n_points: The number of points in the grid
         '''
+        
         pd.DataFrame(np.array(bbox)).to_csv('bbox.csv', index = False, header = False)
         NW_gr = latlong2grid(bbox[0][1],bbox[1][0])
         NW = np.array([NW_gr.E, NW_gr.N])
         SE_gr = latlong2grid(bbox[1][1],bbox[0][0])
         SE = np.array([SE_gr.E, SE_gr.N])
-        n_points = NW - SE
-        NW[1] = SE[1] + n_points[0]
-        n_points = NW - SE
         self.SE = SE
         self.NW = NW
-        self.n_points = n_points
+        if n_points != None:
+            self.n_points = (n_points, n_points)
+        else:
+            n_points = NW - SE
+            NW[1] = SE[1] + n_points[0]
+            n_points = NW - SE
+            
+            self.n_points = n_points
+        
         
     def make_grid(self):
         '''
@@ -424,7 +429,7 @@ class heatmap_layer():
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
     
-    def make_layers(self):
+    def make_layers(self, distance = 100):
         '''
         A function to create a heatmap grid.
         
@@ -442,7 +447,6 @@ class heatmap_layer():
         '''
         
         effect = 1
-        distance = 10
         grid = self.grid[:2]
         grid.append(np.zeros(self.grid[0].shape))
         
@@ -486,23 +490,12 @@ def main():
     '''
     Runs an example heatmap using data.geojson and bbox.csv
     '''
+    preferences = {'water': 2, 'elevation': 2}
     bbox = pd.read_csv('bbox.csv', header = None).to_numpy()
     heatmap = heatmap_layer(bbox)
-    heatmap.make_layers()
+    heatmap.make_layers(100)
     heatmap.plot_3D_heatmap()
-    x = heatmap.grid[0]
-    y = heatmap.grid[1]
-    z = heatmap.grid[2]
-    n_spots = 5
-    grid_spots = np.concatenate(
-        (np.array([x[np.unravel_index(np.argsort(z.flatten())[-n_spots:], z.shape)[0], 0]]).T,
-         np.array([y[0, np.unravel_index(np.argsort(z.flatten())[-n_spots:], z.shape)[1]]]).T),
-        1)
-    
-    latlong_spots = []
-    for i in range(grid_spots.shape[0]):
-        latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
-        latlong_spots.append([latlong.longitude, latlong.latitude])
+    heatmap.plot_2D_heatmap()
     
 if __name__ == '__main__':
     main()
