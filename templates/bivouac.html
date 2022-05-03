@@ -578,6 +578,14 @@
 
         function startLocation() {
 
+
+            // if (map.getLayer("route")) {
+            //     map.removeLayer("route");
+            // }
+            // if (map.getSource("route")) {
+            //     map.removeSource("route");
+            // }
+
             console.log("Setting start location....");
 
             start_coordinate = $("#mouse_info").html();
@@ -607,6 +615,12 @@
 
         function destinationLocation(start_coordinate) {
 
+            if (map.getLayer("route")) {
+                map.removeLayer("route");
+            }
+            if (map.getSource("route")) {
+                map.removeSource("route");
+            }
 
             console.log("(start location = " + start_coordinate + ")");
 

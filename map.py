@@ -1,3 +1,4 @@
+from tkinter import OptionMenu
 from flask import Flask, render_template, url_for, jsonify, request, json
 import re
 import math
@@ -12,7 +13,7 @@ from feature_class import map_feature, map_layer, heatmap_layer
 import mercantile
 
 # from elevation import getElevationMatrix, rasterToImage, getRasterRGB, getSlopeMatrix
-from pathfinding import get_min_path
+from new_pathfinding import new_get_min_path
 import numpy as np
 
 
@@ -51,9 +52,9 @@ class Optimiser:
         self.tempWind = self.getTempWind()
         # self.printStats()
 
-        self.convertToJson(
-            get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level))
-        )
+        # self.convertToJson(
+        #     get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level))
+        # )
         # print(self.minPathToPoint, flush=True)
 
     def make_heatmap(self):
@@ -135,11 +136,9 @@ class Optimiser:
         self.endPoint = [end_latlonDict["lng"], end_latlonDict["lat"]]
 
         # if self.startPoint != None and self.endPoint != None:
-        min_path = get_min_path(
-            self.startPoint, self.endPoint, math.ceil(float(self.zoom_level))
-        )
+        min_path = new_get_min_path(self.startPoint, self.endPoint, 14)
 
-        print("\n\nMIN PATH =: ", min_path, "\n\n")
+        print("\n\nMIN PATH: \n\n", min_path, "\n\n")
 
         return self.convertToJson(min_path)
 
@@ -214,11 +213,20 @@ def end_destination():
             re.findall("\{.*?\}", request.form["end_location"])[1]
         )
 
-        print("start location: ", start_location)
-        print("end location: ", end_location)
+        startPoint = [start_location["lng"], start_location["lat"]]
+        endPoint = [end_location["lng"], end_location["lat"]]
 
-        minpath = optimiser.setPoint(start_location, end_location)
-        print("end minpath:\n", minpath, "\n")
+        print("startPoint: ", startPoint)
+        print("startPoint type: ", type(startPoint))
+
+        print("endPoint: ", endPoint)
+        print("endPoint type: ", type(endPoint))
+
+        # if self.startPoint != None and self.endPoint != None:
+        min_path = new_get_min_path(startPoint, endPoint, 13)
+
+        minpath = optimiser.convertToJson(min_path)
+        print("end MINPATHDSbujgibdufgld ghiuolb io:\n", minpath, "\n")
 
         # switches lat and long (changed it in setPoint instead)
         # minpath["features"][0]["geometry"]["coordinates"][:] = map(
@@ -229,7 +237,7 @@ def end_destination():
 
         data = {"status": "success", "minpath": minpath}
 
-        print("end_dest function minpath:\n", minpath, "\n")
+        print("end_dest function minpath obtained!\n")
 
     return data, 200
 

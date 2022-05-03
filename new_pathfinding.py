@@ -18,7 +18,7 @@ upper_left = mercantile.ul(tile_coords)
 print("upperleft:", upper_left)"""
 
 
-def get_tile(lat, lng, zoom_level):
+def new_get_tile(lat, lng, zoom_level):
     tile_coords = mercantile.tile(lng=lng, lat=lat, zoom=zoom_level)
     elevation_mat = getElevationMatrix(
         MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y
@@ -29,7 +29,7 @@ def get_tile(lat, lng, zoom_level):
     # print(padded_mat, flush=True)
     # Get latitude and longitude at upper-left of tile
     upper_left = mercantile.ul(tile_coords)
-    djikstra(
+    new_djikstra(
         padded_mat,
         startNode=(1, 1),
         targetNode=(248, 250),
@@ -40,44 +40,47 @@ def get_tile(lat, lng, zoom_level):
     )
 
 
-def construct_lng_lat_matrix(ul, zoomlevel):
+def new_construct_lng_lat_matrix(ul, zoomlevel):
 
     matrix = np.zeros([256, 256], list)
 
     for i in range(256):
         for j in range(256):
-            lng_lat = coord_to_lng_lat(ul, coord=(i, j), zoomlevel=zoomlevel)
+            lng_lat = new_coord_to_lng_lat(ul, coord=(i, j), zoomlevel=zoomlevel)
             matrix[i, j] = [lng_lat[0], lng_lat[1]]
 
     return matrix
 
 
-def construct_lng_lat_matrix2(tile):
+def new_construct_lng_lat_matrix2(tile):
 
     bbox = mercantile.bounds(tile)
     # Unpack upper-left lng lat
-    ul_lng = round(bbox.west, 6)
-    ul_lat = round(bbox.north, 6)
+    ul_lng = round(bbox.west, 7)
+    ul_lat = round(bbox.north, 7)
     # Unpack lower-right lng lat
-    lr_lng = round(bbox.east, 6)
-    lr_lat = round(bbox.south, 6)
+    lr_lng = round(bbox.east, 7)
+    lr_lat = round(bbox.south, 7)
 
     # delta lng & lat from upper-left to lower-right
-    delta_lng = round(abs(1000000*bbox.east - 1000000*bbox.west), 6)
-    delta_lat = round(abs(1000000*bbox.north - 1000000*bbox.south), 6)
+    delta_lng = round(abs(10000000 * bbox.east - 10000000 * bbox.west), 7)
+    delta_lat = round(abs(10000000 * bbox.north - 10000000 * bbox.south), 7)
 
     matrix = np.zeros([256, 256], list)
 
     for i in range(256):
         for j in range(256):
-            cell_lng = round(1000000*ul_lng + (j*delta_lng)/256, 6)
-            cell_lat = round(1000000*ul_lat - (i*delta_lat)/256, 6)
-            matrix[i,j] = [round(cell_lng/1000000, 6), round(cell_lat/1000000, 6)]
+            cell_lng = round(10000000 * ul_lng + (j * delta_lng) / 256, 7)
+            cell_lat = round(10000000 * ul_lat - (i * delta_lat) / 256, 7)
+            matrix[i, j] = [
+                round(cell_lng / 10000000, 7),
+                round(cell_lat / 10000000, 7),
+            ]
 
     return matrix
 
 
-def coord_to_lng_lat2(ul, coord, zoomlevel):
+def new_coord_to_lng_lat2(ul, coord, zoomlevel):
     """Converts x,y matrix coordinate into longitude and latitude coordinates"""
     # Unpack upper-left of tile longitude and latitude
     ul_lat = ul.lat
@@ -103,7 +106,7 @@ def coord_to_lng_lat2(ul, coord, zoomlevel):
     return [lonO, latO]
 
 
-def coord_to_lng_lat(coord, tile):
+def new_coord_to_lng_lat(coord, tile):
 
     bbox = mercantile.bounds(tile)
     # Unpack upper-left lng lat
@@ -117,13 +120,13 @@ def coord_to_lng_lat(coord, tile):
     total_delta_lng = abs(abs(lr_lng) - abs(ul_lng))
     total_delta_lat = abs(abs(lr_lat) - abs(ul_lat))
 
-    lng = ul_lng + (coord[0]/255)*total_delta_lng
-    lat = ul_lat - (coord[1]/255)*total_delta_lat
+    lng = ul_lng + (coord[0] / 255) * total_delta_lng
+    lat = ul_lat - (coord[1] / 255) * total_delta_lat
 
-    return (lng, lat)
+    return [lng, lat]
 
 
-def lng_lat_to_coord(lng_lat, tile):
+def new_lng_lat_to_coord(lng_lat, tile):
 
     target_lng = lng_lat[0]
     target_lat = lng_lat[1]
@@ -142,15 +145,15 @@ def lng_lat_to_coord(lng_lat, tile):
     target_delta_lng = abs(abs(target_lng) - abs(ul_lng))
     target_delta_lat = abs(abs(target_lat) - abs(ul_lat))
 
-    x = (target_delta_lng / total_delta_lng)
-    y = (target_delta_lat / total_delta_lat)
+    x = target_delta_lng / total_delta_lng
+    y = target_delta_lat / total_delta_lat
 
-    x = math.floor(x*255)
-    y = math.floor(y*255)
-    return (x, y)
+    x = math.floor(x * 255)
+    y = math.floor(y * 255)
+    return [x, y]
 
 
-def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=4):
+def new_djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=4):
 
     neighbourDiffs = [[0, 1], [0, -1], [-1, 0], [1, 0]]
     visitedNodes = {
@@ -175,7 +178,8 @@ def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=4):
                 neighbourDist = (
                     currentDist
                     + resolution
-                    + elevation_multiplier * abs((float(matrix[node]) - float(matrix[currentNode])))
+                    + elevation_multiplier
+                    * abs((float(matrix[node]) - float(matrix[currentNode])))
                 )
 
                 # Update frontier if newly-discovered distance is smaller than existing frontier distance
@@ -217,7 +221,7 @@ def djikstra(matrix, startNode, targetNode, resolution, elevation_multiplier=4):
     return nodePath
 
 
-def get_min_path(
+def new_get_min_path(
     start_lng_lat, end_lng_lat, zoom, elevation_multiplier=5, show_img=False
 ):
 
@@ -227,37 +231,41 @@ def get_min_path(
 
     if (x_delta < 0) and (y_delta > 0):
         tile_lng_lat = end_lng_lat
-        #startNode = (256, 256)
+        # startNode = (256, 256)
 
     elif (x_delta < 0) and (y_delta < 0):
         tile_lng_lat = (end_lng_lat[0], start_lng_lat[1])
-        #startNode = (1, 256)
+        # startNode = (1, 256)
 
     elif (x_delta > 0) and (y_delta < 0):
         tile_lng_lat = start_lng_lat
-        #startNode = (1, 1)
+        # startNode = (1, 1)
 
     elif (x_delta > 0) and (y_delta > 0):
         tile_lng_lat = (start_lng_lat[0], end_lng_lat[1])
-        #startNode = (256, 1)
+        # startNode = (256, 1)
 
     # Get mercantile tile x,y,z from lng, lat, zoom
     tile_coords = mercantile.tile(lng=tile_lng_lat[0], lat=tile_lng_lat[1], zoom=zoom)
 
     # Get elevation matrix
-    elevation_mat = getElevationMatrix(MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y)
+    elevation_mat = getElevationMatrix(
+        MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y
+    )
     # Pad matrix with infinities to represent boundaries
-    padded_mat = np.pad(elevation_mat, [(1, 1), (1, 1)], mode='constant', constant_values=np.Inf)
+    padded_mat = np.pad(
+        elevation_mat, [(1, 1), (1, 1)], mode="constant", constant_values=np.Inf
+    )
 
     # resolution = 156543.03 meters/pixel * cos(latitude) / (2 ^ zoomlevel)
     latitude_radians = tile_lng_lat[1] * math.pi / 180
-    resolution = abs(156543.03 * np.cos(latitude_radians) / (2 ** zoom))
+    resolution = abs(156543.03 * np.cos(latitude_radians) / (2**zoom))
 
-    startNode = lng_lat_to_coord(start_lng_lat, tile_coords)
-    targetNode = lng_lat_to_coord(end_lng_lat, tile_coords)
+    startNode = new_lng_lat_to_coord(start_lng_lat, tile_coords)
+    targetNode = new_lng_lat_to_coord(end_lng_lat, tile_coords)
 
     # Generate the shortest path as a sequence of lng, lat tuples
-    node_path = djikstra(
+    node_path = new_djikstra(
         padded_mat,
         startNode=(startNode[0], startNode[1]),
         targetNode=(targetNode[0], targetNode[1]),
@@ -266,7 +274,8 @@ def get_min_path(
     )
 
     # Gets path as series of longitude and latitude coordinates
-    lnglatPath = [coord_to_lng_lat(coord, tile_coords) for coord in node_path]
+    lnglatPath = [new_coord_to_lng_lat(coord, tile_coords) for coord in node_path]
+    lnglatPath = lnglatPath[::-1]
 
     if show_img:
         plt.imshow(elevation_mat, interpolation="nearest")
@@ -278,7 +287,7 @@ def get_min_path(
     return lnglatPath
 
 
-def get_min_path_from_bbox(bbox, elevation_multiplier=10, show_img=False):
+def new_get_min_path_from_bbox(bbox, elevation_multiplier=10, show_img=False):
     if bbox[0] > bbox[2]:  # coord 1 more east
         if bbox[1] > bbox[3]:  # coord 1 more north
             bbox = [bbox[2], bbox[1], bbox[0], bbox[3]]
@@ -297,7 +306,7 @@ def get_min_path_from_bbox(bbox, elevation_multiplier=10, show_img=False):
     elevation_mat = getElevationMatrix(
         MAPBOX_TOKEN, tile_coords.z, tile_coords.x, tile_coords.y
     )
-    lng_lat_mat = construct_lng_lat_matrix(upper_left, tile_coords.z)
+    lng_lat_mat = new_construct_lng_lat_matrix(upper_left, tile_coords.z)
 
     # Pad matrix with infinities to represent boundaries
     padded_mat = np.pad(
@@ -308,11 +317,11 @@ def get_min_path_from_bbox(bbox, elevation_multiplier=10, show_img=False):
     latitude_radians = bbox[1] * math.pi / 180
     resolution = abs(156543.03 * np.cos(latitude_radians) / (2**tile_coords.z))
 
-    startNode = lng_lat_to_coord(lng_lat_mat, [bbox[0], bbox[1]])
-    targetNode = lng_lat_to_coord(lng_lat_mat, [bbox[2], bbox[3]])
+    startNode = new_lng_lat_to_coord(lng_lat_mat, [bbox[0], bbox[1]])
+    targetNode = new_lng_lat_to_coord(lng_lat_mat, [bbox[2], bbox[3]])
 
     # Generate the shortest path as a sequence of lng, lat tuples
-    node_path = djikstra(
+    node_path = new_djikstra(
         padded_mat,
         startNode=(startNode[0] + 1, startNode[1] + 1),
         targetNode=(targetNode[0] + 1, targetNode[1] + 1),
@@ -322,7 +331,7 @@ def get_min_path_from_bbox(bbox, elevation_multiplier=10, show_img=False):
 
     # Gets path as series of longitude and latitude coordinates
     lnglatPath = [
-        coord_to_lng_lat(upper_left, coord, tile_coords.z) for coord in node_path
+        new_coord_to_lng_lat(upper_left, coord, tile_coords.z) for coord in node_path
     ]
 
     if show_img:
