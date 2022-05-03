@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="images/favicon.ico" type="image/vnd.microsoft.icon" />
+    <link rel="shortcut icon"
+        href="https://raw.githubusercontent.com/crispianm/crispianm.github.io/main/images/favicon.ico">
     <title>bivouac</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css" rel="stylesheet" />
@@ -326,10 +327,13 @@
             font-family: "Open Sans", sans-serif;
         }
 
-        #mouse_info {
+        /* #mouse_info {
             display: table;
-            position: relative;
-            margin: 0px auto;
+            position: absolute;
+            left: 37.5%;
+            bottom: 15px;
+            margin: auto;
+            width: 25%;
             word-wrap: anywhere;
             white-space: pre-wrap;
             padding: 10px;
@@ -339,7 +343,7 @@
             text-align: center;
             color: #222;
             background: #fff;
-        }
+        } */
 
         #menu a {
             font-size: 13px;
@@ -833,7 +837,7 @@
                 // map.removeLayer('serious_image-layer')
 
                 var radius = 100;
-                var padding = 10;
+                var padding = 300;
 
                 var bbox = [
                     [e.point.x - radius, e.point.y - radius],
@@ -934,7 +938,7 @@
                     )
                     .addTo(map);
 
-                console.log("THE COORDINATES LOADED ARE: " + start_coordinate);
+                // console.log("THE COORDINATES LOADED ARE: " + start_coordinate);
             });
 
             // new mapboxgl.Popup()
@@ -989,35 +993,15 @@
                 const layers = document.getElementById("menu");
                 layers.appendChild(link);
             }
-
-            //Layers for zoom based Symbols
         });
-
-        // map.on("mouseenter", "camp_landuse", () => {
-        //     map.getCanvas().style.cursor = "pointer";
-        // });
-
-        // map.on("mouseleave", "camp_landuse", () => {
-        //     map.getCanvas().style.cursor = "";
-        // });
 
         map.on("mousemove", (g) => {
             // var northCenter = mapboxgl.LngLat(map.getCenter().lng, map.getBounds().getNorth())
 
             document.getElementById("mouse_info").innerHTML =
-                // `e.point` is the x, y coordinates of the `mousemove` event
-                // relative to the top-left corner of the map.
-                JSON.stringify(map.getZoom()) +
-                "<br />" +
+
                 JSON.stringify(g.point) +
                 "<br />" +
-
-                // `e.lngLat` is the longitude, latitude geographical position of the event.
-
-                // "<br> Top Left: " + JSON.stringify(map.getBounds().getNorthWest()) + '<br />' +
-                // "<br> Top Right: " + JSON.stringify(map.getBounds().getNorthEast()) + '<br />' +
-                // "<br> Bottom Right: " + JSON.stringify(map.getBounds().getSouthEast()) + '<br />' +
-                // "<br> Bottom Left: " + JSON.stringify(map.getBounds().getSouthWest()) + '<br />' +
 
                 JSON.stringify(g.lngLat.wrap());
         });
@@ -1105,11 +1089,49 @@
                 id: "points",
                 type: "heatmap",
                 source: "points",
-                // paint: {
-                //     "line-color": "#888",
-                //     "line-opacity": 0.75,
-                //     "line-width": 6,
-                // },
+                'paint': {
+                    // Increase the heatmap color weight weight by zoom level
+                    // heatmap-intensity is a multiplier on top of heatmap-weight
+                    'heatmap-intensity': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        0,
+                        1,
+                        9,
+                        3
+                    ],
+                    // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
+                    // Begin color ramp at 0-stop with a 0-transparancy color
+                    // to create a blur-like effect.
+                    'heatmap-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['heatmap-density'],
+                        0,
+                        'rgba(33,102,172,0)',
+                        0.2,
+                        'rgb(103,169,207)',
+                        0.4,
+                        'rgb(209,229,240)',
+                        0.6,
+                        'rgb(240, 195, 250)',
+                        0.8,
+                        'rgb(215, 86, 227)',
+                        1,
+                        'rgb(255, 61, 239)'
+                    ],
+                    // Adjust the heatmap radius by zoom level
+                    'heatmap-radius': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        0,
+                        2,
+                        9,
+                        20
+                    ],
+                }
             });
 
             const pointdata = {
