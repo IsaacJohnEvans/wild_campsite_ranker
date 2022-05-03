@@ -738,42 +738,6 @@
                 exaggeration: 1.5,
             });
 
-            map.addSource("route", {
-                type: "geojson",
-                data: [],
-            });
-
-            map.addLayer({
-                id: "route",
-                type: "line",
-                source: "route",
-                layout: {
-                    "line-join": "round",
-                    "line-cap": "round",
-                },
-                paint: {
-                    "line-color": "#888",
-                    "line-opacity": 0.75,
-                    "line-width": 6,
-                },
-            });
-
-            map.addSource("points", {
-                type: "geojson",
-                data: [],
-            });
-
-            map.addLayer({
-                id: "points",
-                type: "heatmap",
-                source: "points",
-                // paint: {
-                //     "line-color": "#888",
-                //     "line-opacity": 0.75,
-                //     "line-width": 6,
-                // },
-            });
-
             // map.addLayer({
             //     'id': 'hillshading',
             //     'source': 'mapbox-dem',
@@ -1021,6 +985,36 @@
         });
 
         function showRoute(minPath) {
+
+            if (map.getLayer("route")) {
+                map.removeLayer("route");
+            }
+            if (map.getSource("route")) {
+                map.removeSource("route");
+            }
+
+            const coordinates = minPath.features[0].geometry.coordinates;
+
+            map.addSource("route", {
+                type: "geojson",
+                data: [coordinates[0]],
+            });
+
+            map.addLayer({
+                id: "route",
+                type: "line",
+                source: "route",
+                layout: {
+                    "line-join": "round",
+                    "line-cap": "round",
+                },
+                paint: {
+                    "line-color": "#888",
+                    "line-opacity": 0.75,
+                    "line-width": 6,
+                },
+            });
+
             console.log("starting calcs");
             const routedata = {
                 "type": "FeatureCollection",
@@ -1035,7 +1029,7 @@
                 ]
             }
 
-            const coordinates = minPath.features[0].geometry.coordinates;
+            
             routedata.features[0].geometry.coordinates = [coordinates[0]];
             console.log("here we goooo");
 
@@ -1055,6 +1049,31 @@
 
         function showPoints(best_points) {
 
+            if (map.getLayer("points")) {
+                map.removeLayer("points");
+            }
+            if (map.getSource("points")) {
+                map.removeSource("points");
+            }
+
+            const pointcoordinates = best_points.features[0].geometry.coordinates;
+
+            map.addSource("points", {
+                type: "geojson",
+                data: [],
+            });
+
+            map.addLayer({
+                id: "points",
+                type: "heatmap",
+                source: "points",
+                // paint: {
+                //     "line-color": "#888",
+                //     "line-opacity": 0.75,
+                //     "line-width": 6,
+                // },
+            });
+
             const pointdata = {
                 "type": "FeatureCollection",
                 "features": [
@@ -1062,13 +1081,12 @@
                         "type": "Feature",
                         "geometry": {
                             "type": "LineString",
-                            "coordinates": []
+                            "coordinates": [pointcoordinates[0]]
                         }
                     }
                 ]
             }
 
-            const pointcoordinates = best_points.features[0].geometry.coordinates;
             pointdata.features[0].geometry.coordinates = [pointcoordinates[0]];
             // console.log(routedata);
 

@@ -23,8 +23,8 @@ class Optimiser:
             "Test4": None,
             "Test5": None,
             "Test6": None,
-            "Test7":None,
-            "Test8":None
+            "Test7": None,
+            "Test8": None
         }
         self.latlon = None
         self.zoom_level = None
