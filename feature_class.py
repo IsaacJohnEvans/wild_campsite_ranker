@@ -310,9 +310,7 @@ class heatmap_layer():
             self.preferences = self.preferences | {'Pubs': self.preferences['Pubs'],
                                                    'food_and_drink' : self.preferences['Pubs']}
         if 'Paths' in self.preferences.keys():
-            self.preferences = self.preferences | {'path': self.preferences['Paths'], 'track': self.preferences['Paths']}
-        print('here')
-        
+            self.preferences = self.preferences | {'path': self.preferences['Paths'], 'track': self.preferences['Paths']}        
         
         if 'Accomodation' in self.preferences.keys():
             self.preferences = self.preferences | {'lodging': self.preferences['Accomodation']}
@@ -356,10 +354,21 @@ class heatmap_layer():
         self.grid[2] += self.gradient * self.preferences['elevation']
         self.grid[2][self.uncampable] -= 5
         
-    def plot_heatmap(self):
+    def plot_3D_heatmap(self):
         ax = plt.axes(projection="3d")
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap='inferno')
         plt.show()
+    
+    def plot_2D_heatmap(self):
+        fig, ax = plt.subplots()
+        heatmap_plot = ax.pcolor(self.grid[0], self.grid[1], self.grid[2], cmap='inferno', shading='auto')
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        plt.xticks(rotation = 45)
+        plt.colorbar(heatmap_plot, label='Suitability for camping')
+        plt.savefig('poster/optimiser_heatmap.pdf')
+        plt.show()
+        
 
 def main():    
     bbox = pd.read_csv('bbox.csv', header = None).to_numpy()
@@ -379,7 +388,7 @@ def main():
     for i in range(grid_spots.shape[0]):
         latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
         latlong_spots.append([latlong.longitude, latlong.latitude])
-    heatmap.plot_heatmap()
+    heatmap.plot_3D_heatmap()
     
 if __name__ == '__main__':
     main()
