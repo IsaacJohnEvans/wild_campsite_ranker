@@ -8,6 +8,7 @@ from OSGridConverter import grid2latlong, latlong2grid, OSGridReference
 from scipy import ndimage
 import skimage
 from shapely import wkt
+from sympy import Q
 from tqdm import tqdm
 from matplotlib import cm
 from elevation import getSlopeMatrix
@@ -170,8 +171,29 @@ class heatmap_layer():
     preferences: The preferences of the heatmap
     features: The features of the heatmap
     unique_features: The unique features of the heatmap
+    
     '''
     def __init__(self, bbox, preferences = None):
+        self.unpack_bbox(bbox)
+        self.make_grid()
+        self.uncampable = self.grid[2].copy().astype(bool)
+        self.layers = []
+        self.preferences = preferences
+        self.elevation = self.grid[2].copy()
+        self.gradient = self.grid[2].copy()
+    
+    def unpack_bbox(self, bbox):
+        '''
+        A function to unpack the bounding box and turn it into OS grid references and the number of points in the grid.
+        
+        Parameters:
+        bbox: The bounding box of the heatmap
+        
+        Returns:
+        SE: The bottom left element
+        NW: The top right element
+        n_points: The number of points in the grid
+        '''
         pd.DataFrame(np.array(bbox)).to_csv('bbox.csv', index = False, header = False)
         NW_gr = latlong2grid(bbox[0][1],bbox[1][0])
         NW = np.array([NW_gr.E, NW_gr.N])
@@ -180,19 +202,32 @@ class heatmap_layer():
         n_points = NW - SE
         NW[1] = SE[1] + n_points[0]
         n_points = NW - SE
-        x = np.outer(np.linspace(SE[0], NW[0], 1 + n_points[0]), np.ones(1 + n_points[0]))
-        y = np.outer(np.linspace(SE[1], NW[1], 1 + n_points[0]), np.ones(1 + n_points[0])).T
+        self.SE = SE
+        self.NW = NW
+        self.n_points = n_points
+        
+    def make_grid(self):
+        '''
+        A function to create the grid from the bounding box and the number of points in the grid.
+        
+        Returns:
+        grid: A list of the data for the grid
+        '''
+        x = np.outer(np.linspace(self.SE[0], self.NW[0], 1 + self.n_points[0]), np.ones(1 + self.n_points[0]))
+        y = np.outer(np.linspace(self.SE[1], self.NW[1], 1 + self.n_points[0]), np.ones(1 + self.n_points[0])).T
         z = np.zeros(x.shape)
-        self.uncampable = z.copy().astype(bool)
         self.grid = [x, y, z]
-        self.get_features()
-        self.get_unique_feature_types()
-        self.layers = []
-        self.preferences = preferences
-        self.elevation = z.copy()
-        self.gradient = z.copy()
     
     def get_features(self, file_name = 'data.geojson'):
+        '''
+        Extracts the features from the geojson file and creates map feature instances for each feature.
+        
+        Parameters:
+        file_name: The name of the geojson file
+        
+        Returns:
+        A list of the features on the heatmap
+        '''
         features = []
         with open(file_name, "r") as read_file:
             data_list = json.load(read_file)
@@ -224,44 +259,47 @@ class heatmap_layer():
                         data_list[i]["geometry"]["coordinates"],
                     )
                 )
-        self.features = features
-        '''
-            elif "FID" in data_list[i]["properties"]:
-                features.append(
-                    map_feature(
-                        i,
-                        data_list[i]["properties"]["FID"],
-                        data_list[i]["geometry"]["type"],
-                        data_list[i]["geometry"]["coordinates"],
-                    )
-                )
-        '''
-            
+        self.features = features            
 
     def get_unique_feature_types(self):
+        '''
+        A function to find the unique feature types in the heatmap.
+        
+        Parameters:
+        self.features: The features of the heatmap
+        
+        Returns:
+        self.unique_features: The unique features of the heatmap
+        '''
         desired_features = set()
         for feature in self.features:
             desired_features.add(feature.feature_type)
         self.unique_features = list(desired_features)
     
     def make_dilate_struct(self):
+        '''
+        Makes a structuring element for the dilation of the heatmap.
+        '''
         struct = np.ones((3, 3))
         struct[1, 1] = 0
         return struct.astype(bool)
 
-    def make_layers(self):
-        effect = 1
-        grid = self.grid[:2]
-        grid.append(np.zeros(self.grid[0].shape))
+    def features_into_layers(self):
+        '''
+        A function to create a dictionary of unique layers which contain a list of the features of the heatmap.
+        '''
         layers = {}
-        struct = self.make_dilate_struct()
-
         for unique_feature in self.unique_features:
             layers[unique_feature] = []
-         
         for feature in self.features:
             layers[feature.feature_type].append(feature)
         
+        return layers
+    
+    def sort_features(self):
+        '''
+        A function to sort the features into good features and contours.
+        '''
         good_features = []
         contour_lines = []
         
@@ -270,38 +308,54 @@ class heatmap_layer():
                 good_features += [unique_feature]
             elif type(unique_feature) == int:
                 contour_lines.append(unique_feature)
-        self.unique_features = good_features
-        contour_lines = sorted(contour_lines)
         
-        for contour in tqdm(contour_lines):
+        self.unique_features = good_features
+        self.contour_lines = sorted(contour_lines)
+        
+    def get_elevation(self, grid, effect, distance, layers):
+        '''
+        A function to calculate the elevation of the bbox area using the contours of the heatmap.
+        Then a filter is applied to smooth between the layers.
+        '''
+        for contour in tqdm(self.contour_lines):
             distance = 1
-            layer1 = map_layer(grid,contour, effect, distance, layers[contour])
+            layer1 = map_layer(grid, contour, effect, distance, layers[contour])
             layer1.bool_features()
             self.elevation[layer1.poly_bool] = contour + 5
-        
-        
-        self.elevation[self.elevation == 0] = contour_lines[0]
+        self.elevation[self.elevation == 0] = self.contour_lines[0]
         self.elevation = skimage.filters.gaussian(self.elevation, sigma = 20)
-
+    
+    def get_gradient(self):
+        '''
+        A function to calculate the gradient of the bbox area.
+        '''
         self.gradient = np.absolute(getSlopeMatrix(self.elevation))
         self.gradient = -(self.gradient / np.max(self.gradient))
-        
-        if self.preferences == None:
-            self.preferences = {}
-            for unique_feature in self.unique_features:
-                self.preferences[unique_feature] = 1
-        
+    
+    def no_preferences(self):
+        '''
+        A function to create a default dictionary of preferences for the heatmap when None is passed.
+        The dictionary allocates a value of one to every unique feature type.
+        '''
+        self.preferences = {}
+        for unique_feature in self.unique_features:
+            self.preferences[unique_feature] = 1
+    
+    def unpack_preferences(self):
+        '''
+        A function to unpack the preferences from the website into a dictionary.
+        The function changes the values of the dictionary to integers.
+        Then each keyword is unpacked in turn.
+        '''
         self.preferences = dict((k, int(v)-1) for k, v in self.preferences.items())
 
         if 'Shops' in self.preferences.keys():
             self.preferences = self.preferences | {'commercial_area': self.preferences['Shops'],
                                                    'food_and_drink_stores': self.preferences['Shops']}
-        
         if 'Water' in self.preferences.keys():
             self.preferences = self.preferences | {'water': self.preferences['Water'], 
                                                    'stream' : self.preferences['Water'], 
                                                    'river': self.preferences['Water']}
-        
         if 'Landmarks' in self.preferences.keys():
             self.preferences = self.preferences | {'landmark': self.preferences['Landmarks'], 
                                                    'historical': self.preferences['Landmarks'], 
@@ -318,29 +372,47 @@ class heatmap_layer():
         if 'Medical' in self.preferences.keys():
             self.preferences = self.preferences | {'medical': self.preferences['Medical']}
         
-        effect = 1
+        if set(self.preferences.keys()).intersection(self.unique_features) == set():
+            print('No preferential features in the area selected. The heatmap will be based entirely on the contours of the area.')
+    
+    def sort_preferences(self, effect):
+        '''
+        A function that selects whether to generate preferences if there are none or to unpack the preferences.
+        The function also prints the unique features and the preferences.
+        '''
+        if self.preferences == None:
+            self.no_preferences()
+        else:
+            self.unpack_preferences()
         if 'elevation' not in self.preferences.keys():
             self.preferences = self.preferences | {'elevation': effect}
-        
-        if set(self.preferences.keys()).intersection(self.unique_features) == set():
-            print('No preferential features in the area selected.')
         print('Unique features: ', self.unique_features)
         print('Preferences: ', self.preferences)
         
+    def get_bad_features(self, grid, distance, layers):
+        '''
+        A function to get some features that are not good to camp on and turn them into points on a boolean array.
+        '''
         self.bad_features = []
         self.bad_features += ['major_rail', 'minor_rail', 'primary', 'secondary', 'tertiary', 'wetland',
                               'arts_and_entertainment', 'residential', 'street', 'school', 'service']
-        
-        print('Running bad feature layer')
         for unique_feature in set(self.bad_features).intersection(set(layers.keys())):
             layer1 = map_layer(grid, unique_feature, 1, 
                 distance, layers[unique_feature], 1)
             layer1.bool_features()
             self.uncampable = np.logical_or(self.uncampable, layer1.uncampable)
             self.uncampable[layer1.poly_bool] = 1
-        
-        print('Running good feature layer')
-        distance = 100
+    
+    def get_good_features(self, grid, distance, layers):
+        '''
+        A function to get the good features on the map and dilate an area around them.
+        The function makes a dilating structure.
+        For every layer the function creates a map_layer object.
+            Next the function gets the features for a layer and turns them into points on a boolean array.
+            Then the layer is dilated and the points are turned into an array.
+            Then the values of the layer are added to the heatmap grid.        
+        '''
+        struct = self.make_dilate_struct()
         for unique_feature in tqdm(set(self.preferences.keys()).intersection(set(layers.keys()))):
             layer1 = map_layer(grid, unique_feature, 
                 self.preferences[unique_feature], 
@@ -351,15 +423,55 @@ class heatmap_layer():
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
+    
+    def make_layers(self):
+        '''
+        A function to create a heatmap grid.
+        
+        Parameters:
+        effect (int): The default effect of the data.
+        distance (int): The distance of the dilation. (Half the distance provides the optimal distance.)
+        
+        The function creates a heatmap grid.
+        Next the function gets the features and unique features.
+        Then the features are sorted into layers.
+        Next the elevation of the bbox is calculated and from that the gradient.
+        The preferences for each feature are then defined.
+        Then the good and bad features are turned into points on a boolean array.
+        The good features are added to the heatmap and the bad features, including the gradient, are subtracted from the heatmap.
+        '''
+        
+        effect = 1
+        distance = 10
+        grid = self.grid[:2]
+        grid.append(np.zeros(self.grid[0].shape))
+        
+        self.get_features()
+        self.get_unique_feature_types()
+        layers = self.features_into_layers()
+        self.sort_features()
+        self.get_elevation(grid, effect, distance =1, layers = layers)
+        self.get_gradient()
+        self.sort_preferences(effect)
+        
+        self.get_bad_features(grid, distance, layers)
+        self.get_good_features(grid, distance, layers)
+        
         self.grid[2] += self.gradient * self.preferences['elevation']
         self.grid[2][self.uncampable] -= 5
         
     def plot_3D_heatmap(self):
+        '''
+        Plots a 3D heatmap.
+        '''
         ax = plt.axes(projection="3d")
         ax.plot_surface(self.grid[0], self.grid[1], self.grid[2], cmap='inferno')
         plt.show()
     
     def plot_2D_heatmap(self):
+        '''
+        Plots a 2D heatmap.
+        '''
         fig, ax = plt.subplots()
         heatmap_plot = ax.pcolor(self.grid[0], self.grid[1], self.grid[2], cmap='inferno', shading='auto')
         plt.xlabel('X')
@@ -370,10 +482,14 @@ class heatmap_layer():
         plt.show()
         
 
-def main():    
+def main():
+    '''
+    Runs an example heatmap using data.geojson and bbox.csv
+    '''
     bbox = pd.read_csv('bbox.csv', header = None).to_numpy()
     heatmap = heatmap_layer(bbox)
     heatmap.make_layers()
+    heatmap.plot_3D_heatmap()
     x = heatmap.grid[0]
     y = heatmap.grid[1]
     z = heatmap.grid[2]
@@ -384,11 +500,9 @@ def main():
         1)
     
     latlong_spots = []
-    #print(grid2latlong(str(OSGridReference(grid_spots[0][0], grid_spots[0][1]))))
     for i in range(grid_spots.shape[0]):
         latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
         latlong_spots.append([latlong.longitude, latlong.latitude])
-    heatmap.plot_3D_heatmap()
     
 if __name__ == '__main__':
     main()
