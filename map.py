@@ -20,14 +20,14 @@ import numpy as np
 class Optimiser:
     def __init__(self):
         self.preferences = {
-            "Test1": None,
-            "Test2": None,
-            "Test3": None,
-            "Test4": None,
-            "Test5": None,
-            "Test6": None,
-            "Test7": None,
-            "Test8": None,
+            "shops": None,
+            "pubs": None,
+            "water": None,
+            "accomodation": None,
+            "medical": None,
+            "landmarks": None,
+            "paths": None,
+            "elevation": None,
         }
         self.latlon = None
         self.zoom_level = None
