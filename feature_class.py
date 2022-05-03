@@ -291,9 +291,8 @@ class heatmap_layer():
             for unique_feature in self.unique_features:
                 self.preferences[unique_feature] = 1
         
-        self.preferences = dict((k, int(v)) for k, v in self.preferences.items())
-        
-        print('why')
+        self.preferences = dict((k, int(v)-1) for k, v in self.preferences.items())
+
         if 'Shops' in self.preferences.keys():
             self.preferences = self.preferences | {'commercial_area': self.preferences['Shops'],
                                                    'food_and_drink_stores': self.preferences['Shops']}
@@ -314,13 +313,13 @@ class heatmap_layer():
             self.preferences = self.preferences | {'path': self.preferences['Paths'], 'track': self.preferences['Paths']}
         print('here')
         
-        ''' 
-        if 'accomodation' in self.preferences.keys():
-            self.preferences = self.preferences | {'accomodation': self.preferences['accomodation']}
+        
+        if 'Accomodation' in self.preferences.keys():
+            self.preferences = self.preferences | {'lodging': self.preferences['Accomodation']}
             
-        if 'medical' in self.preferences.keys():
-            self.preferences = self.preferences | {'medical': self.preferences['medical']}
-        '''
+        if 'Medical' in self.preferences.keys():
+            self.preferences = self.preferences | {'medical': self.preferences['Medical']}
+        
         effect = 1
         if 'elevation' not in self.preferences.keys():
             self.preferences = self.preferences | {'elevation': effect}
@@ -354,7 +353,7 @@ class heatmap_layer():
             layer1.dilate_poly(struct)
             self.grid[2] += layer1.grid[2]
             self.layers.append(layer1)
-        self.grid[2] += self.gradient * self.preferences['Elevation']
+        self.grid[2] += self.gradient * self.preferences['elevation']
         self.grid[2][self.uncampable] -= 5
         
     def plot_heatmap(self):
