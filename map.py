@@ -6,11 +6,13 @@ app = Flask(__name__)
 from basic_weather_calls import weather_mesh
 from wind_shelter import wind_shelter
 from OSGridConverter import *
+
 # from pathfinding import get_tile
 from feature_class import map_feature, map_layer, heatmap_layer
 import mercantile
+
 # from elevation import getElevationMatrix, rasterToImage, getRasterRGB, getSlopeMatrix
-from new_pathfinding import get_min_path
+from pathfinding import get_min_path
 import numpy as np
 
 
@@ -24,7 +26,7 @@ class Optimiser:
             "Test5": None,
             "Test6": None,
             "Test7": None,
-            "Test8": None
+            "Test8": None,
         }
         self.latlon = None
         self.zoom_level = None
@@ -47,7 +49,7 @@ class Optimiser:
         self.shelterIndex = self.getShelterIndex()
         self.OSGridReference = self.getOSGridReference()
         self.tempWind = self.getTempWind()
-        #self.printStats()
+        # self.printStats()
 
         self.convertToJson(
             get_min_path(self.bbox[0], self.bbox[1], math.floor(self.zoom_level))
@@ -57,20 +59,43 @@ class Optimiser:
     def make_heatmap(self):
         heatmap = heatmap_layer(self.bbox)
         heatmap.make_layers()
-        
+
         x = heatmap.grid[0]
         y = heatmap.grid[1]
         z = heatmap.grid[2]
 
         n_spots = self.numberOfPoints
         grid_spots = np.concatenate(
-        (np.array([x[np.unravel_index(np.argsort(z.flatten())[-n_spots:], z.shape)[0], 0]]).T,
-         np.array([y[0, np.unravel_index(np.argsort(z.flatten())[-n_spots:], z.shape)[1]]]).T),
-        1)
-    
+            (
+                np.array(
+                    [
+                        x[
+                            np.unravel_index(
+                                np.argsort(z.flatten())[-n_spots:], z.shape
+                            )[0],
+                            0,
+                        ]
+                    ]
+                ).T,
+                np.array(
+                    [
+                        y[
+                            0,
+                            np.unravel_index(
+                                np.argsort(z.flatten())[-n_spots:], z.shape
+                            )[1],
+                        ]
+                    ]
+                ).T,
+            ),
+            1,
+        )
+
         latlong_spots = []
         for i in range(grid_spots.shape[0]):
-            latlong = grid2latlong(str(OSGridReference(grid_spots[i][0], grid_spots[i][1])))
+            latlong = grid2latlong(
+                str(OSGridReference(grid_spots[i][0], grid_spots[i][1]))
+            )
             latlong_spots.append([latlong.longitude, latlong.latitude])
 
         heatmap.plot_heatmap()
@@ -104,21 +129,19 @@ class Optimiser:
         ]
         return bbox
 
-    def setPoint(self, latlonDict, pointType):
-        if pointType == "start":
-            self.startPoint = [latlonDict["lng"], latlonDict["lat"]]
+    def setPoint(self, start_latlonDict, end_latlonDict):
 
-        else:
-            self.endPoint = [latlonDict["lng"], latlonDict["lat"]]
+        self.startPoint = [start_latlonDict["lng"], start_latlonDict["lat"]]
+        self.endPoint = [end_latlonDict["lng"], end_latlonDict["lat"]]
 
+        # if self.startPoint != None and self.endPoint != None:
+        min_path = get_min_path(
+            self.startPoint, self.endPoint, math.ceil(float(self.zoom_level))
+        )
 
-        if self.startPoint != None and self.endPoint != None:
-            min_path = get_min_path(
-                self.startPoint, self.endPoint, math.ceil(float(self.zoom_level))
-            )
-            return self.convertToJson(min_path)
-        else:
-            return 0
+        print("\n\nMIN PATH =: ", min_path, "\n\n")
+
+        return self.convertToJson(min_path)
 
     def getFeatures(self):
         pass
@@ -164,29 +187,37 @@ def home():
     return render_template("bivouac.html")
 
 
-@app.route("/start_destination", methods=["POST", "GET"])
-def start_destination():
-    if request.method == "POST":
+# @app.route("/start_destination", methods=["POST", "GET"])
+# def start_destination():
+#     if request.method == "POST":
 
-        location = json.loads(re.findall("\{.*?\}", request.form["location"])[1])
+#         start_location = json.loads(re.findall("\{.*?\}", request.form["location"])[1])
 
-        minpath = optimiser.setPoint(location, "start")
-        print("start minpath:\n", minpath, "\n")
+#         # minpath = optimiser.setPoint(start_location, "start")
+#         # print("start minpath:\n", minpath, "\n")
 
-        data = {"status": "success", "minpath": minpath}
+#         data = {"status": "success", "start_location": start_location}
 
-        # print("start_destination coords:\n", type(location[1]), "\n")
+#         # print("start_destination coords:\n", type(location[1]), "\n")
 
-    return data, 200
+#     return data, 200
 
 
 @app.route("/end_destination", methods=["POST", "GET"])
 def end_destination():
     if request.method == "POST":
 
-        location = json.loads(re.findall("\{.*?\}", request.form["location"])[1])
+        start_location = json.loads(
+            re.findall("\{.*?\}", request.form["start_location"])[1]
+        )
+        end_location = json.loads(
+            re.findall("\{.*?\}", request.form["end_location"])[1]
+        )
 
-        minpath = optimiser.setPoint(location, "end")
+        print("start location: ", start_location)
+        print("end location: ", end_location)
+
+        minpath = optimiser.setPoint(start_location, end_location)
         print("end minpath:\n", minpath, "\n")
 
         # switches lat and long (changed it in setPoint instead)
@@ -194,10 +225,11 @@ def end_destination():
         #     lambda l: list(reversed(l)),
         #     minpath["features"][0]["geometry"]["coordinates"],
         # )
-        #print(minpath, flush=True)
+        # print(minpath, flush=True)
+
         data = {"status": "success", "minpath": minpath}
 
-        # print("end_dest function minpath:\n", minpath, "\n")
+        print("end_dest function minpath:\n", minpath, "\n")
 
     return data, 200
 
@@ -207,8 +239,8 @@ def create_heatmap():
     if request.method == "POST":
         location = request.form["location"]
         best_points = optimiser.convertToJson(optimiser.make_heatmap())
-        #best_points = optimiser.convertToJson([-2.602678,51.455691])
-        data = {"status": "success", "points":best_points}
+        # best_points = optimiser.convertToJson([-2.602678,51.455691])
+        data = {"status": "success", "points": best_points}
     return data, 200
 
 
@@ -239,7 +271,6 @@ def process_result():
         # print(features)
         with open("data.geojson", "w") as f:
             json.dump(json.loads(features), f)
-        
 
         latlon = json.loads(re.findall("\{.*?\}", mouse_pos)[1])
         optimiser.updateOptimiser(
@@ -257,7 +288,7 @@ def process_result():
             "some": num_features,
             "temp": optimiser.tempWind["Temp"],
             "wind": optimiser.tempWind["Wind"],
-            "wind_shelter": round(optimiser.shelterIndex,4),
+            "wind_shelter": round(optimiser.shelterIndex, 4),
             "osGrid": optimiser.OSGridReference,
         }
         # creating elevation matrix (needs to be using the bbox and latlon centre)

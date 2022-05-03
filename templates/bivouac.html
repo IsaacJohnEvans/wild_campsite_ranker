@@ -554,6 +554,9 @@
     <pre id="mouse_info"></pre>
 
     <script>
+
+        var start_coordinate = '{"x":0,"y":0}{"lng":0,"lat":0}';
+
         function savePreferences() {
             var sliderValues = [];
             var sliders = document.getElementsByClassName("slider");
@@ -577,40 +580,52 @@
 
             console.log("Setting start location....");
 
-            var coordinate = $("#mouse_info").html();
+            start_coordinate = $("#mouse_info").html();
             //use feat_matrix variable here
 
-            $.ajax({
-                type: "POST",
-                async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
-                data: {
-                    location: coordinate,
-                },
-                dataType: "json",
-                url: "/start_destination",
-                success: function (json) {
-                    min_path = json.minpath;
-                    if (min_path != 0) {
-                        showRoute(min_path);
-                    }
-                },
-            });
+            // $.ajax({
+            //     type: "POST",
+            //     async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
+            //     data: {
+            //         location: start_coordinate,
+            //     },
+            //     dataType: "json",
+            //     url: "/start_destination",
+            //     success: function (json) {
+            //         start_location = json.start_location;
+            //         // if (min_path != 0) {
+            //         //     showRoute(min_path);
+            //         // }
+            //     },
+            // });
 
-            console.log("Start location set.");
+            console.log("Start location set at: " + start_coordinate);
+
+            return start_coordinate
 
         }
 
-        function destinationLocation() {
+        function destinationLocation(start_coordinate) {
 
-            console.log("Setting destination location....");
 
-            var coordinate = $("#mouse_info").html();
+            console.log("(start location = " + start_coordinate + ")");
+
+
+            const end_coordinate = $("#mouse_info").html();
+
+            // if (start_coordinate = "") {
+
+            //     alert("No path set (start_coordinate = '').");
+
+            // }
+            console.log("Set destination location at: " + end_coordinate);
 
             $.ajax({
                 type: "POST",
                 async: false, // apparantly very sus, seems to work though. I reckon its effectively global from python
                 data: {
-                    location: coordinate,
+                    end_location: end_coordinate,
+                    start_location: start_coordinate
                 },
                 dataType: "json",
                 url: "/end_destination",
@@ -618,13 +633,16 @@
                     min_path = json.minpath;
                     if (min_path != 0) {
                         showRoute(min_path);
+                    } else {
+                        alert("No path found (min_path = 0).");
                     }
                 },
             });
 
-            console.log("Destination location set.");
 
+            console.log("Destination location set.");
         }
+
 
         function createHeatmap() {
 
@@ -786,8 +804,7 @@
             // });
 
             // HTML from the click event's properties.
-            map.on("click", (e) => {
-
+            map.on("contextmenu", (e) => {
 
                 map.flyTo({ center: e.lnglat, zoom: 14, essential: true });
 
@@ -802,7 +819,7 @@
                 var radius = 100;
                 var padding = 10;
 
-                const bbox = [
+                var bbox = [
                     [e.point.x - radius, e.point.y - radius],
                     [e.point.x + radius, e.point.y + radius],
                 ];
@@ -868,7 +885,7 @@
                     wind = response.wind;
                     shelter = response.wind_shelter;
                     gridref = response.osGrid;
-                    console.log("Inside ajax: " + num_features);
+                    console.log("Features inside ajax: " + num_features);
                     //use feat_matrix variable here
                 }
 
@@ -897,9 +914,11 @@
                         shelter +
                         "<br> Grid Ref: " +
                         gridref +
-                        "<br><button class='goFromButton' onclick='startLocation()'>Set Starting Location</button><br><button class='goToButton' onclick='destinationLocation()'>Set Destination</button><br><button class='heatmapButton' onclick='createHeatmap()'>Create Heatmap</button>"
+                        "<br><button class='goFromButton' onclick='startLocation()'>Set Starting Location</button><br><button class='goToButton' onclick='destinationLocation(start_coordinate)'>Set Destination</button><br><button class='heatmapButton' onclick='createHeatmap()'>Create Heatmap</button>"
                     )
                     .addTo(map);
+
+                console.log("THE COORDINATES LOADED ARE: " + start_coordinate);
             });
 
             // new mapboxgl.Popup()
@@ -1029,7 +1048,7 @@
                 ]
             }
 
-            
+
             routedata.features[0].geometry.coordinates = [coordinates[0]];
             console.log("here we goooo");
 

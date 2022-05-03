@@ -139,3 +139,4 @@ local_config.py
 *.geojson
 minPath.geojson
 *.geojson
+bbox.csv
