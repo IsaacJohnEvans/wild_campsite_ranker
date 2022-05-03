@@ -20,14 +20,14 @@ import numpy as np
 class Optimiser:
     def __init__(self):
         self.preferences = {
-            "shops": None,
-            "pubs": None,
-            "water": None,
-            "accomodation": None,
-            "medical": None,
-            "landmarks": None,
-            "paths": None,
-            "elevation": None,
+            "Shops": None,
+            "Pubs": None,
+            "Water": None,
+            "Accomodation": None,
+            "Medical": None,
+            "Landmarks": None,
+            "Paths": None,
+            "Elevation": None,
         }
         self.latlon = None
         self.zoom_level = None
@@ -58,7 +58,7 @@ class Optimiser:
         # print(self.minPathToPoint, flush=True)
 
     def make_heatmap(self):
-        heatmap = heatmap_layer(self.bbox)
+        heatmap = heatmap_layer(self.bbox, self.preferences)
         heatmap.make_layers()
 
         x = heatmap.grid[0]
