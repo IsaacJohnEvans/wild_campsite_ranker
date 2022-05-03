@@ -56,25 +56,25 @@ def new_construct_lng_lat_matrix2(tile):
 
     bbox = mercantile.bounds(tile)
     # Unpack upper-left lng lat
-    ul_lng = round(bbox.west, 7)
-    ul_lat = round(bbox.north, 7)
+    ul_lng = round(bbox.west, 9)
+    ul_lat = round(bbox.north, 9)
     # Unpack lower-right lng lat
-    lr_lng = round(bbox.east, 7)
-    lr_lat = round(bbox.south, 7)
+    lr_lng = round(bbox.east, 9)
+    lr_lat = round(bbox.south, 9)
 
     # delta lng & lat from upper-left to lower-right
-    delta_lng = round(abs(10000000 * bbox.east - 10000000 * bbox.west), 7)
-    delta_lat = round(abs(10000000 * bbox.north - 10000000 * bbox.south), 7)
+    delta_lng = round(abs(1000000000 * bbox.east - 1000000000 * bbox.west), 9)
+    delta_lat = round(abs(1000000000 * bbox.north - 1000000000 * bbox.south), 9)
 
     matrix = np.zeros([256, 256], list)
 
     for i in range(256):
         for j in range(256):
-            cell_lng = round(10000000 * ul_lng + (j * delta_lng) / 256, 7)
-            cell_lat = round(10000000 * ul_lat - (i * delta_lat) / 256, 7)
+            cell_lng = round(1000000000 * ul_lng + (j * delta_lng) / 256, 9)
+            cell_lat = round(1000000000 * ul_lat - (i * delta_lat) / 256, 9)
             matrix[i, j] = [
-                round(cell_lng / 10000000, 7),
-                round(cell_lat / 10000000, 7),
+                round(cell_lng / 1000000000, 9),
+                round(cell_lat / 1000000000, 9),
             ]
 
     return matrix

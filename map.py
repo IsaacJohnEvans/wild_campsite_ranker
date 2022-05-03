@@ -135,10 +135,20 @@ class Optimiser:
         self.startPoint = [start_latlonDict["lng"], start_latlonDict["lat"]]
         self.endPoint = [end_latlonDict["lng"], end_latlonDict["lat"]]
 
-        # if self.startPoint != None and self.endPoint != None:
-        min_path = new_get_min_path(self.startPoint, self.endPoint, 14)
+        print("startPoint: ", self.startPoint)
+        print("endPoint: ", self.endPoint)
 
-        print("\n\nMIN PATH: \n\n", min_path, "\n\n")
+        route_zoom = math.ceil(float(self.zoom_level))
+
+        min_path = []
+        while len(min_path) == 0:
+            try:
+                min_path = new_get_min_path(self.startPoint, self.endPoint, route_zoom)
+            except:
+                print("\nError at zoom level: ", route_zoom)
+                route_zoom -= 1
+
+        print("\n\nMINIMUM PATH: \n\n", min_path)
 
         return self.convertToJson(min_path)
 
@@ -213,27 +223,8 @@ def end_destination():
             re.findall("\{.*?\}", request.form["end_location"])[1]
         )
 
-        startPoint = [start_location["lng"], start_location["lat"]]
-        endPoint = [end_location["lng"], end_location["lat"]]
-
-        print("startPoint: ", startPoint)
-        print("startPoint type: ", type(startPoint))
-
-        print("endPoint: ", endPoint)
-        print("endPoint type: ", type(endPoint))
-
         # if self.startPoint != None and self.endPoint != None:
-        min_path = new_get_min_path(startPoint, endPoint, 13)
-
-        minpath = optimiser.convertToJson(min_path)
-        print("end MINPATHDSbujgibdufgld ghiuolb io:\n", minpath, "\n")
-
-        # switches lat and long (changed it in setPoint instead)
-        # minpath["features"][0]["geometry"]["coordinates"][:] = map(
-        #     lambda l: list(reversed(l)),
-        #     minpath["features"][0]["geometry"]["coordinates"],
-        # )
-        # print(minpath, flush=True)
+        minpath = optimiser.setPoint(start_location, end_location)
 
         data = {"status": "success", "minpath": minpath}
 
