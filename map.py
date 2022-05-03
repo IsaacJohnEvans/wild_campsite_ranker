@@ -147,6 +147,9 @@ class Optimiser:
             except:
                 print("\nError at zoom level: ", route_zoom)
                 route_zoom -= 1
+            if route_zoom < 8:
+                print("\nNo path found")
+                break
 
         print("\n\nMINIMUM PATH: \n\n", min_path)
 
