@@ -495,7 +495,7 @@ def main():
     heatmap = heatmap_layer(bbox)
     heatmap.make_layers(100)
     heatmap.plot_3D_heatmap()
-    heatmap.plot_2D_heatmap()
+    # heatmap.plot_2D_heatmap()
     
 if __name__ == '__main__':
     main()
