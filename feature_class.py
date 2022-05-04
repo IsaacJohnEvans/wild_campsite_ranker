@@ -90,8 +90,11 @@ class map_layer(map_feature):
         self.sigma = sigma
         self.effect = effect
         self.dist = distance
-        self.values = self.effect_values()
         self.poly_bool = np.zeros(self.grid[2].shape).astype(bool)
+        if self.dist != 0:
+            self.values = self.effect_values()
+        else:
+            self.values = [1]
 
     def effect_values(self):
         '''
@@ -172,7 +175,7 @@ class heatmap_layer():
     unique_features: The unique features of the heatmap
     
     '''
-    def __init__(self, bbox, preferences = None, n_points = None):
+    def __init__(self, bbox, preferences = None, n_points = None, bad_features = None):
         self.unpack_bbox(bbox, n_points)
         self.make_grid()
         self.uncampable = self.grid[2].copy().astype(bool)
@@ -180,6 +183,7 @@ class heatmap_layer():
         self.preferences = preferences
         self.elevation = self.grid[2].copy()
         self.gradient = self.grid[2].copy()
+        self.bad_features = bad_features
     
     def unpack_bbox(self, bbox, n_points):
         '''
@@ -398,9 +402,10 @@ class heatmap_layer():
         '''
         A function to get some features that are not good to camp on and turn them into points on a boolean array.
         '''
-        self.bad_features = []
-        self.bad_features += ['major_rail', 'minor_rail', 'primary', 'secondary', 'tertiary', 'wetland',
-                              'arts_and_entertainment', 'residential', 'street', 'school', 'service']
+        if self.bad_features == None:
+            self.bad_features = ['major_rail', 'minor_rail', 'primary', 'secondary', 'tertiary', 'wetland',
+                              'arts_and_entertainment', 'residential', 'street', 'school', 'service'
+                              'water', 'stream', 'river']
         for unique_feature in set(self.bad_features).intersection(set(layers.keys())):
             layer1 = map_layer(grid, unique_feature, 1, 
                 distance, layers[unique_feature], 1)
@@ -420,8 +425,8 @@ class heatmap_layer():
         struct = self.make_dilate_struct()
         for unique_feature in tqdm(set(self.preferences.keys()).intersection(set(layers.keys()))):
             layer1 = map_layer(grid, unique_feature, 
-                self.preferences[unique_feature], 
-                distance, layers[unique_feature], 1)
+            self.preferences[unique_feature], 
+            distance, layers[unique_feature], 1)
             layer1.bool_features()
             self.uncampable = np.logical_or(self.uncampable, layer1.uncampable)
             self.uncampable[layer1.poly_bool] = 1
@@ -454,7 +459,7 @@ class heatmap_layer():
         self.get_unique_feature_types()
         layers = self.features_into_layers()
         self.sort_features()
-        self.get_elevation(grid, effect, distance =1, layers = layers)
+        self.get_elevation(grid, effect, distance = 1, layers = layers)
         self.get_gradient()
         self.sort_preferences(effect)
         
@@ -490,12 +495,20 @@ def main():
     '''
     Runs an example heatmap using data.geojson and bbox.csv
     '''
-    preferences = {'water': 2, 'elevation': 2}
+    preferences = {'Water': 1, 'elevation': 1}
     bbox = pd.read_csv('bbox.csv', header = None).to_numpy()
-    heatmap = heatmap_layer(bbox)
-    heatmap.make_layers(100)
+    n_points = 255
+    bad_features = ['water', 'stream', 'river']
+    #preferences = {'path': 2, 'primary': 2, 'secondary': 2, 'tertiary': 2, 'track': 2}
+    heatmap = heatmap_layer(bbox, preferences, n_points, bad_features = bad_features)
+    heatmap.make_layers(0)
+    '''
+    fig, ax = plt.subplots()
+    heatmap_plot = ax.pcolor(heatmap.grid[0], heatmap.grid[1], heatmap.uncampable, cmap='inferno', shading='auto')
+    plt.show()
+    '''
     heatmap.plot_3D_heatmap()
-    heatmap.plot_2D_heatmap()
+    #heatmap.plot_2D_heatmap()
     
 if __name__ == '__main__':
     main()
