@@ -410,6 +410,7 @@ class heatmap_layer():
             layer1 = map_layer(grid, unique_feature, 1, 
                 distance, layers[unique_feature], 1)
             layer1.bool_features()
+            self.grid[2][layer1.poly_bool] -= 5
             self.uncampable = np.logical_or(self.uncampable, layer1.uncampable)
             self.uncampable[layer1.poly_bool] = 1
     
@@ -467,7 +468,7 @@ class heatmap_layer():
         self.get_good_features(grid, distance, layers)
         
         self.grid[2] += self.gradient * self.preferences['elevation']
-        self.grid[2][self.uncampable] -= 5
+        #self.grid[2][self.uncampable] -= 5
         
     def plot_3D_heatmap(self):
         '''
